@@ -118,7 +118,7 @@ else
     echo "You can check its logs with: docker logs $CONTAINER_NAME"
     echo "You can stop it with: docker stop $CONTAINER_NAME"
     echo ""
-    echo "The MCP server can be accessed at: http://$HOST:$PORT/sse" on Docker host
+    echo "The MCP server can be accessed at: http://$HOST:$PORT/sse on Docker host"
     echo "or .. "
-    echo "http://$CONTAINER_NAME:$INTERNAL_PORT/sse" from any container on the same Docker [mcp-net] network"
+    echo "http://$CONTAINER_NAME:$INTERNAL_PORT/sse from any container on the same Docker mcp-net network"
 fi

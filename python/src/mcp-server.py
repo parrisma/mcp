@@ -7,10 +7,12 @@ npx @modelcontextprotocol/inspector python ./mcp-server.py
 """
 import argparse
 import logging
+import os
 import signal
 import sys
 import time
-from typing import Dict, Any
+import types
+from typing import Any, Dict, Optional
 
 from mcp.server.fastmcp import FastMCP
 
@@ -24,9 +26,13 @@ logger = logging.getLogger("mcp-server")
 
 def parse_arguments():
     """Parse command line arguments"""
+    # Get default values from environment variables or use fallbacks
+    default_host = os.environ.get("MCP_HOST", "127.0.0.1")
+    default_port = int(os.environ.get("MCP_PORT", "6277"))
+    
     parser = argparse.ArgumentParser(description="MCP Server")
-    parser.add_argument("--host", default="127.0.0.1", help="Host to bind the server to")
-    parser.add_argument("--port", type=int, default=6277, help="Port to bind the server to")
+    parser.add_argument("--host", default=default_host, help=f"Host to bind the server to (default: {default_host}, env: MCP_HOST)")
+    parser.add_argument("--port", type=int, default=default_port, help=f"Port to bind the server to (default: {default_port}, env: MCP_PORT)")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")
     return parser.parse_args()
 
@@ -47,7 +53,7 @@ def add(a: int, b: int) -> int:
 
 # Add a multiplication tool
 @mcp.tool()
-def multiplyX(a: int, b: int) -> int:
+def multiply(a: int, b: int) -> int:
     """Multiply two numbers"""
     logger.info(f"Multiplying {a} and {b}")
     return a * b
@@ -114,11 +120,13 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
         logger.debug("Debug mode enabled")
     
-    # Log server startup
-    logger.info(f"Starting MCP server on {args.host}:{args.port}")
+    # Log server startup with source of configuration
+    host_source = "environment variable" if "MCP_HOST" in os.environ else "default"
+    port_source = "environment variable" if "MCP_PORT" in os.environ else "default"
+    logger.info(f"Starting MCP server on {args.host}:{args.port} (host from {host_source}, port from {port_source})")
     
     # Set up signal handlers for the main process
-    def signal_handler(sig, frame):
+    def signal_handler(sig: int, frame: Optional[types.FrameType]) -> None:
         logger.info("Shutting down MCP server...")
         sys.exit(0)
     
@@ -128,7 +136,7 @@ def main():
     try:
         # Run the MCP server directly
         # Host and port were already provided at initialization
-        mcp.run()
+        mcp.run(transport="sse")
     except Exception as e:
         logger.error(f"Error running MCP server: {e}")
         sys.exit(1)

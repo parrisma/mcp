@@ -1,4 +1,4 @@
-from typing import Tuple, Protocol, Awaitable, List
+from typing import Tuple, Protocol, Awaitable, List, Any
 import unittest
 import asyncio
 import socket
@@ -8,19 +8,23 @@ from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 import mcp.types as types
 
+
 class TestMCPServer(unittest.IsolatedAsyncioTestCase):
 
     class MCPClientTest(Protocol):
-        async def __call__(self, session: ClientSession, **                           
-                           kwargs) -> Awaitable[None]: ... # type: ignore (kwargs)
+        async def __call__(self,
+                           session: ClientSession,
+                           **kwargs: dict[str, Any]
+                           ) -> Awaitable[None]: ...
 
     _test_number = 0
     _test_number_lock = asyncio.Lock()
-    _name:str = ""
-    _image:str = ""
-    _port:int = -1
-    _internal_port:int = 6277
-    
+    _name: str = ""
+    _image: str = ""
+    _port: int = -1
+    _internal_port: int = 6277
+    _error_str: str = "Error"
+
     @classmethod
     async def get_and_incr_test_number(cls) -> int:
         async with cls._test_number_lock:
@@ -179,13 +183,96 @@ class TestMCPServer(unittest.IsolatedAsyncioTestCase):
             subprocess.run(["docker", "rmi", cls._image], check=True)
             print(f"Container {cls._name} stopped and removed.")
         except Exception as e:
-            print(f"Error {e} stopping & removing container & associated image: {cls._name}")
+            print(
+                f"Error {e} stopping & removing container & associated image: {cls._name}")
             raise
         return
 
+    async def test_01_ping(self):
+        async def _ping_test(session: ClientSession,
+                             **_: dict[str, Any]) -> None:
+            try:
+                # Set a 10-second timeout for the ping operation
+                response = await asyncio.wait_for(session.send_ping(), timeout=10.0)
+                # Assert that we got a valid response
+                self.assertIsNotNone(
+                    response, "Ping response should not be None")
+            except asyncio.TimeoutError:
+                self.fail(
+                    "Ping test timed out after 10 seconds - no response received")
+            except Exception as e:
+                self.fail(f"Ping test failed with exception: {str(e)}")
+
+        # type: ignore (test_func)
+        await asyncio.create_task(self.run_mcp_client_test(_ping_test)) # type: ignore
+
+    async def test_02_list_tools(self):
+        async def _list_tools_test(session: ClientSession,
+                                   **_: dict[str, Any]) -> None:
+            try:
+                # Get the list of available tools with a 10-second timeout
+                actual_tools: types.ListToolsResult = await asyncio.wait_for(session.list_tools(), timeout=10.0)
+                expected_tools: List[str] = ["add", "multiply"]
+                actual_tool_names: List[str] = [
+                    # type: ignore (tool.name)
+                    tool.name for tool in actual_tools.tools]
+                self.assertEqual(type(actual_tools), types.ListToolsResult,
+                                 f"Expected {types.ListToolsResult} type, but got {type(actual_tools)}")
+                self.assertEqual(len(actual_tool_names), len(expected_tools),
+                                 f"Expected {len(expected_tools)} tools, but got {len(actual_tool_names)}")
+                for expected_tool in expected_tools:
+                    self.assertIn(expected_tool, actual_tool_names,
+                                  f"Expected tool '{expected_tool}' not found in the list of tools")
+            except asyncio.TimeoutError:
+                self.fail("List tools operation timed out after 10 seconds")
+            except Exception as e:
+                self.fail(
+                    f"List tools operation failed with exception: {str(e)}")
+
+        # type: ignore (test_func)
+        await asyncio.create_task(self.run_mcp_client_test(_list_tools_test)) # type: ignore
+
+    async def test_03_add_tool(self):
+        async def _add_tool_test(session: ClientSession,
+                                 a: Any,
+                                 b: Any,
+                                 expected: Any) -> None:
+            try:
+                # Get the list of available tools with a 10-second timeout
+                sum_result: types.CallToolResult = await asyncio.wait_for(session.call_tool(
+                    name="add",
+                    arguments={"a": a, "b": b}
+                ), timeout=10.0)
+                self._check_call_tool_result(
+                    sum_result,
+                    num_expected=1,
+                    expected_result_types=[types.TextContent],
+                    expected_types=[int],
+                    expected_values=[expected]
+                )
+
+            except asyncio.TimeoutError:
+                self.fail("Tool [add] operation timed out after 10 seconds")
+            except Exception as e:
+                self.fail(
+                    f"Tool [add] operation failed with exception: {str(e)}")
+
+        # Test cases with different integer values
+        test_cases: List[Tuple[Any, Any, Any]] = [
+            (5, 7, 12),         # Positive numbers
+            (-3, 8, 5),         # Mixed positive and negative
+            (-10, -5, -15),     # Negative numbers
+            (0, 0, 0),          # Zeros
+            (1000, 2000, 3000),  # Large numbers
+            (5.1, 3, self._error_str),  # Error, as float is not castable to int
+            (5, 3.9, self._error_str),  # Error, as float is not castable to int
+        ]
+        for a, b, expected in test_cases:
+            await asyncio.create_task(self.run_mcp_client_test(_add_tool_test, a=a, b=b, expected=expected)) # type: ignore
+
     @classmethod
     async def run_mcp_client_test(cls,
-                                  mcp_client_test: MCPClientTest, **kwargs: object) -> None:
+                                  mcp_client_test: MCPClientTest, **kwargs: dict[str, Any]) -> None:
         # Connect to the server using SSE, we use container name as host as it is host name on Docker network
         server_url = f"http://{cls._name}:{cls._internal_port}/sse"
         print(f"Connecting to MCP server at: {server_url}")
@@ -203,6 +290,9 @@ class TestMCPServer(unittest.IsolatedAsyncioTestCase):
                 print("=" * 80)
                 print(
                     f"Running test   #[{tst_num}] for [{getattr(mcp_client_test, '__name__', str(mcp_client_test))}] on mcp session: [{id(session)}]")
+                if kwargs:
+                    print(
+                        f"Test arguments # {', '.join(f'{k}={v!r}' for k, v in kwargs.items())}")
                 await mcp_client_test(session, **kwargs)
                 print(
                     f"Completed Test #[{tst_num}] for [{getattr(mcp_client_test, '__name__', str(mcp_client_test))}] on mcp session: [{id(session)}]")
@@ -210,38 +300,51 @@ class TestMCPServer(unittest.IsolatedAsyncioTestCase):
 
                 return
 
-    async def test_01_ping(self):
-        async def _ping_test(session: ClientSession) -> None:
-            try:
-                # Set a 10-second timeout for the ping operation
-                response = await asyncio.wait_for(session.send_ping(), timeout=10.0)
-                # Assert that we got a valid response
-                self.assertIsNotNone(response, "Ping response should not be None")
-            except asyncio.TimeoutError:
-                self.fail("Ping test timed out after 10 seconds - no response received")
-            except Exception as e:
-                self.fail(f"Ping test failed with exception: {str(e)}")
+    def _check_call_tool_result(self,
+                                actual: Any,
+                                num_expected: int,
+                                expected_result_types: List[type],
+                                expected_types: List[type],
+                                expected_values: List[Any]) -> None:
+        if not (len(expected_result_types) == len(expected_types) == len(expected_values)):
+            raise ValueError(
+                f"Expected result types, values and expected types must all be the same length: {len(expected_result_types)}, {len(expected_types)}, {len(expected_values)}")
+        self.assertEqual(type(actual), types.CallToolResult,
+                         f"Expected {types.CallToolResult} type, but got {type(actual)}")
+        self.assertTrue(isinstance(actual.content, List),
+                        f"Expected {List} type, but got {type(actual.content)}")
+        self.assertEqual(len(actual.content), num_expected,
+                         f"Expected one result but got {len(actual.content)}")
+        for result, expected_result_type, expected_type, expected_value in zip(actual.content, expected_result_types, expected_types, expected_values):
+            self.assertEqual(type(result), expected_result_type,
+                             f"Expected {expected_result_type} type, but got {type(result)}")
+            if expected_result_type == types.TextContent:
+                test_result: str = result.text
+            elif expected_result_type == types.ImageContent:
+                assert False, f"Unit tests do not yet handle: {types.ImageContent}"
+            elif expected_result_type == types.EmbeddedResource:
+                assert False, f"Unit tests do not yet handle: {types.EmbeddedResource}"
+            else:
+                assert False, f"Unknown result type: {expected_result_type}"
+            if expected_value == self._error_str:
+                self.assertIn(self._error_str, test_result,
+                              f"Expected error string '{self._error_str}' in result, but got {test_result}")
+            else:
+                self.assertTrue(self.is_castable(test_result, expected_type),
+                                f"Expected {expected_type} type, but got {type(test_result)}")
+                actual_value = expected_type(test_result)
+                self.assertEqual(actual_value, expected_value,
+                                 f"Expected result {expected_value}, but got {actual_value}")
 
-        await asyncio.create_task(self.run_mcp_client_test(_ping_test)) # type: ignore (test_func)
-
-    async def test_02_list_tools(self):
-        async def _list_tools_test(session: ClientSession) -> None:
-            try:
-                # Get the list of available tools with a 10-second timeout
-                actual_tools:types.ListToolsResult = await asyncio.wait_for(session.list_tools(), timeout=10.0)
-                expected_tools:List[str] = ["add", "multiply"]
-                actual_tool_names:List[str] = [tool.name for tool in actual_tools.tools] # type: ignore (tool.name)
-                self.assertEqual(len(actual_tool_names), len(expected_tools),
-                                 f"Expected {len(expected_tools)} tools, but got {len(actual_tool_names)}")
-                for expected_tool in expected_tools:
-                    self.assertIn(expected_tool, actual_tool_names,
-                                  f"Expected tool '{expected_tool}' not found in the list of tools")
-            except asyncio.TimeoutError:
-                self.fail("List tools operation timed out after 10 seconds")
-            except Exception as e:
-                self.fail(f"List tools operation failed with exception: {str(e)}")
-
-        await asyncio.create_task(self.run_mcp_client_test(_list_tools_test)) # type: ignore (test_func)
+    @classmethod
+    def is_castable(cls,
+                    value: Any,
+                    target_type: type) -> bool:
+        try:
+            target_type(value)
+            return True
+        except (ValueError, TypeError):
+            return False
 
 
 if __name__ == "__main__":

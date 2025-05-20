@@ -37,6 +37,8 @@ RUN apt-get update --fix-missing && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Docker
+ARG DOCKER_GID=1001
+RUN groupadd -g ${DOCKER_GID} docker
 RUN mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
@@ -54,10 +56,11 @@ RUN curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.s
 ENV PATH="/opt/conda/bin:${PATH}"
 
 # Create mcp-dev user and add to docker group
-RUN groupadd -g 1679 mcp-dev && \
-    useradd -u 1679 -g 1679 -m -d /home/mcp-dev -s /bin/bash mcp-dev && \
-    groupadd -f docker && \
-    usermod -aG docker mcp-dev
+ARG MCP_DEV_GID=1679
+ARG MCP_DEV_UID=1679
+RUN groupadd -g ${MCP_DEV_GID} mcp-dev
+RUN useradd -u ${MCP_DEV_UID} -g ${MCP_DEV_GID} -m -d /home/mcp-dev -s /bin/bash mcp-dev
+RUN usermod -aG docker mcp-dev    
 
 USER mcp-dev
 RUN echo 'umask 0006' >> ~/.bashrc
@@ -91,10 +94,10 @@ RUN conda create -y -n mcp python=3.12 && \
     conda clean -a -y
 
 # Install MCP Python SDK in the conda environment using pip (with CLI extras)
+RUN conda run -n mcp pip install mcp-server
 RUN conda run -n mcp pip install "mcp[cli]"
 RUN conda run -n mcp pip install docker
-RUN conda run -n mcp conda install -y pytest pytest-asyncio
-RUN conda run -n mcp conda install -c conda-forge pytest-check
+RUN conda run -n mcp conda install -c conda-forge langchain
 
 RUN echo 'conda activate mcp' >> ~/.bashrc
 

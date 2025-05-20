@@ -21,6 +21,7 @@ RUN groupadd -g 1000 mcp && \
 
 # Install the MCP Python package and dependencies
 RUN pip install --no-cache-dir "mcp[cli]"
+RUN pip install --no-cache-dir langchain
 
 # Set up the application directory
 WORKDIR /app

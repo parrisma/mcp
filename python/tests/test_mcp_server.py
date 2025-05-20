@@ -1,8 +1,15 @@
-from typing import Tuple, Protocol, Awaitable, List, Any
+# pylint: disable=C0114
+# pylint: disable=C0115
+# pylint: disable=C0116
+# pylint: disable=C0103
+# pylint: disable=C0301
+
+from typing import Tuple, Protocol, Awaitable, List, Dict, Any, Callable
 import unittest
 import asyncio
 import socket
 import os
+import re
 import subprocess
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
@@ -16,6 +23,12 @@ class TestMCPServer(unittest.IsolatedAsyncioTestCase):
                            session: ClientSession,
                            **kwargs: dict[str, Any]
                            ) -> Awaitable[None]: ...
+
+    class MCPGetCapability(Protocol):
+        async def __call__(self,
+                           session: ClientSession,
+                           **kwargs: dict[str, Any]
+                           ) -> Awaitable[Any]: ...
 
     _test_number = 0
     _test_number_lock = asyncio.Lock()
@@ -81,7 +94,7 @@ class TestMCPServer(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def _build_mcp_test_container(cls) -> Tuple[str, str]:
         """
-            Helper function to build a test container for the MCP server. 
+            Helper function to build a test container for the MCP server.
             This is run each time to ensure that the latest version of the
             mcp server (py) script is used.
         """
@@ -122,7 +135,7 @@ class TestMCPServer(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def _run_mcp_test_container(cls) -> str:
         """
-            Helper function to run a test container for the MCP server. 
+            Helper function to run a test container for the MCP server.
             This is run on the given port making the mcp server available
             on the docker mcp-net shared with the dev container in which
             these test are run.
@@ -203,34 +216,27 @@ class TestMCPServer(unittest.IsolatedAsyncioTestCase):
             except Exception as e:
                 self.fail(f"Ping test failed with exception: {str(e)}")
 
-        # type: ignore (test_func)
-        await asyncio.create_task(self.run_mcp_client_test(_ping_test)) # type: ignore
+        await asyncio.create_task(self._run_mcp_client_test(_ping_test)  # type: ignore
+                                  )
 
     async def test_02_list_tools(self):
         async def _list_tools_test(session: ClientSession,
                                    **_: dict[str, Any]) -> None:
-            try:
-                # Get the list of available tools with a 10-second timeout
-                actual_tools: types.ListToolsResult = await asyncio.wait_for(session.list_tools(), timeout=10.0)
-                expected_tools: List[str] = ["add", "multiply"]
-                actual_tool_names: List[str] = [
-                    # type: ignore (tool.name)
-                    tool.name for tool in actual_tools.tools]
-                self.assertEqual(type(actual_tools), types.ListToolsResult,
-                                 f"Expected {types.ListToolsResult} type, but got {type(actual_tools)}")
-                self.assertEqual(len(actual_tool_names), len(expected_tools),
-                                 f"Expected {len(expected_tools)} tools, but got {len(actual_tool_names)}")
-                for expected_tool in expected_tools:
-                    self.assertIn(expected_tool, actual_tool_names,
-                                  f"Expected tool '{expected_tool}' not found in the list of tools")
-            except asyncio.TimeoutError:
-                self.fail("List tools operation timed out after 10 seconds")
-            except Exception as e:
-                self.fail(
-                    f"List tools operation failed with exception: {str(e)}")
+            async def _get_tools(session: ClientSession, **_: dict[str, Any]) -> Any:
+                return await session.list_tools()
 
-        # type: ignore (test_func)
-        await asyncio.create_task(self.run_mcp_client_test(_list_tools_test)) # type: ignore
+            # Check the capability of the server
+            await self._check_capability(session=session,
+                                         mcp_get_capability=_get_tools,
+                                         capability_type=types.ListToolsResult,
+                                         expected_capabilities=[
+                                             {"name": "add"},
+                                             {"name": "multiply"}],
+                                         get_capabilities=lambda x: x.tools,
+                                         get_capability_detail=lambda x: {"name": x.name})
+
+        await asyncio.create_task(self._run_mcp_client_test(_list_tools_test)  # type: ignore
+                                  )
 
     async def test_03_add_tool(self):
         async def _add_tool_test(session: ClientSession,
@@ -266,13 +272,223 @@ class TestMCPServer(unittest.IsolatedAsyncioTestCase):
             (1000, 2000, 3000),  # Large numbers
             (5.1, 3, self._error_str),  # Error, as float is not castable to int
             (5, 3.9, self._error_str),  # Error, as float is not castable to int
+            (5, None, self._error_str),  # Error, as None is passed.
         ]
         for a, b, expected in test_cases:
-            await asyncio.create_task(self.run_mcp_client_test(_add_tool_test, a=a, b=b, expected=expected)) # type: ignore
+            await asyncio.create_task(self._run_mcp_client_test(_add_tool_test,  # type: ignore
+                                                                a=a,
+                                                                b=b,
+                                                                expected=expected))
+        return
+
+    async def test_04_multiply_tool(self):
+        async def _multiply_tool_test(session: ClientSession,
+                                      a: Any,
+                                      b: Any,
+                                      expected: Any) -> None:
+            try:
+                # Get the list of available tools with a 10-second timeout
+                multiply_result: types.CallToolResult = await asyncio.wait_for(session.call_tool(
+                    name="multiply",
+                    arguments={"a": a, "b": b}
+                ), timeout=10.0)
+                self._check_call_tool_result(
+                    multiply_result,
+                    num_expected=1,
+                    expected_result_types=[types.TextContent],
+                    expected_types=[int],
+                    expected_values=[expected]
+                )
+
+            except asyncio.TimeoutError:
+                self.fail(
+                    "Tool [multiply] operation timed out after 10 seconds")
+            except Exception as e:
+                self.fail(
+                    f"Tool [multiply] operation failed with exception: {str(e)}")
+
+        # Test cases with different integer values
+        test_cases: List[Tuple[Any, Any, Any]] = [
+            (5, 7, 35),         # Positive numbers
+            (-3, 8, -24),       # Mixed positive and negative
+            (-10, -5, 50),      # Negative numbers
+            (0, 5, 0),          # Zero multiplied by a number
+            (5, 0, 0),          # Number multiplied by zero
+            (10, 100, 1000),    # Large numbers
+            (5.1, 3, self._error_str),  # Error, as float is not castable to int
+            (5, 3.9, self._error_str),  # Error, as float is not castable to int
+        ]
+        for a, b, expected in test_cases:
+            # type: ignore
+            await asyncio.create_task(self._run_mcp_client_test(_multiply_tool_test,  # type: ignore
+                                                                a=a,
+                                                                b=b,
+                                                                expected=expected))
+        return
+
+    async def test_05_list_resources(self):
+        async def _list_resource_test(session: ClientSession,
+                                      **_: dict[str, Any]) -> None:
+            async def _get_resources(session: ClientSession, **_: dict[str, Any]) -> Any:
+                return await session.list_resources()
+
+            # Check the capability of the server
+            await self._check_capability(session=session,
+                                         mcp_get_capability=_get_resources,
+                                         capability_type=types.ListResourcesResult,
+                                         expected_capabilities=[
+                                             {"name": "alive", "uri": "alive://"}],
+                                         get_capabilities=lambda x: x.resources,
+                                         get_capability_detail=lambda x: {"name": x.name, "uri": str(x.uri)})
+
+        await asyncio.create_task(self._run_mcp_client_test(_list_resource_test)  # type: ignore
+                                  )
+
+    async def test_06_list_resource_templates(self):
+        async def _list_resource_templates_test(session: ClientSession,
+                                                **_: dict[str, Any]) -> None:
+            async def _get_resource_templates(session: ClientSession, **_: dict[str, Any]) -> Any:
+                return await session.list_resource_templates()
+
+            # Check the capability of the server
+            await self._check_capability(session=session,
+                                         mcp_get_capability=_get_resource_templates,
+                                         capability_type=types.ListResourceTemplatesResult,
+                                         expected_capabilities=[
+                                             {"uriTemplate": "message://{name}"}],
+                                         get_capabilities=lambda x: x.resourceTemplates,
+                                         get_capability_detail=lambda x: {"uriTemplate": x.uriTemplate})
+
+        await asyncio.create_task(self._run_mcp_client_test(_list_resource_templates_test)  # type: ignore
+                                  )
+
+    async def test_07_list_prompts(self):
+        async def _list_prompt_test(session: ClientSession,
+                                    **_: dict[str, Any]) -> None:
+            async def _get_prompts(session: ClientSession, **_: dict[str, Any]) -> Any:
+                return await session.list_prompts()
+
+            # Check the capability of the server
+            await self._check_capability(session=session,
+                                         mcp_get_capability=_get_prompts,
+                                         capability_type=types.ListPromptsResult,
+                                         expected_capabilities=[
+                                             {"name": "sme"}],
+                                         get_capabilities=lambda x: x.prompts,
+                                         get_capability_detail=lambda x: {"name": x.name})
+
+        await asyncio.create_task(self._run_mcp_client_test(_list_prompt_test)  # type: ignore
+                                  )
+
+    async def test_08_test_prompts(self):
+        async def _prompt_test(session: ClientSession,
+                               **kwargs: dict[str, Any]) -> None:
+            async def _call_prompt(session: ClientSession,
+                                   **kwargs: dict[str, Any]) -> Any:
+                response: types.GetPromptResult
+                try:
+                    response = await session.get_prompt(
+                        name=str(kwargs["name"]),
+                        arguments=kwargs["arguments"]
+                    )
+                except Exception as e:
+                    response = types.GetPromptResult(
+                        description="Error, failed to get prompt, see repsonsec content",
+                        messages=[
+                            types.PromptMessage(
+                                    role="user",
+                                    content=types.TextContent(
+                                        type="text", text=str(e))
+                            )])
+                return response
+
+            cases = [
+                ["coding", "MCP Servers"],
+                ["math", "pythagorean theorem"],
+                ["writing", "beatnik poetry"],
+                # New case: not coding, math, or writing
+                ["history", "World War II"]
+            ]
+
+            prompt_test_cases: List[Dict[str, Any]] = [
+                {
+                    "name": "sme",
+                    "arguments": {
+                        "topic": cases[0][0],
+                        "subject": cases[0][1]
+                    },
+                    "expected_capabilities": [
+                        {"text": re.compile(
+                            rf".*you are an expert programmer.*{re.escape(cases[0][1])}.*", re.IGNORECASE)}
+                    ]
+                },
+                {
+                    "name": "sme",
+                    "arguments": {
+                        "topic": cases[1][0],
+                        "subject": cases[1][1]
+                    },
+                    "expected_capabilities": [
+                        {"text": re.compile(
+                            rf".*you are a high school mathematics.*{re.escape(cases[1][1])}.*", re.IGNORECASE)}
+                    ]
+                },
+                {
+                    "name": "sme",
+                    "arguments": {
+                        "topic": cases[2][0],
+                        "subject": cases[2][1]
+                    },
+                    "expected_capabilities": [
+                        {"text": re.compile(
+                            rf".*you are a professional writer.*{re.escape(cases[2][1])}.*", re.IGNORECASE)}
+                    ]
+                },
+                {
+                    "name": "sme",
+                    "arguments": {
+                        "topic": cases[3][0],
+                        "subject": cases[3][1]
+                    },
+                    "expected_capabilities": [
+                        {"text": re.compile(r".*Error.*", re.IGNORECASE)}
+                    ]
+                }
+            ]
+
+            # Check the behavior of the prompts
+            for test_case in prompt_test_cases:
+                # Unpack the test case
+                case_name = test_case["name"]
+                case_args = test_case["arguments"]
+                expected_capabilities = test_case["expected_capabilities"]
+
+                # Check the capability of the server
+                await self._check_capability(
+                    session=session,
+                    mcp_get_capability=_call_prompt,
+                    capability_type=types.GetPromptResult,
+                    expected_capabilities=expected_capabilities,
+                    get_capabilities=lambda x: x.messages,
+                    get_capability_detail=lambda x: {
+                        "text": x.content.text
+                    },
+                    name=case_name,  # type: ignore
+                    arguments=case_args
+                )
+
+        await asyncio.create_task(self._run_mcp_client_test(_prompt_test  # type: ignore
+                                                            )
+                                  )
+        return
+    #
+    # ========== T E S T  U T I L S  ==========
+    #
 
     @classmethod
-    async def run_mcp_client_test(cls,
-                                  mcp_client_test: MCPClientTest, **kwargs: dict[str, Any]) -> None:
+    async def _run_mcp_client_test(cls,
+                                   mcp_client_test: MCPClientTest,
+                                   **kwargs: dict[str, Any]) -> None:
         # Connect to the server using SSE, we use container name as host as it is host name on Docker network
         server_url = f"http://{cls._name}:{cls._internal_port}/sse"
         print(f"Connecting to MCP server at: {server_url}")
@@ -330,21 +546,64 @@ class TestMCPServer(unittest.IsolatedAsyncioTestCase):
                 self.assertIn(self._error_str, test_result,
                               f"Expected error string '{self._error_str}' in result, but got {test_result}")
             else:
-                self.assertTrue(self.is_castable(test_result, expected_type),
+                self.assertTrue(self._is_castable(test_result, expected_type),
                                 f"Expected {expected_type} type, but got {type(test_result)}")
                 actual_value = expected_type(test_result)
                 self.assertEqual(actual_value, expected_value,
                                  f"Expected result {expected_value}, but got {actual_value}")
 
     @classmethod
-    def is_castable(cls,
-                    value: Any,
-                    target_type: type) -> bool:
+    def _is_castable(cls,
+                     value: Any,
+                     target_type: type) -> bool:
         try:
             target_type(value)
             return True
         except (ValueError, TypeError):
             return False
+
+    async def _check_capability(self,
+                                session: ClientSession,
+                                mcp_get_capability: MCPGetCapability,
+                                capability_type: type,
+                                expected_capabilities: List[Dict[str, Any]],
+                                get_capabilities: Callable[[Any], Any],
+                                get_capability_detail: Callable[[Any], Dict[str, Any]],
+                                **kwargs: dict[str, Any]) -> None:
+        try:
+            # Get the capability list with a 10-second timeout
+            actual_capability = await asyncio.wait_for(mcp_get_capability(session=session,
+                                                                          **kwargs), timeout=10.0
+                                                       )
+            self.assertEqual(type(actual_capability), capability_type,
+                             f"Expected {capability_type} type, but got {type(actual_capability)}")
+
+            # Get all capability details as dictionaries
+            actual_capability_details: List[Dict[str, Any]] = []
+            for capability in get_capabilities(actual_capability):
+                actual_capability_details.append(
+                    get_capability_detail(capability))
+
+            self.assertEqual(len(actual_capability_details), len(expected_capabilities),
+                             f"Expected {len(expected_capabilities)} capabilities, but got {len(actual_capability_details)}")
+
+            for expected, actual in zip(expected_capabilities, actual_capability_details):
+                for key, expected_value in expected.items():
+                    actual_value = actual.get(key)
+                    if isinstance(expected_value, re.Pattern):
+                        self.assertIsNotNone(
+                            actual_value, f"Missing key '{key}' in actual capability details")
+                        self.assertRegex(str(actual_value), expected_value,
+                                         f"Value for key '{key}' does not match expected pattern")
+                    else:
+                        self.assertEqual(
+                            actual_value, expected_value, f"Value for key '{key}' does not match: expected {expected_value}, got {actual_value}")
+        except asyncio.TimeoutError:
+            self.fail(
+                "Get capabilities from MCP Server - operation timed out after 10 seconds")
+        except (KeyError, AttributeError, ValueError, ConnectionError, socket.error) as e:
+            self.fail(
+                f"Get capabilities from MCP Server - failed with exception: {str(e)}")
 
 
 if __name__ == "__main__":

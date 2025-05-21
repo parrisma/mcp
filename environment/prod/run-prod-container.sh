@@ -99,6 +99,7 @@ echo "Network 'mcp-net' found."
 echo "Starting container as daemon..."
 # The format for port mapping is: -p <external-port>:<internal-port>
 # The MCP_PORT environment variable must match the internal port
+echo "docker run -d --name \"$CONTAINER_NAME\" --network mcp-net -p $PORT:$INTERNAL_PORT -e MCP_HOST=\"$HOST\" -e MCP_PORT=\"$INTERNAL_PORT\" \"$IMAGE_NAME\""
 docker run -d \
     --name "$CONTAINER_NAME" \
     --network mcp-net \
@@ -118,7 +119,7 @@ else
     echo "You can check its logs with: docker logs $CONTAINER_NAME"
     echo "You can stop it with: docker stop $CONTAINER_NAME"
     echo ""
-    echo "The MCP server can be accessed at: http://$HOST:$PORT/sse on Docker host"
+    echo "The MCP server can be accessed at: http://localhost:$PORT/sse on Docker host"
     echo "or .. "
     echo "http://$CONTAINER_NAME:$INTERNAL_PORT/sse from any container on the same Docker mcp-net network"
 fi

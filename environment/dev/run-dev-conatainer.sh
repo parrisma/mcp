@@ -138,7 +138,7 @@ fi
 # --user: Run the container with the specified user and group IDs
 # tail -f /dev/null: A simple command that keeps the container running indefinitely
 docker run --rm --name "$container_name" -d \
--v "$(pwd)/../..":/home/mcp-dev/devroot/mcp \
+-v "$(pwd)/../..":/mcp \
 -v /var/run/docker.sock:/var/run/docker.sock \
 --network="$network_name" \
 --user ${HOST_MCP_DEV_UID}:${HOST_DOCKER_GID} \

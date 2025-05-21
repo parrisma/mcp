@@ -37,6 +37,10 @@ class TestMCPServer(unittest.IsolatedAsyncioTestCase):
     _port: int = -1
     _internal_port: int = 6277
     _error_str: str = "Error"
+    
+    ## == SET TO TRUE IF RUNNING MCP_SERVER LOCALLY IN A DEBUG SESSION ==
+    ## == we then assume mcp-server is on localhost and port 6277      ==
+    _local_server: bool = False
 
     @classmethod
     async def get_and_incr_test_number(cls) -> int:
@@ -50,22 +54,32 @@ class TestMCPServer(unittest.IsolatedAsyncioTestCase):
 
     @classmethod
     async def _asyncSetUpClass(cls):
-        # Find a free port and also use this to uniquly identify the containers
-        cls._port = await asyncio.to_thread(cls._get_free_port)
 
-        # Build and run the MCP test container, picking up the latest mcp server script
-        cls._name, cls._image = await asyncio.to_thread(
-            cls._build_mcp_test_container)
+        if cls._local_server:
+            # If running locally, set the port to a fixed value
+            cls._port = cls._internal_port
+            cls._name = "localhost"
+            print(f"Running MCP server locally on port: {cls._port}")
+        else:
+            # Find a free port and also use this to uniquly identify the containers
+            cls._port = await asyncio.to_thread(cls._get_free_port)
 
-        # Run the MCP test container
-        await asyncio.to_thread(cls._run_mcp_test_container)
+            # Build and run the MCP test container, picking up the latest mcp server script
+            cls._name, cls._image = await asyncio.to_thread(
+                cls._build_mcp_test_container)
 
-        # Wait for the container to be ready
-        await asyncio.sleep(5)
+            # Run the MCP test container
+            await asyncio.to_thread(cls._run_mcp_test_container)
+
+            # Wait for the container to be ready
+            await asyncio.sleep(5)
+
+        return
 
     @classmethod
     def tearDownClass(cls):
-        asyncio.run(cls._asyncTearDownClass())
+        if not cls._local_server:
+            asyncio.run(cls._asyncTearDownClass())
 
     @classmethod
     async def _asyncTearDownClass(cls):
@@ -107,10 +121,11 @@ class TestMCPServer(unittest.IsolatedAsyncioTestCase):
             # Build the MCP server container if it doesn't exist
             # This uses the build-prod-container.sh script
             build_script = os.path.join(
-                os.getcwd(), "mcp/environment/prod/build-prod-container.sh")
-            if not os.path.exists(build_script):
-                build_script = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-                                            "environment/prod/build-prod-container.sh")
+                os.getcwd(), "environment/prod/build-prod-container.sh")
+            if not os.path.isfile(build_script):
+                raise RuntimeError(
+                    f"Build script not found: {build_script}, assumes cwd [{os.getcwd()}] is set to the mcp project root")
+
             subprocess.run([
                 build_script,
                 "--image", container_image,
@@ -153,10 +168,11 @@ class TestMCPServer(unittest.IsolatedAsyncioTestCase):
 
             # Run the MCP server using the run-prod-container.sh script
             run_script = os.path.join(
-                os.getcwd(), "mcp/environment/prod/run-prod-container.sh")
-            if not os.path.exists(run_script):
-                run_script = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-                                          "environment/prod/run-prod-container.sh")
+                os.getcwd(), "environment/prod/run-prod-container.sh")
+            if not os.path.isfile(run_script):
+                raise RuntimeError(
+                    f"Run script not found: {run_script}, assumes cwd [{os.getcwd()}] is set to the mcp project root")
+
             subprocess.run([
                 run_script,
                 "--image", cls._image,
@@ -406,8 +422,7 @@ class TestMCPServer(unittest.IsolatedAsyncioTestCase):
                 ["coding", "MCP Servers"],
                 ["math", "pythagorean theorem"],
                 ["writing", "beatnik poetry"],
-                # New case: not coding, math, or writing
-                ["history", "World War II"]
+                ["history", "World War II"]  # Error case
             ]
 
             prompt_test_cases: List[Dict[str, Any]] = [

@@ -1,0 +1,114 @@
+{
+    "name": "Demo",
+    "description": "MCP Server - Model Context Protocol Server Implementation",
+    "version": "1.0.0",
+    "tools": {
+        "add": {
+            "name": "add",
+            "description": "Add two integers together",
+            "inputSchema": {
+                "properties": {
+                    "a": {
+                        "description": "First integer to add",
+                        "title": "A",
+                        "type": "integer"
+                    },
+                    "b": {
+                        "description": "Second integer to add",
+                        "title": "B",
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "a",
+                    "b"
+                ],
+                "title": "_addArguments",
+                "type": "object"
+            },
+            "annotations": {
+                "title": "Simple arithmetic add",
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false
+            }
+        },
+        "multiply": {
+            "name": "multiply",
+            "description": "Multiply two integers together",
+            "inputSchema": {
+                "properties": {
+                    "a": {
+                        "title": "A",
+                        "type": "integer"
+                    },
+                    "b": {
+                        "title": "B",
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "a",
+                    "b"
+                ],
+                "title": "multiplyArguments",
+                "type": "object"
+            },
+            "annotations": {
+                "title": "Simple arithmetic multiplication",
+                "readOnlyHint": true,
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": false
+            }
+        }
+    },
+    "resources": {
+        "message": {
+            "name": "message",
+            "uri": "message://{name}",
+            "description": "Generate a greeting message for a given name",
+            "uriTemplate": "message://{name}"
+        },
+        "alive": {
+            "name": "alive",
+            "uri": "alive://",
+            "description": "Return server status and server timestamp"
+        }
+    },
+    "prompts": {
+        "sme": {
+            "name": "sme",
+            "description": "Get a subject matter expert prompt for a specific topic",
+            "arguments": {
+                "properties": {
+                    "topic": {
+                        "type": "string",
+                        "enum": [
+                            "coding",
+                            "math",
+                            "writing"
+                        ],
+                        "description": "The topic for the prompt"
+                    },
+                    "subject": {
+                        "type": "string",
+                        "description": "The specific subject to explain"
+                    }
+                },
+                "required": [
+                    "topic",
+                    "subject"
+                ]
+            }
+        }
+    },
+    "serverInfo": {
+        "name": "Demo",
+        "version": "1.0.0"
+    },
+    "transport": {
+        "type": "sse"
+    }
+}

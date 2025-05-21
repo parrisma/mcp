@@ -8,12 +8,23 @@ LABEL version="1.0"
 
 # Define build argument for the MCP server script path
 # This should be the path relative to the Docker build context
-ARG MCP_SERVER_SCRIPT="./mcp-server.py"
+ARG MCP_SERVER_SCRIPT="./mcp/python/src/mcp-server.py"
+ARG MCP_SERVER_CONFIG="./mcp/python/src/mcp-server-meta.json"
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PORT=6277
+
+    # Update package lists and install necessary dependencies
+RUN apt-get update --fix-missing && \
+    apt-get upgrade -y && \
+    apt-get install -y \
+    wget \
+    iputils-ping && \
+    # Purge unnecessary packages.
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user to run the application
 RUN groupadd -g 1000 mcp && \
@@ -36,6 +47,13 @@ RUN if [ -z "${MCP_SERVER_SCRIPT}" ]; then \
 # Copy the MCP server script
 # The COPY instruction will fail if the file doesn't exist in the build context
 COPY --chown=mcp:mcp ${MCP_SERVER_SCRIPT} /app/
+
+# Validate the config path is not empty
+RUN if [ -z "${MCP_SERVER_CONFIG}" ]; then \
+    echo "ERROR: MCP_SERVER_CONFIG cannot be empty" && exit 1; \
+    fi && \
+    echo "Using MCP server script: ${MCP_SERVER_SCRIPT}"
+COPY --chown=mcp:mcp ${MCP_SERVER_CONFIG} /app/
 
 # Extract the script filename and make it executable
 RUN MCP_SCRIPT_FILENAME=$(basename ${MCP_SERVER_SCRIPT}) && \

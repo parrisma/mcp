@@ -19,11 +19,42 @@ import signal
 import sys
 import time
 import types
-from typing import Any, Dict, Literal, Optional
+import json
+from enum import Enum
+from typing import Any, Dict, Literal, Optional, Annotated, List, Callable, Tuple, Union
+from functools import partial
 
 from langchain.prompts import PromptTemplate
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
+from pydantic import Field
+
+
+# Define enums for metadata types and fields to avoid string literals
+class MetaType(str, Enum):
+    TOOLS = "tools"
+    RESOURCES = "resources"
+    PROMPTS = "prompts"
+
+    def __str__(self):
+        return self.value
+
+
+class MetaField(str, Enum):
+    NAME = "name"
+    DESCRIPTION = "description"
+    TITLE = "annotations.title"
+    READ_ONLY_HINT = "annotations.readOnlyHint"
+    DESTRUCTIVE_HINT = "annotations.destructiveHint"
+    IDEMPOTENT_HINT = "annotations.idempotentHint"
+    OPEN_WORLD_HINT = "annotations.openWorldHint"
+    URI = "uri"
+    URI_TEMPLATE = "uriTemplate"
+    ARGUMENTS = "arguments"
+
+    def __str__(self):
+        return self.value
+
 
 # Configure logging
 logging.basicConfig(
@@ -54,7 +85,10 @@ class MCPServer:
     MCP Server class that provides tools, resources, and prompts for AI models.
     """
 
-    def __init__(self, name: str, host: str, port: int):
+    def __init__(self, name: str,
+                 host: str,
+                 port: int,
+                 in_conatiner: bool = False):
         """
         Initialize the MCP Server with the given configuration.
 
@@ -63,43 +97,143 @@ class MCPServer:
             host: The host to bind the server to
             port: The port to bind the server to
         """
-        self.name = name
-        self.host = host
-        self.port = port
-        self.mcp = FastMCP(name, host=host, port=port)
+        self._name = name
+        self._host = host
+        self._port = port
+        self._mcp = FastMCP(self._name, host=self._host, port=self._port)
+
+        meta_path: str = ""
+        try:
+            config_file = "mcp-server-config.json"
+            if not in_conatiner:
+                config_file = f"config/{config_file}"
+            meta_path = os.path.join(
+                os.getcwd(), config_file)
+            with open(meta_path, "r", encoding="utf-8") as f:
+                self._meta = json.load(f)
+        except Exception as e:
+            logger.error(f"Failed to load or parse [{meta_path}]: {e}")
+            raise RuntimeError(
+                f"Aborting MCPServer initialization due to metadata file load error: [{meta_path}]") from e
 
         # Register tools, resources, and prompts
         self._register_tools()
         self._register_resources()
         self._register_prompts()
 
+    def get_meta(self,
+                 meta_type: Union[MetaType, Literal["tools", "resources", "prompts"]],
+                 name: str,
+                 item_path: Union[MetaField, str]) -> Any:
+        """
+        Retrieve a metadata item from the loaded _meta dictionary.
+
+        Args:
+            meta_type: The type of metadata (MetaType.TOOLS, MetaType.RESOURCES, or MetaType.PROMPTS)
+            name: The name of the item (e.g., tool name)
+            item_path: The specific metadata key or dot-separated path to retrieve (e.g., MetaField.DESCRIPTION or "arguments.type")
+
+        Returns:
+            The requested metadata value.
+
+        Raises:
+            RuntimeError: If the metadata item is not found.
+        """
+        try:
+            # Support arbitrary depth using a JSON path (dot-separated)
+            keys = [str(meta_type), name, str(item_path)] if isinstance(
+                item_path, (MetaField, str)) else [str(meta_type), name]
+            # If item is a dot-separated path, split and extend
+            if isinstance(item_path, str) and "." in item_path:
+                keys = [str(meta_type), name] + item_path.split(".")
+            value = self._meta
+            for k in keys:
+                value = value[k]
+            return value
+        except KeyError as ke:
+            raise RuntimeError(
+                f"Metadata not found for type '{meta_type}', name '{name}', item '{item_path}'"
+            ) from ke
+
     def _register_tools(self):
-        self.mcp.tool(name="add",
-                      description="Add two integers together",
-                      annotations=ToolAnnotations(
-                          title="Simple arithmetic add",
-                          readOnlyHint=True))(self._add)
-        self.mcp.tool(name="multiply",
-                      description="Multiplt two integers together",
-                      annotations=ToolAnnotations(
-                          title="Simple arithmetic multiplication",
-                          readOnlyHint=True))(self.multiply)
+        # Register the add tool with fully qualified metadata
+        # Get tool metadata using the config manager
+
+        tools_to_add: List[Tuple[str, Callable]] = [
+            ("add", self._add),
+            ("multiply", self.multiply),
+        ]
+
+        for tool in tools_to_add:
+            tool_name, tool_func = tool
+            try:
+                get_meta = partial(self.get_meta, MetaType.TOOLS, tool_name)
+                self._mcp.tool(
+                    name=get_meta(MetaField.NAME),
+                    description=get_meta(MetaField.DESCRIPTION),
+                    annotations=ToolAnnotations(
+                        title=get_meta(MetaField.TITLE),
+                        readOnlyHint=get_meta(MetaField.READ_ONLY_HINT),
+                        destructiveHint=get_meta(MetaField.DESTRUCTIVE_HINT),
+                        idempotentHint=get_meta(MetaField.IDEMPOTENT_HINT),
+                        openWorldHint=get_meta(MetaField.OPEN_WORLD_HINT),
+                    ),
+                )(tool_func)
+            except RuntimeError as e:
+                msg = f"Failed to register tool [{tool_name}]: {e}"
+                logger.error(msg)
+                raise RuntimeError(msg) from e
 
     def _register_resources(self):
-        self.mcp.resource(uri="message://{name}",
-                          name="message",
-                          description="Generate a greeting message for a given name")(self.get_message)
-        self.mcp.resource(uri="alive://",
-                          name="alive",
-                          description="Return server status and server timestamp")(self.alive)
+        resources_to_add = [
+            ("message", self.get_message),
+            ("alive", self.alive),
+        ]
+
+        for resource in resources_to_add:
+            resource_name, resource_func = resource
+            try:
+                get_meta = partial(
+                    self.get_meta, MetaType.RESOURCES, resource_name)
+                self._mcp.resource(
+                    uri=get_meta(MetaField.URI),
+                    name=resource_name,
+                    description=get_meta(MetaField.DESCRIPTION)
+                )(resource_func)
+            except RuntimeError as e:
+                msg = f"Failed to register resource [{resource_name}]: {e}"
+                logger.error(msg)
+                raise RuntimeError(msg) from e
 
     def _register_prompts(self):
-        self.mcp.prompt(name="sme",
-                        description="Get a subject matter expert prompt for a specific topic")(self.get_sme_prompt)
+        prompts_to_add = [
+            ("sme", self.get_sme_prompt),
+        ]
+
+        for prompt in prompts_to_add:
+            prompt_name, prompt_func = prompt
+            try:
+                get_meta = partial(
+                    self.get_meta, MetaType.PROMPTS, prompt_name)
+                self._mcp.prompt(
+                    name=prompt_name,
+                    description=get_meta(MetaField.DESCRIPTION)
+                )(prompt_func)
+            except RuntimeError as e:
+                msg = f"Failed to register prompt [{prompt_name}]: {e}"
+                logger.error(msg)
+                raise RuntimeError(msg) from e
 
     def _add(self,
-             a: int,
-             b: int) -> int:
+             a: Annotated[int, Field(description="First integer to add")],
+             b: Annotated[int, Field(description="Second integer to add")]) -> int:
+        """
+        Add two integers together.
+
+        This tool is fully qualified with metadata in the _register_tools method.
+        The parameters are annotated with descriptions using Pydantic's Field.
+        """
+
         logger.info(f"Adding {a} and {b}")
         return a + b
 
@@ -161,7 +295,8 @@ class MCPServer:
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)
 
-    def run(self, transport: Literal['stdio', 'sse', 'streamable-http'] = "sse"):
+    def run(self,
+            transport: Literal['stdio', 'sse', 'streamable-http'] = "sse"):
         """
         Run the MCP server.
 
@@ -173,20 +308,20 @@ class MCPServer:
         host_source = "environment variable" if "MCP_HOST" in os.environ else "default"
         port_source = "environment variable" if "MCP_PORT" in os.environ else "default"
         logger.info(
-            f"Starting MCP server on {self.host}:{self.port} (host from {host_source}, port from {port_source})")
+            f"Starting MCP server on {self._host}:{self._port} (host from {host_source}, port from {port_source})")
 
         self.setup_signal_handlers()
 
         try:
             # Run the MCP server
-            self.mcp.run(transport=transport)
+            self._mcp.run(transport=transport)
         except Exception as e:
             logger.error(f"Error running MCP server: {e}")
             sys.exit(1)
 
 
 def main():
-    """Main entry point for the MCP server"""
+
     # Parse command line arguments
     args = parse_arguments()
 
@@ -196,7 +331,10 @@ def main():
         logger.debug("Debug mode enabled")
 
     # Create and run the MCP server
-    server = MCPServer("Demo", args.host, args.port)
+    server = MCPServer("MCP Demo Server",
+                       host=args.host,
+                       port=args.port,
+                       in_conatiner=True)
     server.run()
 
 

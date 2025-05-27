@@ -1,31 +1,11 @@
 {
     "name": "Demo",
-    "description": "MCP Server - Model Context Protocol Server Implementation",
+    "instructions": "MCP Server - Model Context Protocol Server Implementation",
     "version": "1.0.0",
     "tools": {
         "add": {
             "name": "add",
             "description": "Add two integers together",
-            "inputSchema": {
-                "properties": {
-                    "a": {
-                        "description": "First integer to add",
-                        "title": "A",
-                        "type": "integer"
-                    },
-                    "b": {
-                        "description": "Second integer to add",
-                        "title": "B",
-                        "type": "integer"
-                    }
-                },
-                "required": [
-                    "a",
-                    "b"
-                ],
-                "title": "_addArguments",
-                "type": "object"
-            },
             "annotations": {
                 "title": "Simple arithmetic add",
                 "readOnlyHint": true,
@@ -37,24 +17,6 @@
         "multiply": {
             "name": "multiply",
             "description": "Multiply two integers together",
-            "inputSchema": {
-                "properties": {
-                    "a": {
-                        "title": "A",
-                        "type": "integer"
-                    },
-                    "b": {
-                        "title": "B",
-                        "type": "integer"
-                    }
-                },
-                "required": [
-                    "a",
-                    "b"
-                ],
-                "title": "multiplyArguments",
-                "type": "object"
-            },
             "annotations": {
                 "title": "Simple arithmetic multiplication",
                 "readOnlyHint": true,

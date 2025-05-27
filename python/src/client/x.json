@@ -1,0 +1,37 @@
+{
+    "Demo": {
+        "prompts": [
+            {
+                "arguments": [
+                    {
+                        "description": "Topics supported: coding, math, writing",
+                        "name": "topic",
+                        "required": true
+                    },
+                    {
+                        "description":"The subject to get details on for the given topic",
+                        "name":"subject",
+                        "required":true}
+                    ],
+                    "description":"Get a subject matter expert prompt for a specific topic",
+                    "name":"sme"}
+                ],
+        "resource_templates":[
+            {
+                "description":"Generate a greeting message for a given name",
+                "name":"message",
+                "uriTemplate":"message:XX{name}"}],
+                "resources":[
+                    {"description":"Return server status and server timestamp",
+                    "name":"alive",
+                    "uri":"alive:XX"}
+                ],
+        "server_detail":{"instructions":"MCP Server - Model Context Protocol Server Implementation","n
+ame":"Demo","server_url":"http: //localhost:6277","version":"1.9.1"},"tools":[{"annotations":{"destructiveHint":false,"idempotentHint":true,"openWorldHint":false,"
+readOnlyHint":true,"title":"Simple arithmetic add"},"description":"Add two integers together","inputSchema":{"properties":{"a":{"description":"First integer to ad
+d","title":"A","type":"integer"},"b":{"description":"Second integer to add","title":"B","type":"integer"}},"required":["a","b"],"title":"_addArguments","type":"ob
+ject"},"name":"add"},{"annotations":{"destructiveHint":false,"idempotentHint":true,"openWorldHint":false,"readOnlyHint":true,"title":"Simple arithmetic multiplica
+tion"},"description":"Multiply two integers together","inputSchema":{"properties":{"a":{"description":"First integer to multiply","title":"A","type":"integer"},"b
+":{"description":"Second integer to multiply","title":"B","type":"integer"}},"required":["a","b"],"title":"multiplyArguments","type":"object"},"name":"multiply"}]
+                    }
+                }

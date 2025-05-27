@@ -1,17 +1,73 @@
-{
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-
         {
-            "name": "Python Debugger: Current File",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}"
+            // Use IntelliSense to learn about possible attributes.
+            // Hover to view descriptions of existing attributes.
+            // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+            "version": "0.2.0",
+            "configurations": [
+                {
+                    "name": "Python Debugger: MCP Server",
+                    "type": "debugpy",
+                    "request": "launch",
+                    "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
+                    "console": "integratedTerminal",
+                    "cwd": "${workspaceFolder}",
+                    "args": [
+                        "--config-dir=./config",
+                        "--debug"
+                    ],
+                    "env": {
+                        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+                    }
+                },
+                {
+                    "name": "Python Debugger: MCP Tests",
+                    "type": "debugpy",
+                    "request": "launch",
+                    "program": "${workspaceFolder}/python/tests/test_mcp_server.py",
+                    "console": "integratedTerminal",
+                    "cwd": "${workspaceFolder}",
+                    "env": {
+                        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH",
+                        "MCP_LOCAL_SERVER_MODE": "False"
+                    },
+                },
+                {
+                    "name": "Python Debugger: MCP Client",
+                    "type": "debugpy",
+                    "request": "launch",
+                    "module": "python.src.client.mcp_client_runner",
+                    "console": "integratedTerminal",
+                    "cwd": "${workspaceFolder}",
+                    "args": [
+                        "--host-list=${workspaceFolder}/python/src/client/mcp_host_list.json",
+                        "--ollama-host-url=http://ollama-gpu:11434",
+                        "--ollama-model=qwen2.5:72b"
+                    ],
+                    "env": {
+                        "PYTHONPATH": "${workspaceFolder}"
+                    }
+                },
+                {
+                    "name": "Python Debugger: MCP Promethius",
+                    "type": "debugpy",
+                    "request": "launch",
+                    "program": "${workspaceFolder}/python/src/client/logtest.py",
+                    "console": "integratedTerminal",
+                    "cwd": "${workspaceFolder}",
+                    "env": {
+                        "PYTHONPATH": "${workspaceFolder}"
+                    }
+                },
+                {
+                    "name": "Python Debugger: MCP WEB",
+                    "type": "debugpy",
+                    "request": "launch",
+                    "program": "${workspaceFolder}/python/src/client/mcp_client_web_server.py",
+                    "console": "integratedTerminal",
+                    "cwd": "${workspaceFolder}",
+                    "env": {
+                        "PYTHONPATH": "${workspaceFolder}"
+                    }
+                }
+            ]
         }
-    ]
-}

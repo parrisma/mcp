@@ -1,9 +1,3 @@
-# pylint: disable=C0114
-# pylint: disable=C0115
-# pylint: disable=C0116
-# pylint: disable=C0103
-# pylint: disable=C0301
-
 from typing import Tuple, Protocol, Awaitable, List, Dict, Any, Callable
 import unittest
 import asyncio
@@ -37,10 +31,11 @@ class TestMCPServer(unittest.IsolatedAsyncioTestCase):
     _port: int = -1
     _internal_port: int = 6277
     _error_str: str = "Error"
-    
-    ## == SET TO TRUE IF RUNNING MCP_SERVER LOCALLY IN A DEBUG SESSION ==
-    ## == we then assume mcp-server is on localhost and port 6277      ==
-    _local_server: bool = False
+
+    # == SET TO TRUE IF RUNNING MCP_SERVER LOCALLY IN A DEBUG SESSION ==
+    # == we then assume mcp-server is on localhost and port 6277      ==
+    _local_server: bool = os.environ.get(
+        "MCP_LOCAL_SERVER_MODE", "True").lower() == "true"
 
     @classmethod
     async def get_and_incr_test_number(cls) -> int:

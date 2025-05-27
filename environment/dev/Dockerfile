@@ -82,24 +82,27 @@ RUN bash -c "source $NVM_DIR/nvm.sh && node -v && npm -v"
 RUN bash -c "source $NVM_DIR/nvm.sh && npm install --global yarn"
 RUN bash -c "source $NVM_DIR/nvm.sh && yarn --version"
 
-# Export conda environment to YAML file
-RUN conda env export -n mcp > /home/mcp-dev/mcp_environment.yml && \
-    echo "Conda environment exported to /opt/mcp_environment.yml"
-
 # Configure conda for mcp-dev user and set up auto-activation of mcp environment
 RUN conda init bash
 
 # Create conda environment with Python 3.12
-RUN conda create -y -n mcp python=3.12 && \
-    conda clean -a -y
+RUN conda create -y -n mcp python=3.12
+RUN conda clean -a -y
 
 # Install MCP Python SDK in the conda environment using pip (with CLI extras)
 RUN conda run -n mcp pip install mcp-server
 RUN conda run -n mcp pip install "mcp[cli]"
 RUN conda run -n mcp pip install docker
 RUN conda run -n mcp conda install -c conda-forge langchain
-
+RUN conda run -n mcp conda install -c conda-forge ollama
+RUN conda run -n mcp conda install -c conda-forge ollama-python
+RUN conda run -n mcp conda install anaconda::flask
+RUN conda clean -a -y
 RUN echo 'conda activate mcp' >> ~/.bashrc
+
+# Export conda environment to YAML file
+RUN conda env export -n mcp > /home/mcp-dev/mcp_environment.yml && \
+    echo "Conda environment exported to /opt/mcp_environment.yml"
 
 # Set the working directory to the mcp-dev home directory
 WORKDIR /home/mcp-dev

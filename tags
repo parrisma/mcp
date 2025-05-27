@@ -1,0 +1,1 @@
+{"models":[{"name":"qwen2.5:72b","model":"qwen2.5:72b","modified_at":"2025-05-25T07:16:41.789430227Z","size":47415724625,"digest":"424bad2cc13f72f5bcd8085de63f48e7ef2ae5bf50a30be4b3ade7d3258f5796","details":{"parent_model":"","format":"gguf","family":"qwen2","families":["qwen2"],"parameter_size":"72.7B","quantization_level":"Q4_K_M"}}]}

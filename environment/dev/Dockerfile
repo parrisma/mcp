@@ -104,11 +104,18 @@ RUN echo 'conda activate mcp' >> ~/.bashrc
 RUN conda env export -n mcp > /home/mcp-dev/mcp_environment.yml && \
     echo "Conda environment exported to /opt/mcp_environment.yml"
 
+# --- React App Setup: Install Dependencies Only ---
+WORKDIR /home/mcp-dev/react/mcp-app
+COPY --chown=mcp-dev:mcp-dev react/mcp-app/package.json ./package.json
+COPY --chown=mcp-dev:mcp-dev react/mcp-app/package-lock.json ./package-lock.json
+RUN bash -c "source $NVM_DIR/nvm.sh && npm ci"
+# --- End React App Setup ---
+
 # Set the working directory to the mcp-dev home directory
 WORKDIR /home/mcp-dev
 
 # Copy the entrypoint script
-COPY docker-entrypoint.sh /usr/local/bin/
+COPY environment/dev/docker-entrypoint.sh /usr/local/bin/
 USER root
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 USER mcp-dev

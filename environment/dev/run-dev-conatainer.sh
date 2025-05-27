@@ -5,6 +5,7 @@ force_rebuild=false
 image_name="mcp-dev"
 container_name="mcp-dev"
 network_name="mcp-net"
+react_port="5173"
 
 # Display help message
 show_help() {
@@ -102,7 +103,7 @@ if $force_rebuild || ! docker images -q "${image_name}:latest" > /dev/null; then
     --build-arg DOCKER_GID=${HOST_DOCKER_GID} \
     --build-arg MCP_DEV_GID=${HOST_MCP_DEV_GID} \
     --build-arg MCP_DEV_UID=${HOST_MCP_DEV_UID} \
-    -t "${image_name}:latest" .
+    -t "${image_name}:latest" -f Dockerfile ../..
     if [ $? -ne 0 ]; then
         echo "Failed to build ${image_name}:latest image."
         exit 1
@@ -140,6 +141,7 @@ fi
 docker run --rm --name "$container_name" -d \
 -v "$(pwd)/../..":/mcp \
 -v /var/run/docker.sock:/var/run/docker.sock \
+-p "${react_port}:${react_port}" \
 --network="$network_name" \
 --user ${HOST_MCP_DEV_UID}:${HOST_DOCKER_GID} \
 "${image_name}:latest" tail -f /dev/null

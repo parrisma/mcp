@@ -37,7 +37,18 @@ const mainGridProps = {
 };
 
 function App() {
-  const [statusMessage, _setStatusMessage] = useState("Ready.");
+  // Lifted state for API URL construction
+  const [clientHostValue, setClientHostValue] = useState("localhost");
+  const [clientPortValue, setClientPortValue] = useState("9312");
+
+  // State for API response from Prompt
+  const [apiStatus, setApiStatus] = useState({
+    data: null,
+    loading: false,
+    error: null,
+    startTime: null, // Add startTime to the apiStatus state
+  });
+
   const [activeView, setActiveView] = useState("Question");
   const darkTheme = createTheme({
     palette: {
@@ -51,6 +62,8 @@ function App() {
   const handleViewChange = (view) => {
     setActiveView(view);
   };
+
+  const baseApiUrl = `http://${clientHostValue}:${clientPortValue}`;
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -71,14 +84,39 @@ function App() {
                 flexGrow: 1,
               }}
             >
-              {activeView === "Question" && <Prompt />}
-              {activeView === "Settings" && <SettingsAndStatus />}
+              {activeView === "Question" && (
+                <Prompt
+                  baseApiUrl={baseApiUrl}
+                  onApiResponse={(statusUpdate) => {
+                    if (statusUpdate.loading && !apiStatus.loading) {
+                      // If transitioning to loading, set startTime
+                      setApiStatus({ ...statusUpdate, startTime: Date.now() });
+                    } else if (!statusUpdate.loading && apiStatus.loading) {
+                      // If transitioning out of loading, clear startTime
+                      setApiStatus({ ...statusUpdate, startTime: null });
+                    } else {
+                      // Otherwise, just update
+                      setApiStatus(prevStatus => ({...prevStatus, ...statusUpdate}));
+                    }
+                  }}
+                />
+              )}
+              {activeView === "Settings" && (
+                <SettingsAndStatus
+                  clientHostValue={clientHostValue}
+                  setClientHostValue={setClientHostValue}
+                  clientPortValue={clientPortValue}
+                  setClientPortValue={setClientPortValue}
+                />
+              )}
             </Paper>
           </Grid>
+          {/* Status component is always visible now, or conditionally based on activeView if preferred */}
+          {/* For now, let's make it always visible below the main content area if not in settings */}
           {activeView !== "Settings" && (
             <Grid item>
               <Paper sx={homePaper}>
-                <Status message={statusMessage} />
+                <Status apiStatus={apiStatus} />
               </Paper>
             </Grid>
           )}

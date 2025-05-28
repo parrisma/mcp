@@ -2,18 +2,25 @@ import asyncio
 import argparse
 import json
 import logging
-from operator import le
+import datetime
 import os
+
+from operator import le
 from pathlib import Path
+from turtle import mode
 from typing import List, Dict, Any, Tuple
-import mcp
 from yarl import URL
 
 from .mcp_client import MCPClient
 from ..server.network_utils import NetworkUtils
-from .ollama_utils import ollama_running_and_model_loaded
+from .ollama_utils import ollama_running_and_model_loaded, ollama_host, ollama_model, get_initial_response
 from .mcp_client_web_server import MCPClientWebServer
-import datetime
+
+
+# Custom Exception for LLM call failures
+class FailedLLMCall(Exception):
+    """Custom exception for when a call to the LLM fails."""
+    pass
 
 
 class MCPClientRunner:
@@ -303,6 +310,53 @@ class MCPClientRunner:
                    params: Dict) -> Dict:
         return self._get_config()
 
+    async def _get_model_response(self,
+                                  params: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            capabilities: Dict[str, Any] = await self._get_capabilities()
+            if "error" in capabilities:  # Propagate error from _get_capabilities
+                return capabilities
+
+            goal: str = params['args'].get("goal", "")
+            if not goal:
+                msg = "User prompt (goal) is required but was empty."
+                self._log.error(msg)
+                # No need to raise ValueError here, just return an error dict
+                return {"error": msg, "type": "ValueError"}
+
+            llm_call_successful, llm_content = get_initial_response(
+                user_goal=goal,
+                mcp_server_descriptions=json.dumps(capabilities),
+                model=self._ollama_model_name,
+                host=str(self._ollama_host_url),
+                temperature=0.7
+            )
+
+            if not llm_call_successful:
+                error_message = str(
+                    llm_content) if llm_content else "Unknown LLM error during get_initial_response"
+                raise FailedLLMCall(error_message)
+
+            # Assuming llm_content is the actual response data from the model on success
+            return {"response": llm_content, "status": "success"}
+
+        except FailedLLMCall as flc:
+            msg = f"LLM call failed: {flc}"
+            self._log.error(msg)
+            return {"error": msg, "type": "FailedLLMCall"}
+        except ValueError as ve:  # This will now catch ValueErrors raised explicitly if any
+            msg = f"Input error for model response: {ve}"
+            self._log.error(msg)
+            return {"error": msg, "type": "ValueError"}
+        except Exception as e:
+            msg = f"An unexpected error occurred while getting model response: {e}"
+            self._log.exception(msg)
+            return {"error": "An internal server error occurred.", "type": "Exception"}
+
+    def get_model_response(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Synchronous wrapper for the async get_model_response method."""
+        return asyncio.run(self._get_model_response(params))
+
     async def _get_capabilities(self) -> Dict[str, Any]:
         """
         Retrieves the capabilities of the MCP server.
@@ -327,6 +381,7 @@ class MCPClientRunner:
         self._web_server.add_route('/config', self.get_config)
         self._web_server.add_route('/capability', self.get_capabilities)
         self._web_server.add_route('/ping', self.ping_callback)
+        self._web_server.add_route('/model_response', self.get_model_response)
         self._web_server.run()
 
     async def run(self) -> None:

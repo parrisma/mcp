@@ -1,14 +1,8 @@
 {
-  "args": {},
-  "message": "ok",
-  "path": "/ping",
-  "ping": {
-    "day": 28,
-    "hour": 8,
-    "minute": 43,
-    "month": 5,
-    "second": 24,
-    "timezone": "UTC",
-    "year": 2025
-  }
+  "call_number": 1,
+  "method": "GET",
+  "url": "http://localhost:6277/message//{name}",
+  "params": { "name": "Mark" },
+  "resource_template": "message",
+  "description": "Generate a greeting message for Mark."
 }

@@ -3,13 +3,16 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import MCPServerCard from "./MCPServerCard"; // Import the new component
+import PropTypes from "prop-types"; // For prop validation
 
-function SettingsAndStatus() {
-  const clientHost = "localhost";
-  const llmModel = "9312";
-
-  const [clientHostValue, setClientHostValue] = React.useState(clientHost);
-  const [clientPortValue, setClientPortValue] = React.useState(llmModel);
+function SettingsAndStatus({
+  clientHostValue,
+  setClientHostValue,
+  clientPortValue,
+  setClientPortValue,
+}) {
+  // clientHost and llmModel constants are removed as initial values are set in App.jsx
+  // Local state for clientHostValue and clientPortValue is removed, using props instead.
 
   const [pingResult, setPingResult] = React.useState(null);
   const [pingLoading, setPingLoading] = React.useState(false);
@@ -106,9 +109,11 @@ function SettingsAndStatus() {
       // We need to transform it into an array of objects for MCPServerCard
       // Each item in the array will be an object with a single key (server name)
       // and its value will be the server's capability data.
-      const serversArray = Object.entries(data).map(([serverName, serverData]) => ({
-        [serverName]: serverData,
-      }));
+      const serversArray = Object.entries(data).map(
+        ([serverName, serverData]) => ({
+          [serverName]: serverData,
+        })
+      );
       setMcpServersList(serversArray);
     } catch (err) {
       setMcpServersError(err.message);
@@ -318,9 +323,16 @@ function SettingsAndStatus() {
 
       {/* Fourth Row: MCP Servers Display Area */}
       <Box sx={{ mt: 2, border: "1px dashed grey", borderRadius: "4px", p: 1 }}>
-        <Box sx={{ display: "flex", justifyContent: "flex-start", alignItems: "center", mb: 1 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "center",
+            mb: 1,
+          }}
+        >
           {/* Button and error message container, aligned to the left */}
-          <Box sx={{display: "flex", alignItems: "center", gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <button
               onClick={handleGetMcpServers}
               disabled={mcpServersLoading}
@@ -336,7 +348,11 @@ function SettingsAndStatus() {
               {mcpServersLoading ? "Fetching Servers..." : "Get MCP Servers"}
             </button>
             {mcpServersError && (
-              <Typography variant="caption" color="error" sx={{ fontSize: '0.75rem' }}>
+              <Typography
+                variant="caption"
+                color="error"
+                sx={{ fontSize: "0.75rem" }}
+              >
                 Error: {mcpServersError}
               </Typography>
             )}
@@ -352,21 +368,33 @@ function SettingsAndStatus() {
             p: 1, // Padding for the content area
           }}
         >
-          {mcpServersList.length > 0 ? (
-            mcpServersList.map((serverData, index) => (
-              <MCPServerCard key={index} jsonData={serverData} />
-            ))
-          ) : (
-            !mcpServersLoading && !mcpServersError && (
-              <Typography sx={{gridColumn: '1 / -1', textAlign: 'center', color: 'text.secondary'}}>
-                Press "Get MCP Servers" to load server capabilities.
-              </Typography>
-            )
-          )}
+          {mcpServersList.length > 0
+            ? mcpServersList.map((serverData, index) => (
+                <MCPServerCard key={index} jsonData={serverData} />
+              ))
+            : !mcpServersLoading &&
+              !mcpServersError && (
+                <Typography
+                  sx={{
+                    gridColumn: "1 / -1",
+                    textAlign: "center",
+                    color: "text.secondary",
+                  }}
+                >
+                  Press "Get MCP Servers" to load server capabilities.
+                </Typography>
+              )}
         </Box>
       </Box>
     </Box>
   );
 }
+
+SettingsAndStatus.propTypes = {
+  clientHostValue: PropTypes.string.isRequired,
+  setClientHostValue: PropTypes.func.isRequired,
+  clientPortValue: PropTypes.string.isRequired,
+  setClientPortValue: PropTypes.func.isRequired,
+};
 
 export default SettingsAndStatus;

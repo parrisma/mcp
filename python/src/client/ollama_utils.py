@@ -1,12 +1,14 @@
 import os
+import mcp
 import requests
 import json
 import logging
-from typing import Tuple, List, Dict
+from typing import Tuple, Dict
 from enum import Enum
 from ollama import EmbeddingsResponse, embeddings
 from datetime import datetime
 from yarl import URL
+from .prompts import get_initial_prompt
 
 _logger: logging.Logger = logging.getLogger(__name__)
 if not logging.getLogger().hasHandlers():
@@ -25,22 +27,6 @@ class OllamaModel(Enum):
 
 ollama_model = OllamaModel.QWEN2_5_72B.value
 ollama_host = "http://localhost:11434"
-
-# Create embedding and load files into Chroma
-#
-
-
-def generate_ollama_embedding(text: str,
-                              model: str,
-                              host: str) -> List[float]:
-    try:
-        if os.environ.get("OLLAMA_HOST") != host:
-            os.environ["OLLAMA_HOST"] = host
-        response: EmbeddingsResponse = embeddings(model=model, prompt=text)
-        return response['embedding']
-    except Exception as e:
-        _logger.debug(f"Ollama - Error generating embedding: {e}")
-        return []
 
 
 def ollama_running_and_model_loaded(host_url: URL,
@@ -64,22 +50,21 @@ def ollama_running_and_model_loaded(host_url: URL,
 
 def clean_json_str(jason_str: str) -> str:
     jason_str = jason_str.replace('\n', '')
-    jason_str = jason_str.replace('\`', '')
+    jason_str = jason_str.replace('`', '')
     jason_str = jason_str.replace('\'', '')
 
     first_bracket_index = jason_str.find('[')
     last_bracket_index = jason_str.rfind(']')
 
-    if first_bracket_index == -1 or last_bracket_index == -1:
-        return None  # No brackets found
+    if first_bracket_index == -1 and last_bracket_index == -1:
+        return jason_str
 
-    if first_bracket_index == last_bracket_index:
-        return None  # only one bracket found
+    if first_bracket_index != -1 and last_bracket_index != -1:
+        return jason_str[first_bracket_index+1:last_bracket_index]
 
-    if first_bracket_index > last_bracket_index:
-        return None  # first bracket after last bracket
-
-    return jason_str[first_bracket_index+1:last_bracket_index]
+    jason_str = jason_str.replace('[', '')
+    jason_str = jason_str.replace(']', '')
+    return jason_str
 
 
 def get_ollama_response(prompt: str,
@@ -121,3 +106,23 @@ def get_ollama_response(prompt: str,
         return (False, "Error: Unexpected response format from Ollama.")
     except Exception as e:
         return (False, f"An unexpected error occurred: {e}")
+
+
+def get_initial_response(user_goal: str,
+                         mcp_server_descriptions: str,
+                         model: str,
+                         host: str,
+                         temperature) -> Tuple[bool, Dict]:
+    try:
+        prompt: str = get_initial_prompt(
+            mcp_server_descriptions=mcp_server_descriptions,
+            goal=user_goal
+        )
+
+        res, reply = get_ollama_response(
+            prompt, model=model, host=host, temperature=temperature)
+        return res, reply
+    except Exception as e:
+        msg: str = f"Error in get_initial_response: {e}"
+        _logger.error(msg)
+        return False, {"error": msg}

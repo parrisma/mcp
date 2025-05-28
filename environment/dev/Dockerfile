@@ -97,6 +97,8 @@ RUN conda run -n mcp conda install -c conda-forge langchain
 RUN conda run -n mcp conda install -c conda-forge ollama
 RUN conda run -n mcp conda install -c conda-forge ollama-python
 RUN conda run -n mcp conda install anaconda::flask
+RUN conda run -n mcp conda install -c conda-forge flask-cors
+
 RUN conda clean -a -y
 RUN echo 'conda activate mcp' >> ~/.bashrc
 

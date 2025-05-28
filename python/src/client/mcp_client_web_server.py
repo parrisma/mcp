@@ -3,6 +3,7 @@ from typing import Dict, Protocol, Any, Literal
 from functools import partial, update_wrapper
 from unittest import result
 from flask import Flask, Response, jsonify, request
+from flask_cors import CORS
 from urllib.parse import parse_qs
 import json
 from enum import Enum
@@ -27,10 +28,11 @@ class MCPClientWebServer:
                  host: str,
                  port: int) -> None:
         self._app = Flask(__name__)
+        # Enable CORS for the specific origin of the React app
+        CORS(self._app, resources={r"/*": {"origins": "http://localhost:5173"}})
         self._host: str = host
         self._port: int = port
         self._routes: Dict[str, MCPClientWebServer.WebCallback] = {}
-
         self._app.route('/')(self._home)
 
     def _home(self) -> Response:

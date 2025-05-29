@@ -13,7 +13,7 @@ import Box from "@mui/material/Box"; // For layout
  * @param {number|null} props.apiStatus.startTime - Timestamp when loading started.
  * @returns {JSX.Element}
  */
-function Status({ apiStatus, baseApiUrl, onApiResponse, lastResponseData }) {
+function Status({ apiStatus, baseApiUrl, onApiResponse, lastResponseData, currentGoalPromptText }) {
   const { data, loading, error, startTime } = apiStatus || {};
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isNextStepsLoading, setIsNextStepsLoading] = useState(false);
@@ -39,7 +39,7 @@ function Status({ apiStatus, baseApiUrl, onApiResponse, lastResponseData }) {
   let content;
 
   if (loading) {
-    content = `thinking ${elapsedSeconds}s`;
+    content = `thinking, please be patient [${elapsedSeconds}s]`;
   } else if (error) {
     content = `Error: ${error}`;
   } else if (data && data.response) { // Check for the nested 'response' object
@@ -102,8 +102,10 @@ function Status({ apiStatus, baseApiUrl, onApiResponse, lastResponseData }) {
     try {
       // Construct query parameters
       const params = new URLSearchParams();
-      params.append("goal", nextStepsText);
+      params.append("goal", currentGoalPromptText); // Use the original prompt text as the goal
+
       if (lastResponseData) {
+        // Send the full lastResponseData object as the 'questions' parameter
         params.append("questions", JSON.stringify(lastResponseData));
       }
       
@@ -189,6 +191,7 @@ Status.propTypes = {
   baseApiUrl: PropTypes.string,
   onApiResponse: PropTypes.func.isRequired,
   lastResponseData: PropTypes.any,
+  currentGoalPromptText: PropTypes.string, // Add prop type
 };
 
 Status.defaultProps = {
@@ -200,6 +203,7 @@ Status.defaultProps = {
   },
   baseApiUrl: "",
   lastResponseData: null,
+  currentGoalPromptText: "", // Add default prop
 };
 
 export default Status;

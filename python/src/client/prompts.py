@@ -28,7 +28,11 @@ mcp_server_definition = """
 """
 
 llm_prompt_template = """
-Examine and respond this goal {goal}, you can do **ONE* of
+Examine and respond to the goal, between >> and <<
+>>
+{goal}
+<<
+you can do **ONE* of
 1. use MCP Servers defined as [{mcp_server_definition}], where these MCP Server(s) are available [{mcp_server_descriptions}]
 2. ask questions to clarify the goal.
 3. provide a final response when you have enough information, where a valid response is to decline where the scope of goal is outside the MCP Server(s) capabilities.
@@ -62,7 +66,6 @@ Your response must be valid, strictly formatted JSON that adheres to the followi
 {{
   "mcp_server_calls": [
     {{
-       "id": "unique GUID identifier for the call",
        "mcp_server_name": "server name supplies in server descriptions",
        "mcp_capability": "tools|resources|resource_templates|prompts",
        "mcp_capability_name": "name of the capability",
@@ -73,7 +76,6 @@ Your response must be valid, strictly formatted JSON that adheres to the followi
   ],
   "clarifications": [
     {{
-      "id": "unique GUID identifier for the question",
       "question": "point of clarification needed to respond to the goal"
     }}
   ],
@@ -96,9 +98,11 @@ initial_prompt = PromptTemplate(
 
 
 def get_llm_prompt(mcp_server_descriptions: str,
+                   mcp_responses: str,
+                   clarifications: str,
                    goal: str) -> str:
     return initial_prompt.format(mcp_server_definition=mcp_server_definition,
                                  mcp_server_descriptions=mcp_server_descriptions,
-                                 mcp_server_responses="",
-                                 clarification_responses="",
+                                 mcp_server_responses=mcp_responses,
+                                 clarification_responses=clarifications,
                                  goal=goal)

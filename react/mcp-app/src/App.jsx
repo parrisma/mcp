@@ -46,8 +46,9 @@ function App() {
     data: null,
     loading: false,
     error: null,
-    startTime: null, // Add startTime to the apiStatus state
+    startTime: null,
   });
+  const [currentGoalPromptText, setCurrentGoalPromptText] = useState(""); // Store the original goal
 
   const [activeView, setActiveView] = useState("Question");
   const darkTheme = createTheme({
@@ -79,8 +80,38 @@ function App() {
       error: null,
       startTime: null,
     });
-    // The Prompt component will clear its own text input locally.
+    setCurrentGoalPromptText(""); // Clear the stored goal on reset
   };
+
+  // This is the callback for the main Prompt component
+  const handlePromptSubmitResponse = (statusUpdate, submittedGoal) => {
+    if (submittedGoal && statusUpdate.loading && !apiStatus.loading) {
+      // This is a new submission from Prompt.jsx
+      setCurrentGoalPromptText(submittedGoal);
+      setApiStatus({ ...statusUpdate, data: null, error: null, startTime: Date.now() });
+    } else if (statusUpdate.loading && !apiStatus.loading) {
+      // This might be from "Do Next Steps" or a re-submission without changing goal
+      // Ensure data isn't prematurely cleared if it's a next step
+      setApiStatus(prevStatus => ({ ...prevStatus, ...statusUpdate, startTime: Date.now() }));
+    } else if (!statusUpdate.loading && apiStatus.loading) {
+      setApiStatus({ ...statusUpdate, startTime: null });
+    } else {
+      setApiStatus(prevStatus => ({ ...prevStatus, ...statusUpdate }));
+    }
+  };
+  
+  // This callback can be simplified for Status component's "Do Next Steps"
+  // as it won't set the currentGoalPromptText
+  const handleNextStepsApiResponse = (statusUpdate) => {
+     if (statusUpdate.loading && !apiStatus.loading) {
+        setApiStatus(prevStatus => ({ ...prevStatus, ...statusUpdate, data: prevStatus.data, startTime: Date.now() }));
+     } else if (!statusUpdate.loading && apiStatus.loading) {
+        setApiStatus({ ...statusUpdate, startTime: null });
+     } else {
+        setApiStatus(prevStatus => ({...prevStatus, ...statusUpdate}));
+     }
+  };
+
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -104,17 +135,9 @@ function App() {
               {activeView === "Question" && (
                 <Prompt
                   baseApiUrl={baseApiUrl}
-                  onApiResponse={(statusUpdate) => {
-                    if (statusUpdate.loading && !apiStatus.loading) {
-                      setApiStatus({ ...statusUpdate, data: apiStatus.data, startTime: Date.now() }); // Preserve existing data on new load
-                    } else if (!statusUpdate.loading && apiStatus.loading) {
-                      setApiStatus({ ...statusUpdate, startTime: null });
-                    } else {
-                      setApiStatus(prevStatus => ({...prevStatus, ...statusUpdate}));
-                    }
-                  }}
+                  onApiResponse={handlePromptSubmitResponse} // Use the new handler
                   isNextStepsMode={isNextStepsAvailable}
-                  onResetAll={handleResetAll} // Pass the reset handler
+                  onResetAll={handleResetAll}
                 />
               )}
               {activeView === "Settings" && (
@@ -134,17 +157,10 @@ function App() {
               <Paper sx={homePaper}>
                 <Status
                   apiStatus={apiStatus}
-                  baseApiUrl={baseApiUrl} // Pass baseApiUrl to Status
-                  onApiResponse={(statusUpdate) => { // Pass onApiResponse to Status
-                    if (statusUpdate.loading && !apiStatus.loading) {
-                      setApiStatus({ ...statusUpdate, data: apiStatus.data, startTime: Date.now() });
-                    } else if (!statusUpdate.loading && apiStatus.loading) {
-                      setApiStatus({ ...statusUpdate, startTime: null });
-                    } else {
-                      setApiStatus(prevStatus => ({...prevStatus, ...statusUpdate}));
-                    }
-                  }}
-                  lastResponseData={apiStatus.data} // Pass the full last response
+                  baseApiUrl={baseApiUrl}
+                  onApiResponse={handleNextStepsApiResponse} // Use the specific handler for "Do Next Steps"
+                  lastResponseData={apiStatus.data}
+                  currentGoalPromptText={currentGoalPromptText} // Pass the original goal
                 />
               </Paper>
             </Grid>

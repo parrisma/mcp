@@ -67,7 +67,7 @@
       "name": "Python Debugger: MCP Invoke Tests",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/python/src/client/mcp_invoke.py",
+      "module": "python.src.client.mcp_invoke",
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}",
       "env": {

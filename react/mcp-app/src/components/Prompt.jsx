@@ -31,7 +31,8 @@ function Prompt({ baseApiUrl, onApiResponse, isNextStepsMode, onResetAll }) {
     }
 
     setIsLoading(true);
-    onApiResponse({ data: null, loading: true, error: null });
+    // Pass the promptText as the second argument to onApiResponse (handlePromptSubmitResponse in App.jsx)
+    onApiResponse({ data: null, loading: true, error: null }, promptText);
 
     try {
       const fullUrl = `${baseApiUrl}/model_response?goal=${encodeURIComponent(
@@ -97,11 +98,11 @@ function Prompt({ baseApiUrl, onApiResponse, isNextStepsMode, onResetAll }) {
         </button>
         <button
           onClick={handleReset}
-          style={{ // Identical style to Submit button
+          style={{
             padding: "4px 12px",
             borderRadius: 4,
-            border: "1px solid #1976d2", // Or a different color for reset, e.g., a gray
-            background: "#6c757d", // Example: Secondary/gray color for Reset
+            border: "1px solid #1976d2",
+            background: "#1976d2", // Same blue as Submit
             color: "#fff",
             cursor: "pointer",
           }}

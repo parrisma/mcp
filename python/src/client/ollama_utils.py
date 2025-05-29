@@ -1,13 +1,11 @@
 import os
-from tkinter import E
-from urllib import response
+import mcp
 import requests
 import json
 import logging
 import re
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Any
 from enum import Enum
-from ollama import EmbeddingsResponse, embeddings
 from datetime import datetime
 from yarl import URL
 from .prompts import get_llm_prompt
@@ -115,16 +113,35 @@ def get_ollama_response(prompt: str,
         return (False, {"error": f"An unexpected error occurred: {e}"})
 
 
+def _log_prompt(prompt: str) -> None:
+    try:
+        with open("prompt_log.txt", "a", encoding="utf-8") as f:
+            f.write("=" * 80 + "\n\n")
+            f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')}\n\n")
+            f.write(prompt + "\n")
+            f.write("=" * 80 + "\n\n")
+    except Exception as e:
+        _logger.error(f"Failed to log prompt: {e}")
+
+
 def get_llm_response(user_goal: str,
                      mcp_server_descriptions: str,
+                     mcp_responses: Dict[str, Any],
+                     clarifications: Dict[str, Any],
                      model: str,
                      host: str,
                      temperature) -> Tuple[bool, Dict]:
     try:
         prompt: str = get_llm_prompt(
             mcp_server_descriptions=mcp_server_descriptions,
+            mcp_responses=json.dumps(
+                mcp_responses, ensure_ascii=False, indent=2),
+            clarifications=json.dumps(
+                clarifications, ensure_ascii=False, indent=2),
             goal=user_goal
         )
+
+        _log_prompt(prompt)
 
         res, reply = get_ollama_response(
             prompt, model=model, host=host, temperature=temperature)

@@ -7,12 +7,14 @@ import os
 
 from pathlib import Path
 from typing import List, Dict, Any, Tuple
+import mcp
 from yarl import URL
 
 from .mcp_client import MCPClient
 from ..server.network_utils import NetworkUtils
 from .ollama_utils import ollama_running_and_model_loaded, ollama_host, ollama_model, get_llm_response
 from .mcp_client_web_server import MCPClientWebServer
+from .mcp_invoke import MCPInvoke
 
 
 # Custom Exception for LLM call failures
@@ -45,6 +47,8 @@ class MCPClientRunner:
         self._mcp_host_urls: List[str] = self._get_mcp_host_urls(args)
         self._mcp_client: MCPClient = MCPClient(
             server_base_urls=self._mcp_host_urls)
+
+        self._invoker: MCPInvoke = MCPInvoke([self._mcp_client])
 
         self._web_server_host: str
         self._web_server_port: int
@@ -316,6 +320,18 @@ class MCPClientRunner:
         mcp_responses: Dict[str, Any] = {}
         clarifications: Dict[str, Any] = {}
 
+        if not questions:
+            raise ValueError("Questions parameter cannot be empty.")
+        if not isinstance(questions, dict):
+            raise ValueError("Questions parameter must be a dictionary.")
+        try:
+            mcp_res = await self._invoker.process_mcp_responses(response=questions)
+            mcp_responses = mcp_res.get("mcp_server_responses", {})
+            clarifications = mcp_res.get("clarification_responses", {})
+        except Exception as e:
+            msg: str = f"Error processing MCP responses and clarifications: {e}"
+            self._log.error(msg)
+
         return mcp_responses, clarifications
 
     async def _get_model_response(self,
@@ -335,10 +351,17 @@ class MCPClientRunner:
 
             # Check to see if there are un answer MCP Model calls or User clarification questions
             # If so, we will get answewrs to MCP calls pass them to the LLM via the prompt.
-            questions: Dict[str, str] = params['args'].get("questions", [])
+            questions: Dict[str, Any] = params['args'].get("questions", {})
+            mcp_responses: Dict[str, Any] = {}
+            clarifications: Dict[str, Any] = {}
             if questions:
-                mcp_responses: Dict[str, Any] = {}
-                clarifications: Dict[str, Any] = {}
+                if isinstance(questions, str):
+                    try:
+                        questions = json.loads(questions)
+                    except json.JSONDecodeError as e:
+                        msg = f"Failed to decode questions, expecting valid JSON: {e}"
+                        self._log.error(msg)
+                        raise ValueError(msg)
                 mcp_responses, clarifications = await self._get_mcp_responses_and_clarifications(
                     questions=questions
                 )
@@ -346,6 +369,8 @@ class MCPClientRunner:
             llm_call_successful, llm_content = get_llm_response(
                 user_goal=goal,
                 mcp_server_descriptions=json.dumps(capabilities),
+                mcp_responses=mcp_responses,
+                clarifications=clarifications,
                 model=self._ollama_model_name,
                 host=str(self._ollama_host_url),
                 temperature=0.7

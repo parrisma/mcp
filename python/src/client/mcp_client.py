@@ -267,23 +267,23 @@ class MCPClient:
                     "_get_server_url: Capabilities cache is empty, populating...")
                 await self.get_details_of_all_servers()  # This populates the cache by base_url
 
-                # Iterate through the cached capabilities (which are keyed by base_url)
-                # to find the server by its name.
-                for base_url, cached_data in self._capabilities_cache.items():
-                    if isinstance(cached_data, dict):
-                        server_detail = cached_data.get(
-                            self.MCPServerCapabilities.SERVER_DETAIL.value)
-                        if isinstance(server_detail, dict) and \
-                                server_detail.get(self.MCPServerDetail.NAME.value) == server_name:
-                            found_url = server_detail.get(
-                                self.MCPServerDetail.SERVER_URL.value)
-                            if found_url:
-                                self._log.debug(
-                                    f"_get_server_url: Found URL '{found_url}' for server name '{server_name}'.")
-                                return str(found_url)  # Ensure it's a string
-                            else:  # Should not happen if data is consistent
-                                raise MCPClient.FailedToFindMCPServerURL(
-                                    f"_get_server_url: Server name '{server_name}' found but server_url is missing in cache for {base_url}.")
+            # Iterate through the cached capabilities (which are keyed by base_url)
+            # to find the server by its name.
+            for base_url, cached_data in self._capabilities_cache.items():
+                if isinstance(cached_data, dict):
+                    server_detail = cached_data.get(
+                        self.MCPServerCapabilities.SERVER_DETAIL.value)
+                    if isinstance(server_detail, dict) and \
+                            server_detail.get(self.MCPServerDetail.NAME.value) == server_name:
+                        found_url = server_detail.get(
+                            self.MCPServerDetail.SERVER_URL.value)
+                        if found_url:
+                            self._log.debug(
+                                f"_get_server_url: Found URL '{found_url}' for server name '{server_name}'.")
+                            return str(found_url)  # Ensure it's a string
+                        else:  # Should not happen if data is consistent
+                            raise MCPClient.FailedToFindMCPServerURL(
+                                f"_get_server_url: Server name '{server_name}' found but server_url is missing in cache for {base_url}.")
                 raise ValueError(
                     f"_get_server_url: Server name '{server_name}' not found in capabilities cache.")
         except Exception as e:
@@ -359,6 +359,9 @@ class MCPClient:
                                 f"Tool '{tool_name}' returned no result from server '{server_name}'.")
                         result["results"] = self._extract_tool_result(
                             tool_result)
+            else:
+                raise MCPClient.FailedToFindMCPServerURL(
+                    f"Server URL for '{server_name}' could not be found in the cache.")
         except Exception as e:
             msg = f"execute_tool: An error occurred while executing tool '{tool_name}' on server '{server_name}': {e}"
             self._log.error(msg=msg)

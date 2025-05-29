@@ -30,9 +30,10 @@ class MCPServer:
     class MCPServerCapabilityType(str, Enum):
         TOOLS = "tools"
         RESOURCES = "resources"
+        RESOURCE_TEMPLATES = "resource_templates"
         PROMPTS = "prompts"
 
-        def __str__(self) -> Literal['tools', 'resources', 'prompts']:
+        def __str__(self) -> Literal['tools', 'resources', 'prompts', 'resource_templates']:
             return self.value
 
 

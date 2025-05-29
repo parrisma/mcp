@@ -1,14 +1,16 @@
 import os
-import mcp
+from tkinter import E
+from urllib import response
 import requests
 import json
 import logging
+import re
 from typing import Tuple, Dict
 from enum import Enum
 from ollama import EmbeddingsResponse, embeddings
 from datetime import datetime
 from yarl import URL
-from .prompts import get_initial_prompt
+from .prompts import get_llm_prompt
 
 _logger: logging.Logger = logging.getLogger(__name__)
 if not logging.getLogger().hasHandlers():
@@ -49,28 +51,33 @@ def ollama_running_and_model_loaded(host_url: URL,
 
 
 def clean_json_str(jason_str: str) -> str:
-    jason_str = jason_str.replace('\n', '')
-    jason_str = jason_str.replace('`', '')
-    jason_str = jason_str.replace('\'', '')
-
-    first_bracket_index = jason_str.find('[')
-    last_bracket_index = jason_str.rfind(']')
-
-    if first_bracket_index == -1 and last_bracket_index == -1:
-        return jason_str
-
-    if first_bracket_index != -1 and last_bracket_index != -1:
-        return jason_str[first_bracket_index+1:last_bracket_index]
-
-    jason_str = jason_str.replace('[', '')
-    jason_str = jason_str.replace(']', '')
-    return jason_str
+    jason_str = re.sub(r"[\n\t`']", "", jason_str, flags=re.MULTILINE)
+    jason_str = re.sub(r"^json", "", jason_str, flags=re.IGNORECASE)
+    response: Dict[str, str] = {}
+    try:
+        response = json.loads(jason_str)
+    except json.JSONDecodeError as je:
+        msg: str = f"JSON Decode Error: {je.msg} at line {je.lineno}, column {je.colno}"
+        _logger.error(msg=msg)
+        response = {
+            "error": "Invalid JSON format",
+            "details": msg
+        }
+    except Exception as e:
+        msg: str = f"Unexpected error while parsing JSON: {str(e)}"
+        _logger.error(msg=msg)
+        response = {
+            "error": "Unexpected error while parsing JSON",
+            "details": msg
+        }
+    return json.dumps(response, ensure_ascii=False, indent=2)
 
 
 def get_ollama_response(prompt: str,
                         model: str,
                         host: str,
-                        temperature: float) -> Tuple[bool, str]:
+                        # Changed str to Dict
+                        temperature: float) -> Tuple[bool, Dict]:
     try:
         start_time: str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         _logger.debug(f"Model request starts: {start_time}")
@@ -99,28 +106,29 @@ def get_ollama_response(prompt: str,
         return (True, json.loads(json_str))
 
     except requests.exceptions.RequestException as e:
-        return (False, f"Error: Failed to connect to Ollama: {e}")
+        return (False, {"error": f"Failed to connect to Ollama: {e}"})
     except json.JSONDecodeError:
-        return (False, "Error: Invalid JSON response from Ollama.")
+        return (False, {"error": "Invalid JSON response from Ollama."})
     except KeyError:
-        return (False, "Error: Unexpected response format from Ollama.")
+        return (False, {"error": "Unexpected response format from Ollama."})
     except Exception as e:
-        return (False, f"An unexpected error occurred: {e}")
+        return (False, {"error": f"An unexpected error occurred: {e}"})
 
 
-def get_initial_response(user_goal: str,
-                         mcp_server_descriptions: str,
-                         model: str,
-                         host: str,
-                         temperature) -> Tuple[bool, Dict]:
+def get_llm_response(user_goal: str,
+                     mcp_server_descriptions: str,
+                     model: str,
+                     host: str,
+                     temperature) -> Tuple[bool, Dict]:
     try:
-        prompt: str = get_initial_prompt(
+        prompt: str = get_llm_prompt(
             mcp_server_descriptions=mcp_server_descriptions,
             goal=user_goal
         )
 
         res, reply = get_ollama_response(
             prompt, model=model, host=host, temperature=temperature)
+        # No change needed here now, as reply will always be a Dict
         return res, reply
     except Exception as e:
         msg: str = f"Error in get_initial_response: {e}"

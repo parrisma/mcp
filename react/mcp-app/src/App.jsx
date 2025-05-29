@@ -65,6 +65,23 @@ function App() {
 
   const baseApiUrl = `http://${clientHostValue}:${clientPortValue}`;
 
+  // Determine if "Next Steps" are available and not "None"
+  const nextStepsFromApi = apiStatus.data?.response?.thinking?.next_steps;
+  const isNextStepsAvailable =
+    nextStepsFromApi &&
+    nextStepsFromApi.trim() !== "" &&
+    nextStepsFromApi.toLowerCase().trim() !== "none";
+
+  const handleResetAll = () => {
+    setApiStatus({
+      data: null,
+      loading: false,
+      error: null,
+      startTime: null,
+    });
+    // The Prompt component will clear its own text input locally.
+  };
+
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
@@ -89,16 +106,15 @@ function App() {
                   baseApiUrl={baseApiUrl}
                   onApiResponse={(statusUpdate) => {
                     if (statusUpdate.loading && !apiStatus.loading) {
-                      // If transitioning to loading, set startTime
-                      setApiStatus({ ...statusUpdate, startTime: Date.now() });
+                      setApiStatus({ ...statusUpdate, data: apiStatus.data, startTime: Date.now() }); // Preserve existing data on new load
                     } else if (!statusUpdate.loading && apiStatus.loading) {
-                      // If transitioning out of loading, clear startTime
                       setApiStatus({ ...statusUpdate, startTime: null });
                     } else {
-                      // Otherwise, just update
                       setApiStatus(prevStatus => ({...prevStatus, ...statusUpdate}));
                     }
                   }}
+                  isNextStepsMode={isNextStepsAvailable}
+                  onResetAll={handleResetAll} // Pass the reset handler
                 />
               )}
               {activeView === "Settings" && (
@@ -116,7 +132,20 @@ function App() {
           {activeView !== "Settings" && (
             <Grid item>
               <Paper sx={homePaper}>
-                <Status apiStatus={apiStatus} />
+                <Status
+                  apiStatus={apiStatus}
+                  baseApiUrl={baseApiUrl} // Pass baseApiUrl to Status
+                  onApiResponse={(statusUpdate) => { // Pass onApiResponse to Status
+                    if (statusUpdate.loading && !apiStatus.loading) {
+                      setApiStatus({ ...statusUpdate, data: apiStatus.data, startTime: Date.now() });
+                    } else if (!statusUpdate.loading && apiStatus.loading) {
+                      setApiStatus({ ...statusUpdate, startTime: null });
+                    } else {
+                      setApiStatus(prevStatus => ({...prevStatus, ...statusUpdate}));
+                    }
+                  }}
+                  lastResponseData={apiStatus.data} // Pass the full last response
+                />
               </Paper>
             </Grid>
           )}

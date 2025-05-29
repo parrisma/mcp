@@ -5,15 +5,13 @@ import logging
 import datetime
 import os
 
-from operator import le
 from pathlib import Path
-from turtle import mode
 from typing import List, Dict, Any, Tuple
 from yarl import URL
 
 from .mcp_client import MCPClient
 from ..server.network_utils import NetworkUtils
-from .ollama_utils import ollama_running_and_model_loaded, ollama_host, ollama_model, get_initial_response
+from .ollama_utils import ollama_running_and_model_loaded, ollama_host, ollama_model, get_llm_response
 from .mcp_client_web_server import MCPClientWebServer
 
 
@@ -24,6 +22,9 @@ class FailedLLMCall(Exception):
 
 
 class MCPClientRunner:
+    class ErrorGettingServerCapabilities(Exception):
+        pass
+
     def __init__(self) -> None:
         """
         Initializes the MCPClientRunner.
@@ -310,12 +311,20 @@ class MCPClientRunner:
                    params: Dict) -> Dict:
         return self._get_config()
 
+    async def _get_mcp_responses_and_clarifications(self,
+                                                    questions: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, str]]:
+        mcp_responses: Dict[str, Any] = {}
+        clarifications: Dict[str, Any] = {}
+
+        return mcp_responses, clarifications
+
     async def _get_model_response(self,
                                   params: Dict[str, Any]) -> Dict[str, Any]:
         try:
             capabilities: Dict[str, Any] = await self._get_capabilities()
             if "error" in capabilities:  # Propagate error from _get_capabilities
-                return capabilities
+                raise MCPClientRunner.ErrorGettingServerCapabilities(
+                    capabilities["error"])
 
             goal: str = params['args'].get("goal", "")
             if not goal:
@@ -324,7 +333,17 @@ class MCPClientRunner:
                 # No need to raise ValueError here, just return an error dict
                 return {"error": msg, "type": "ValueError"}
 
-            llm_call_successful, llm_content = get_initial_response(
+            # Check to see if there are un answer MCP Model calls or User clarification questions
+            # If so, we will get answewrs to MCP calls pass them to the LLM via the prompt.
+            questions: Dict[str, str] = params['args'].get("questions", [])
+            if questions:
+                mcp_responses: Dict[str, Any] = {}
+                clarifications: Dict[str, Any] = {}
+                mcp_responses, clarifications = await self._get_mcp_responses_and_clarifications(
+                    questions=questions
+                )
+
+            llm_call_successful, llm_content = get_llm_response(
                 user_goal=goal,
                 mcp_server_descriptions=json.dumps(capabilities),
                 model=self._ollama_model_name,

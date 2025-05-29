@@ -64,6 +64,17 @@
       }
     },
     {
+      "name": "Python Debugger: MCP Invoke Tests",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/client/mcp_invoke.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    },
+    {
       "name": "React UI",
       "type": "chrome",
       "request": "launch",

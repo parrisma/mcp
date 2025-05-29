@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import PropTypes from "prop-types"; // For prop validation
 
-function Prompt({ baseApiUrl, onApiResponse }) {
+function Prompt({ baseApiUrl, onApiResponse, isNextStepsMode, onResetAll }) {
   const [promptText, setPromptText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -55,6 +55,14 @@ function Prompt({ baseApiUrl, onApiResponse }) {
     }
   };
 
+  const handleReset = () => {
+    setPromptText(""); // Clear promptText locally on reset
+    setIsLoading(false); // Ensure loading is also reset
+    if (onResetAll) {
+      onResetAll(); // This will clear apiStatus in App.jsx, making isNextStepsMode false
+    }
+  };
+
   const promptProps = {
     id: "prompt-textfield",
     label: "Enter your question",
@@ -72,20 +80,33 @@ function Prompt({ baseApiUrl, onApiResponse }) {
         onChange={handleInputChange}
         disabled={isLoading}
       />
-      <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
+      <Box sx={{ display: "flex", justifyContent: "flex-start", gap: 1 }}> {/* Added gap for buttons */}
         <button
           onClick={handleSubmit}
-          disabled={isLoading || !promptText.trim()}
+          disabled={isLoading || isNextStepsMode} // Only disable if loading or in next steps mode
           style={{
             padding: "4px 12px",
             borderRadius: 4,
             border: "1px solid #1976d2",
-            background: isLoading || !promptText.trim() ? "#ccc" : "#1976d2", // Disabled style
+            background: (isLoading || isNextStepsMode) ? "#ccc" : "#1976d2", // Background changes if disabled
             color: "#fff",
-            cursor: isLoading || !promptText.trim() ? "not-allowed" : "pointer",
+            cursor: (isLoading || isNextStepsMode) ? "not-allowed" : "pointer",
           }}
         >
           {isLoading ? "Submitting..." : "Submit"}
+        </button>
+        <button
+          onClick={handleReset}
+          style={{ // Identical style to Submit button
+            padding: "4px 12px",
+            borderRadius: 4,
+            border: "1px solid #1976d2", // Or a different color for reset, e.g., a gray
+            background: "#6c757d", // Example: Secondary/gray color for Reset
+            color: "#fff",
+            cursor: "pointer",
+          }}
+        >
+          Reset
         </button>
       </Box>
     </Box>
@@ -95,10 +116,13 @@ function Prompt({ baseApiUrl, onApiResponse }) {
 Prompt.propTypes = {
   baseApiUrl: PropTypes.string,
   onApiResponse: PropTypes.func.isRequired,
+  isNextStepsMode: PropTypes.bool,
+  onResetAll: PropTypes.func.isRequired, // Add prop type for onResetAll
 };
 
 Prompt.defaultProps = {
   baseApiUrl: "",
+  isNextStepsMode: false,
 };
 
 export default Prompt;

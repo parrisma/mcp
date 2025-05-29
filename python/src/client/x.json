@@ -1,8 +1,19 @@
 {
-  "call_number": 1,
-  "method": "GET",
-  "url": "http://localhost:6277/message//{name}",
-  "params": { "name": "Mark" },
-  "resource_template": "message",
-  "description": "Generate a greeting message for Mark."
+  "response": {
+    "answer": {},
+    "clarifications": [],
+    "mcp_server_calls": [
+      {
+        "id": "1",
+        "mcp_capability": "tools",
+        "mcp_server_name": "Demo",
+        "parameters": { "a": 9, "b": 5, "name": "add" }
+      }
+    ],
+    "thinking": {
+      "next_steps": "After receiving the result of the addition, I will proceed with the multiplication.",
+      "reasoning": "The goal is to compute (9+5)*3. The first step is to add 9 and 5 using the add tool from the MCP server."
+    }
+  },
+  "status": "success"
 }

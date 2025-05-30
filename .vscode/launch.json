@@ -39,7 +39,7 @@
       ],
       "env": {
         "PYTHONPATH": "${workspaceFolder}",
-        "OPENROUTER_API_KEY": "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"
+        "OPENROUTER_API_KEY": "${env:OPENROUTER_API_KEY}"
       }
     },
     {
@@ -73,7 +73,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "PYTHONPATH": "${workspaceFolder}",
-        "OPENROUTER_API_KEY": "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"
+        "OPENROUTER_API_KEY": "${env:OPENROUTER_API_KEY}"
       }
     },
     {

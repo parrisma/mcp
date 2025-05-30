@@ -1,0 +1,24 @@
+{
+  "MCP_Server": {
+    "description": "An API that enables an LLM to retrieve data and execute predefined actions to improve responses.",
+    "capabilities": [
+      {
+        "name": "Tools",
+        "description": "Functions the LLM can invoke for structured problem-solving."
+      },
+      {
+        "name": "Resources",
+        "description": "Retrievable data entities for direct model use."
+      },
+      {
+        "name": "Resource Templates",
+        "description": "Predefined patterns for generating structured responses."
+      },
+      {
+        "name": "Prompts",
+        "description": "AI prompts guiding reasoning and decision-making."
+      }
+    ],
+    "usage_instructions": "Leverage available tools, resources, templates, and prompts to enhance responses by retrieving data or executing structured actions."
+  }
+}

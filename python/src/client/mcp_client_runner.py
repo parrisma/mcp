@@ -6,14 +6,17 @@ import datetime
 import os
 
 from pathlib import Path
-from typing import List, Dict, Any, Tuple
+from tkinter.filedialog import Open
+from typing import List, Dict, Any, Optional, Tuple
+from click import prompt
 from yarl import URL
 
 from .mcp_client import MCPClient
 from ..server.network_utils import NetworkUtils
-from .ollama_utils import ollama_running_and_model_loaded, ollama_host, ollama_model, get_llm_response
+from .ollama_utils import ollama_running_and_model_loaded, ollama_host, ollama_model, get_llm_response, get_llm_prompt
 from .mcp_client_web_server import MCPClientWebServer
 from .mcp_invoke import MCPInvoke
+from .openrouter_utils import OpenRouter
 import uuid
 
 
@@ -59,6 +62,18 @@ class MCPClientRunner:
 
         self._mcp_responses_cache: Dict[uuid.UUID, Dict[str, Any]] = {}
         self._clarifications_cache: Dict[uuid.UUID, Dict[str, str]] = {}
+
+        self._openrouter: OpenRouter | None = self._setup_openrouter()
+
+    def _setup_openrouter(self) -> Optional[OpenRouter]:
+        api_key_env = os.environ.get("OPENROUTER_API_KEY")
+        if not api_key_env:
+            self._log.info(
+                "Please set the OPENROUTER_API_KEY environment variable to use OpenRouter API.")
+        else:
+            self._log.info(f"Openrouter avaialble")
+            return OpenRouter(api_key=api_key_env)
+        return None
 
     def _parse_command_line(self) -> argparse.Namespace:
         """
@@ -436,16 +451,32 @@ class MCPClientRunner:
                     llm_session=llm_session
                 )
 
-            llm_call_successful, llm_content = get_llm_response(
-                user_goal=goal,
-                session_id=llm_session,
-                mcp_server_descriptions=capabilities,
-                mcp_responses=mcp_responses,
-                clarifications=clarifications,
-                model=self._ollama_model_name,
-                host=str(self._ollama_host_url),
-                temperature=0.7
-            )
+            full_prompt: Optional[str] = get_llm_prompt(user_goal=goal,
+                                                        session_id=llm_session,
+                                                        mcp_server_descriptions=capabilities,
+                                                        mcp_responses=mcp_responses,
+                                                        clarifications=clarifications)
+
+            llm_call_successful: bool = False
+            llm_content: Dict[str, Any] = {}
+
+            if not full_prompt:
+                msg = "Failed to generate a valid prompt for the LLM."
+                self._log.error(msg)
+                raise ValueError(msg)
+
+            if self._openrouter:
+                # If OpenRouter is available, use it to get the response
+                llm_call_successful, llm_content = self._openrouter.get_llm_response(
+                    prompt=full_prompt
+                )
+            else:
+                llm_call_successful, llm_content = get_llm_response(prompt=full_prompt,
+                                                                    model=self._ollama_model_name,
+                                                                    host=str(
+                                                                        self._ollama_host_url),
+                                                                    temperature=0.3
+                                                                    )
 
             if not llm_call_successful:
                 error_message = str(

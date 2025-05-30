@@ -44,12 +44,12 @@ function Status({ apiStatus, baseApiUrl, onApiResponse, lastResponseData, curren
     content = `Error: ${error}`;
   } else if (data && data.response) { // Check for the nested 'response' object
     const responseData = data.response;
-    if (responseData.answer && typeof responseData.answer.body !== 'undefined') {
-      content = responseData.answer.body;
-    } else if (responseData.mcp_server_calls && responseData.mcp_server_calls.length > 0) {
+    if (responseData.mcp_server_calls && responseData.mcp_server_calls.length > 0) {
       content = `Pending MCP Server Calls:\n${JSON.stringify(responseData.mcp_server_calls, null, 2)}`;
     } else if (responseData.clarifications && responseData.clarifications.length > 0) {
       content = `Pending Clarifications:\n${JSON.stringify(responseData.clarifications, null, 2)}`;
+    } else if (responseData.answer && typeof responseData.answer.body !== 'undefined') {
+      content = responseData.answer.body;
     } else {
       // Fallback to stringifying the nested response object
       content = JSON.stringify(responseData, null, 2);
@@ -134,7 +134,7 @@ function Status({ apiStatus, baseApiUrl, onApiResponse, lastResponseData, curren
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <TextField
-        label="Response"
+        label={data?.response?.answer ? "Answer" : "Response"}
         multiline
         rows={10}
         value={content}
@@ -166,7 +166,7 @@ function Status({ apiStatus, baseApiUrl, onApiResponse, lastResponseData, curren
       <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
         <button
           onClick={handleDoNextSteps}
-          disabled={!canDoNextSteps || loading || isNextStepsLoading}
+          disabled={!canDoNextSteps || loading || isNextStepsLoading || data?.response?.answer?.body !== undefined}
           style={{
             padding: "4px 12px",
             borderRadius: 4,

@@ -2,116 +2,175 @@ import os
 import requests
 import json
 import logging
+import re
 from typing import Tuple, Dict, Any, Optional, List
 
-_logger: logging.Logger = logging.getLogger(__name__)
-if not logging.getLogger().hasHandlers():
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[logging.StreamHandler()]
-    )
-
 OPENROUTER_API_BASE_URL = "https://openrouter.ai/api/v1"
-DEFAULT_OPENROUTER_MODEL = "openai/gpt-3.5-turbo" # A common default, can be changed
-
-class OpenRouterError(Exception):
-    """Custom exception for OpenRouter API errors."""
-    pass
-
-def get_openrouter_response(
-    api_key: str,
-    model_name: str,
-    prompt: str,
-    system_prompt: Optional[str] = None,
-    temperature: float = 0.7,
-    max_tokens: Optional[int] = None,
-    site_url: Optional[str] = "http://localhost:3000", # Recommended by OpenRouter
-    site_name: Optional[str] = "MCPClient" # Recommended by OpenRouter
-) -> Tuple[bool, Any]:
-    """
-    Contacts the OpenRouter.ai API to get a response from a specified model.
-
-    :param api_key: Your OpenRouter.ai API key.
-    :param model_name: The name of the model to use (e.g., "openai/gpt-3.5-turbo").
-    :param prompt: The user's prompt.
-    :param system_prompt: An optional system message to guide the model's behavior.
-    :param temperature: Sampling temperature, between 0 and 2.
-    :param max_tokens: Optional maximum number of tokens to generate.
-    :param site_url: Your app's site URL for OpenRouter to identify your app.
-    :param site_name: Your app's name for OpenRouter to identify your app.
-    :return: A tuple (success: bool, response_content: Any).
-             If success is True, response_content is the parsed JSON response from the API.
-             If success is False, response_content is an error message string.
-    """
-    if not api_key:
-        _logger.error("OpenRouter API key is missing.")
-        return False, "Error: OpenRouter API key is required."
-
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-    }
-    if site_url:
-        headers["HTTP-Referer"] = site_url
-    if site_name:
-        headers["X-Title"] = site_name
-
-    messages: List[Dict[str, str]] = []
-    if system_prompt:
-        messages.append({"role": "system", "content": system_prompt})
-    messages.append({"role": "user", "content": prompt})
-
-    payload: Dict[str, Any] = {
-        "model": model_name,
-        "messages": messages,
-        "temperature": temperature,
-    }
-    if max_tokens is not None:
-        payload["max_tokens"] = max_tokens
-
-    url = f"{OPENROUTER_API_BASE_URL}/chat/completions"
-
-    try:
-        _logger.debug(f"Sending request to OpenRouter: URL='{url}', Model='{model_name}', Payload='{json.dumps(payload, indent=2)}'")
-        response = requests.post(url, headers=headers, json=payload, timeout=120) # 120s timeout
-        response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
-
-        response_data = response.json()
-        _logger.debug(f"Received response from OpenRouter: {json.dumps(response_data, indent=2)}")
-
-        if response_data.get("choices") and len(response_data["choices"]) > 0:
-            # Typically, the main content is in the first choice's message
-            message_content = response_data["choices"][0].get("message", {}).get("content")
-            if message_content:
-                return True, message_content # Return the string content directly
-            else: # If content is missing for some reason
-                return True, response_data # Fallback to returning the whole data
-        else: # If no choices or choices array is empty
-            _logger.warning(f"OpenRouter response did not contain expected choices: {response_data}")
-            return False, f"Error: OpenRouter response format unexpected - no choices. Full response: {response_data}"
+DEFAULT_OPENROUTER_MODEL = "google/gemini-2.5-pro-preview"
 
 
-    except requests.exceptions.HTTPError as http_err:
-        error_content = "Unknown error"
+class OpenRouter:
+
+    class OpenRouterError(Exception):
+        pass
+
+    def __init__(self,
+                 api_key: str,
+                 openrouter_url: Optional[str] = None,
+                 model_name: Optional[str] = None,
+                 max_tokens: Optional[int] = None,
+                 system_prompt: Optional[str] = None,
+                 temperature: float = 0.3,) -> None:
+
+        self._log: logging.Logger = logging.getLogger(__name__)
+        if not logging.getLogger().hasHandlers():
+            logging.basicConfig(
+                level=logging.INFO,
+                format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                handlers=[logging.StreamHandler()]
+            )
+        if openrouter_url is None:
+            openrouter_url = OPENROUTER_API_BASE_URL
+        else:
+            self._openrouter_url: str = openrouter_url
+        self._api_key: str = api_key
+        if not model_name:
+            self._model_name = DEFAULT_OPENROUTER_MODEL
+        else:
+            self._model_name: str = model_name
+        self._temperature: float = temperature
+        self._max_tokens: int | None = max_tokens
+        self._url: str = f"{OPENROUTER_API_BASE_URL}/chat/completions"
+        if system_prompt is not None:
+            self._system_prompt: str = system_prompt
+        else:
+            self._system_prompt: str = "you are an expert assistant that answers questions directly and concisely, without any additional information or disclaimers. You are very helpful and friendly, but you do not provide any additional information or disclaimers. You answer questions directly and concisely, without any additional information or disclaimers"
+
+    def _clean_json_str(self,
+                        jason_str: str) -> Dict[str, Any]:
+        jason_str = re.sub(r"[\n\t`']", "", jason_str, flags=re.MULTILINE)
+        jason_str = re.sub(r"^json", "", jason_str, flags=re.IGNORECASE)
+        response: Dict[str, str] = {}
         try:
-            error_content = http_err.response.json()
+            response = json.loads(jason_str)
+        except json.JSONDecodeError as je:
+            msg: str = f"JSON Decode Error: {je.msg} at line {je.lineno}, column {je.colno}"
+            self._log.error(msg=msg)
+            response = {
+                "error": "Invalid JSON format",
+                "details": msg
+            }
+        except Exception as e:
+            msg: str = f"Unexpected error while parsing JSON: {str(e)}"
+            self._log.error(msg=msg)
+            response = {
+                "error": "Unexpected error while parsing JSON",
+                "details": msg
+            }
+        # Normalize the JSON string to ensure it's a valid JSON object
+        return json.loads(json.dumps(response, ensure_ascii=False, indent=2))
+
+    def _missing_response(self,
+                          error_message: str) -> Dict[str, Any]:
+        return {
+            "response": {
+                "answer": {
+                    "body": f"{error_message}",
+                    "confidence": "0"
+                },
+                "clarifications": [],
+                "mcp_server_calls": [],
+                "thinking": {
+                }
+            },
+            "status": "error"
+        }
+
+    def get_llm_response(self,
+                         prompt: str
+                         ) -> Tuple[bool, Any]:
+        """
+        Contacts the OpenRouter.ai API to get a response to the given prompt.
+
+        :param prompt: The user's prompt.
+        :return: A tuple (success: bool, response_content: Any).
+                 If success is True, response_content is formatted JSON response from the API.
+                 If success is False, response_content is formatted JSON with error in answer field.
+        """
+
+        headers = {
+            "Authorization": f"Bearer {self._api_key}",
+            "Content-Type": "application/json",
+        }
+        headers["X-Title"] = "MCP Client Web Server"
+
+        messages: List[Dict[str, str]] = []
+        if self._system_prompt:
+            messages.append({"role": "system", "content": self._system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
+        payload: Dict[str, Any] = {
+            "model": self._model_name,
+            "messages": messages,
+            "temperature": self._temperature,
+        }
+        if self._max_tokens is not None:
+            payload["max_tokens"] = self._max_tokens
+
+        try:
+            self._log.debug(
+                f"Sending request to OpenRouter: URL='{self._url}', Model='{self._model_name}', Payload='{json.dumps(payload, indent=2)}'")
+            response: requests.Response = requests.post(self._url, headers=headers,
+                                                        json=payload, timeout=120)  # 120s timeout
+            response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
+
+            response_data = response.json()
+            self._log.debug(
+                f"Received response from OpenRouter: {json.dumps(response_data, indent=2)}")
+
+            if response_data.get("choices") and len(response_data["choices"]) > 0:
+                # Typically, the main content is in the first choice's message
+                message_content = self._clean_json_str(
+                    response_data["choices"][0].get("message", {}).get("content"))
+                if message_content:
+                    # Return response as Response JSON object expected by the client
+                    return True, message_content
+                else:
+                    msg = "Error, content could not be located in the llm response"
+                    self._log.error(msg)
+                    return False, self._missing_response(msg)
+            else:  # If no choices or choices array is empty
+                msg = f"Error, OpenRouter response did not contain expected choices: {response_data}"
+                self._log.error(msg)
+                return False, self._missing_response(msg)
+
+        except requests.exceptions.HTTPError as http_err:
+            error_content = "Unknown error"
+            try:
+                error_content = http_err.response.json()
+            except json.JSONDecodeError:
+                error_content = http_err.response.text
+                msg = f"Error, OpenRouter HTTP error: {http_err.response.status_code} - {error_content}"
+                self._log.error(msg)
+                return False, self._missing_response(msg)
+        except requests.exceptions.RequestException as req_err:
+            msg = f"Error, OpenRouter request exception: {req_err}"
+            self._log.error(msg)
+            return False, self._missing_response(msg)
         except json.JSONDecodeError:
-            error_content = http_err.response.text
-        _logger.error(f"OpenRouter HTTP error: {http_err.response.status_code} - {error_content}")
-        return False, f"Error: OpenRouter API request failed with status {http_err.response.status_code} - {error_content}"
-    except requests.exceptions.RequestException as req_err:
-        _logger.error(f"OpenRouter request exception: {req_err}")
-        return False, f"Error: Failed to connect to OpenRouter: {req_err}"
-    except json.JSONDecodeError:
-        _logger.error("Failed to decode JSON response from OpenRouter.")
-        return False, "Error: Invalid JSON response from OpenRouter."
-    except KeyError as key_err:
-        _logger.error(f"Unexpected response format from OpenRouter (KeyError): {key_err}")
-        return False, f"Error: Unexpected response format from OpenRouter (missing key: {key_err})."
-    except Exception as e:
-        _logger.exception(f"An unexpected error occurred while calling OpenRouter: {e}")
-        return False, f"An unexpected error occurred: {e}"
+            msg = "Error, failed to decode JSON response from OpenRouter."
+            self._log.error(msg)
+            return False, self._missing_response(msg)
+        except KeyError as key_err:
+            msg = f"Error, unexpected response format from OpenRouter (KeyError): {key_err}"
+            self._log.error(msg)
+            return False, self._missing_response(msg)
+        except Exception as e:
+            msg = f"Error, an unexpected error occurred while calling OpenRouter: {e}"
+            self._log.exception(msg)
+            return False, self._missing_response(msg)
+        return False, self._missing_response("Unknown error occurred in get_llm_response.")
+
 
 if __name__ == "__main__":
     # Example usage:
@@ -121,39 +180,28 @@ if __name__ == "__main__":
         print("Please set the OPENROUTER_API_KEY environment variable to run the example.")
     else:
         print("Testing OpenRouter API call...")
-        test_prompt = "What is the capital of France?"
-        test_model = "openai/gpt-3.5-turbo" # You can change this to other models supported by OpenRouter
 
-        success, result = get_openrouter_response(
-            api_key=api_key_env,
-            model_name=test_model,
-            prompt=test_prompt,
-            system_prompt="You are a helpful assistant."
+        openrouter = OpenRouter(api_key=api_key_env)
+
+        test_prompt_path = os.path.join(
+            os.path.dirname(__file__), "test_prompt.txt")
+        if os.path.isfile(test_prompt_path):
+            with open(test_prompt_path, "r", encoding="utf-8") as f:
+                test_prompt = f.read().strip()
+        else:
+            test_prompt = "How a model context protocol server helpful to an LLM ?"
+
+        success, result = openrouter.get_llm_response(
+            prompt=test_prompt
         )
 
         if success:
-            print(f"\nModel: {test_model}")
             print(f"Prompt: {test_prompt}")
             print("Response:")
-            # If result is a string (the message content)
             if isinstance(result, str):
                 print(result)
-            # If result is the full JSON (fallback or if you change the return)
             else:
                 print(json.dumps(result, indent=2))
         else:
             print(f"\nFailed to get response from OpenRouter.")
             print(f"Error: {result}")
-
-        print("\nTesting with a non-existent model (expecting failure):")
-        success_fail, result_fail = get_openrouter_response(
-            api_key=api_key_env,
-            model_name="nonexistent/model-v1",
-            prompt="This should fail."
-        )
-        if not success_fail:
-            print(f"Correctly failed for non-existent model.")
-            print(f"Error: {result_fail}")
-        else:
-            print("Test with non-existent model did not fail as expected.")
-            print(f"Response: {result_fail}")

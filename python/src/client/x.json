@@ -1,5 +1,19 @@
 {
-  "goal": "(8*63)+3142",
-  "questions": "{\"response\":{\"answer\":{},\"clarifications\":[],\"mcp_server_calls\":[{\"mcp_capability\":\"tools\",\"mcp_capability_name\":\"multiply\",\"mcp_server_name\":\"Demo\",\"parameters\":{\"a\":8,\"b\":63}}],\"thinking\":{\"next_steps\":\"After obtaining the result of the multiplication, I will add 3142 to it.\",\"reasoning\":\"The goal is to compute (8*63)+3142. The first step is to multiply 8 and 63 using the multiply tool from the MCP server.\"}},\"status\":\"success\"}",
-  "session": "333F4182-793D-4E4A-8E1E-3793B848EDCA"
+  "response": {
+    "answer": {},
+    "clarifications": [],
+    "mcp_server_calls": [
+      {
+        "mcp_capability": "tools",
+        "mcp_capability_name": "add",
+        "mcp_server_name": "Demo",
+        "parameters": { "a": 6, "b": 3 }
+      }
+    ],
+    "thinking": {
+      "next_steps": "Execute the add tool with parameters a=6 and b=3.",
+      "reasoning": "The goal is to add 6 and 3. The add tool from the Demo server can perform this operation."
+    }
+  },
+  "status": "success"
 }

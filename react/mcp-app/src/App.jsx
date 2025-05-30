@@ -83,6 +83,7 @@ function App() {
       startTime: null,
     });
     setCurrentGoalPromptText(""); // Clear the stored goal on reset
+    setSessionId(uuidv4().toUpperCase()); // Generate a new session ID on reset
   };
 
   // This is the callback for the main Prompt component

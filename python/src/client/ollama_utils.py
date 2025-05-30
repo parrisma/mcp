@@ -5,11 +5,13 @@ import json
 import logging
 import re
 import uuid
-from typing import Tuple, Dict, Any, List
+from typing import Optional, Tuple, Dict, Any, List
 from enum import Enum
 from datetime import datetime
 from yarl import URL
-from .prompts import get_llm_prompt
+from .prompts import Prompts
+
+prompts: Prompts = Prompts()
 
 _logger: logging.Logger = logging.getLogger(__name__)
 if not logging.getLogger().hasHandlers():
@@ -124,27 +126,38 @@ def _log_prompt(prompt: str) -> None:
         _logger.error(f"Failed to log prompt: {e}")
 
 
-def get_llm_response(user_goal: str,
-                     session_id: uuid.UUID,
-                     mcp_server_descriptions: Dict[str, Any],
-                     mcp_responses: List[Dict[str, Any]],
-                     clarifications: List[Dict[str, Any]],
-                     model: str,
-                     host: str,
-                     temperature) -> Tuple[bool, Dict]:
+def get_llm_prompt(user_goal: str,
+                   session_id: uuid.UUID,
+                   mcp_server_descriptions: Dict[str, Any],
+                   mcp_responses: List[Dict[str, Any]],
+                   clarifications: List[Dict[str, Any]]
+                   ) -> Optional[str]:
     try:
-        prompt: str = get_llm_prompt(
+        prompt: str = prompts.get_prompt(
             goal=user_goal,
             session_id=str(session_id),
-            mcp_server_descriptions=json.dumps(mcp_server_descriptions),
-            mcp_responses=json.dumps(
-                mcp_responses, ensure_ascii=False, indent=2),
-            clarifications=json.dumps(
-                clarifications, ensure_ascii=False, indent=2),
+            variables={
+                "mcp_server_descriptions": json.dumps(mcp_server_descriptions),
+                "mcp_server_responses": json.dumps(mcp_responses, ensure_ascii=False, indent=2),
+                "clarification_responses": json.dumps(clarifications, ensure_ascii=False, indent=2)
+            }
         )
 
         _log_prompt(prompt)
 
+        return prompt
+
+    except Exception as e:
+        msg: str = f"Error in forming fully qualified propmt: {e}"
+        _logger.error(msg)
+        return None
+
+
+def get_llm_response(prompt: str,
+                     model: str,
+                     host: str,
+                     temperature) -> Tuple[bool, Dict]:
+    try:
         res, reply = get_ollama_response(
             prompt, model=model, host_and_port_url=host, temperature=temperature)
         # No change needed here now, as reply will always be a Dict

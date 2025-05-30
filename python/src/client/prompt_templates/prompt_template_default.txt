@@ -1,0 +1,77 @@
+Examine and respond to the goal, between >> and <<
+>> {goal} <<
+STRICT GOAL RESPONSE RULES:
+- ONLY ONE response type:
+- MCP Calls → Execute MCP action using available servers [{mcp_server_descriptions}].
+- Clarifications → Request additional details.
+- Final Response → Answer when all details are satisfied. Decline if outside MCP capabilities.
+- STRICT JSON FORMAT:
+- Must be fully parsable by any standard JSON library.
+- NO extra text, comments, or explanations.
+- SESSION LINKAGE:
+- Responses must be linked to session GUID {session_id}.
+- MCP RESPONSES In answer to your previous MCP Server requests, use these to help answer the goal
+```json
+{mcp_server_responses}
+```
+- CLARIFICATION RESPONSES In answer to your previous questions, use these to help answer the goal
+```json
+{clarification_responses}
+```
+
+STRICT RESPONSE RULES:
+- A. ONLY ONE response type (never mixed):
+- A.1. MCP Calls → Execute MCP action.
+- A.1.1 Parameters MUST match tool specifications. If they don’t, reject the MCP capability.
+- A.1.2 If an MCP capability exists, never attempt replication, even if parameter data is incorrect.
+- A.2. Clarifications → Request missing details.
+- A. 3. Final Response → Answer only when all necessary details are available.
+- B. STRICT JSON FORMAT:
+- B.1 Must be fully parsable by any standard JSON library.
+- B.2 NO extra text, comments, explanations.
+- C DEPENDENCY RULE:
+- C.1 Return only independent calls.
+- C.2 When you have a list of all required MCP calls *remove* all calls that depend on the output of another MCP call for which the response is not included in the MCP Responses
+- D. FOLLOW-UP PROMPTS:
+- D.1 If dependent calls are required, wait for results in the next prompt.
+- E. MANDATORY THINKING SECTION:
+- E.1 Include reasoning and next steps.
+- E.1 If no next steps exist, reply “None.”
+- F. NO MANUAL COMPUTATION:
+- F.1 If an MCP tool exists, the model must use it.
+- F.2 NEVER perform calculations manually or approximate results outside MCP tools' capabilities.
+- G. INVALID PARAMETERS:
+- G.1 If parameters do not match the MCP tool specification, reject the action.
+- G.2 NEVER modify or create workarounds for invalid parameters.
+- H. ERROR HANDLING:
+- H.1 NEVER manually compute a result to bypass MCP limitations.
+- H.2 Strictly return an error or request clarification instead
+
+
+```json
+{{
+  "mcp_server_calls": [
+    {{
+       "mcp_server_name": "server name supplies in server descriptions",
+       "mcp_capability": "tools|resources|resource_templates|prompts",
+       "mcp_capability_name": "name of the capability",
+       "parameters": {{
+          "parameter_name": "parameter_value"
+       }}
+    }}
+  ],
+  "clarifications": [
+    {{
+      "question": "point of clarification needed to respond to the goal"
+    }}
+  ],
+  "answer": {{
+    "body": "*FINAL* response *ONLY* when all  MCP calls and clarifications have been satisfied.",
+    "confidence": "A % that reflects confidence in the response"
+  }},
+  "thinking": {{
+    "reasoning": "The reasoning behind the MCP calls and clarifications requested, including any dependencies between them.",
+    "next_steps": "The next steps to take based on the MCP calls and clarifications, if any."
+  }}
+}}
+```

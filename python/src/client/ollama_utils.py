@@ -4,7 +4,8 @@ import requests
 import json
 import logging
 import re
-from typing import Tuple, Dict, Any
+import uuid
+from typing import Tuple, Dict, Any, List
 from enum import Enum
 from datetime import datetime
 from yarl import URL
@@ -73,14 +74,13 @@ def clean_json_str(jason_str: str) -> str:
 
 def get_ollama_response(prompt: str,
                         model: str,
-                        host: str,
-                        # Changed str to Dict
+                        host_and_port_url: str,
                         temperature: float) -> Tuple[bool, Dict]:
     try:
         start_time: str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         _logger.debug(f"Model request starts: {start_time}")
 
-        ollama_host: str = os.environ.get('OLLAMA_HOST', host)
+        ollama_host: str = os.environ.get('OLLAMA_HOST', host_and_port_url)
         url: str = f"{ollama_host}/api/chat"
         headers: Dict[str, str] = {'Content-Type': 'application/json'}
         payload = {
@@ -125,29 +125,31 @@ def _log_prompt(prompt: str) -> None:
 
 
 def get_llm_response(user_goal: str,
-                     mcp_server_descriptions: str,
-                     mcp_responses: Dict[str, Any],
-                     clarifications: Dict[str, Any],
+                     session_id: uuid.UUID,
+                     mcp_server_descriptions: Dict[str, Any],
+                     mcp_responses: List[Dict[str, Any]],
+                     clarifications: List[Dict[str, Any]],
                      model: str,
                      host: str,
                      temperature) -> Tuple[bool, Dict]:
     try:
         prompt: str = get_llm_prompt(
-            mcp_server_descriptions=mcp_server_descriptions,
+            goal=user_goal,
+            session_id=str(session_id),
+            mcp_server_descriptions=json.dumps(mcp_server_descriptions),
             mcp_responses=json.dumps(
                 mcp_responses, ensure_ascii=False, indent=2),
             clarifications=json.dumps(
                 clarifications, ensure_ascii=False, indent=2),
-            goal=user_goal
         )
 
         _log_prompt(prompt)
 
         res, reply = get_ollama_response(
-            prompt, model=model, host=host, temperature=temperature)
+            prompt, model=model, host_and_port_url=host, temperature=temperature)
         # No change needed here now, as reply will always be a Dict
         return res, reply
     except Exception as e:
-        msg: str = f"Error in get_initial_response: {e}"
+        msg: str = f"Error in get_llm_response: {e}"
         _logger.error(msg)
         return False, {"error": msg}

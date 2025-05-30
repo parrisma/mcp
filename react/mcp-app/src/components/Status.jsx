@@ -13,7 +13,7 @@ import Box from "@mui/material/Box"; // For layout
  * @param {number|null} props.apiStatus.startTime - Timestamp when loading started.
  * @returns {JSX.Element}
  */
-function Status({ apiStatus, baseApiUrl, onApiResponse, lastResponseData, currentGoalPromptText }) {
+function Status({ apiStatus, baseApiUrl, onApiResponse, lastResponseData, currentGoalPromptText, sessionId }) {
   const { data, loading, error, startTime } = apiStatus || {};
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isNextStepsLoading, setIsNextStepsLoading] = useState(false);
@@ -108,6 +108,8 @@ function Status({ apiStatus, baseApiUrl, onApiResponse, lastResponseData, curren
         // Send the full lastResponseData object as the 'questions' parameter
         params.append("questions", JSON.stringify(lastResponseData));
       }
+      // Add the session id to the parameters
+      params.append("session", sessionId);
       
       const fullUrl = `${baseApiUrl}/model_response?${params.toString()}`;
       
@@ -192,6 +194,7 @@ Status.propTypes = {
   onApiResponse: PropTypes.func.isRequired,
   lastResponseData: PropTypes.any,
   currentGoalPromptText: PropTypes.string, // Add prop type
+  sessionId: PropTypes.string, // Add prop type for sessionId
 };
 
 Status.defaultProps = {
@@ -204,6 +207,7 @@ Status.defaultProps = {
   baseApiUrl: "",
   lastResponseData: null,
   currentGoalPromptText: "", // Add default prop
+  sessionId: null, // Add default prop for sessionId
 };
 
 export default Status;

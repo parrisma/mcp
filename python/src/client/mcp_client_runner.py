@@ -7,7 +7,6 @@ import os
 
 from pathlib import Path
 from typing import List, Dict, Any, Tuple
-import mcp
 from yarl import URL
 
 from .mcp_client import MCPClient
@@ -15,6 +14,7 @@ from ..server.network_utils import NetworkUtils
 from .ollama_utils import ollama_running_and_model_loaded, ollama_host, ollama_model, get_llm_response
 from .mcp_client_web_server import MCPClientWebServer
 from .mcp_invoke import MCPInvoke
+import uuid
 
 
 # Custom Exception for LLM call failures
@@ -56,6 +56,9 @@ class MCPClientRunner:
             args)
         self._web_server = MCPClientWebServer(host=self._web_server_host,
                                               port=self._web_server_port)
+
+        self._mcp_responses_cache: Dict[uuid.UUID, Dict[str, Any]] = {}
+        self._clarifications_cache: Dict[uuid.UUID, Dict[str, str]] = {}
 
     def _parse_command_line(self) -> argparse.Namespace:
         """
@@ -315,19 +318,58 @@ class MCPClientRunner:
                    params: Dict) -> Dict:
         return self._get_config()
 
+    def _get_cache_and_merge_mcp_responses_by_session(self,
+                                                      mcp_responses: List[Dict[str, Any]],
+                                                      llm_session: uuid.UUID) -> List[Dict[str, Any]]:
+        """
+        Adds mcp_responses to the session cache and returns the merged responses.
+        """
+        try:
+            mcp_sesson_responses: Dict[str, Any] = self._mcp_responses_cache.get(
+                llm_session, {})
+            for mcp_response in mcp_responses:
+                mcp_sesson_responses[mcp_response["source"]] = mcp_response
+            self._mcp_responses_cache[llm_session] = mcp_sesson_responses
+            return list(mcp_sesson_responses.values())
+        except Exception as e:
+            msg: str = f"Error merging MCP responses by session: {e}"
+            self._log.error(msg)
+            return mcp_responses
+
+    def _get_cache_and_merge_clarifications_by_session(self,
+                                                       clarifications: List[Dict[str, Any]],
+                                                       llm_session: uuid.UUID) -> List[Dict[str, Any]]:
+        """
+        Adds clarifications to the session cache and returns the merged clarifications.
+        """
+        try:
+            clarifications_session: Dict[str, Any] = self._clarifications_cache.get(
+                llm_session, {})
+            for clarification in clarifications:
+                clarifications_session[clarification["source"]] = clarification
+            self._clarifications_cache[llm_session] = clarifications_session
+            return list(clarifications_session.values())
+        except Exception as e:
+            msg: str = f"Error merging clarifications by session: {e}"
+            self._log.error(msg)
+            return clarifications
+
     async def _get_mcp_responses_and_clarifications(self,
-                                                    questions: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, str]]:
-        mcp_responses: Dict[str, Any] = {}
-        clarifications: Dict[str, Any] = {}
+                                                    questions: Dict[str, Any],
+                                                    llm_session: uuid.UUID) -> Tuple[List[Dict[str, Any]], List[Dict[str, str]]]:
+        mcp_responses: List[Dict[str, Any]] = [{}]
+        clarifications: List[Dict[str, Any]] = [{}]
 
         if not questions:
             raise ValueError("Questions parameter cannot be empty.")
         if not isinstance(questions, dict):
             raise ValueError("Questions parameter must be a dictionary.")
         try:
-            mcp_res = await self._invoker.process_mcp_responses(response=questions)
-            mcp_responses = mcp_res.get("mcp_server_responses", {})
-            clarifications = mcp_res.get("clarification_responses", {})
+            mcp_res: Dict[str, Any] = await self._invoker.process_mcp_responses(response=questions)
+            mcp_responses = self._get_cache_and_merge_mcp_responses_by_session(mcp_responses=mcp_res.get("mcp_server_responses", {}),
+                                                                               llm_session=llm_session)
+            clarifications = self._get_cache_and_merge_clarifications_by_session(
+                clarifications=mcp_res.get("clarification_responses", {}), llm_session=llm_session)
         except Exception as e:
             msg: str = f"Error processing MCP responses and clarifications: {e}"
             self._log.error(msg)
@@ -337,6 +379,34 @@ class MCPClientRunner:
     async def _get_model_response(self,
                                   params: Dict[str, Any]) -> Dict[str, Any]:
         try:
+            if not params:
+                msg = "No parameters provided for model response."
+                self._log.error(msg)
+                raise
+
+            if not params.get("args"):  # Ensure 'args' key exists
+                msg = "No 'args' provided in parameters for model response."
+                self._log.error(msg)
+                raise ValueError(msg)
+
+            if not isinstance(params['args'], dict):
+                msg = "'args' must be a dictionary containing the user prompt and other parameters."
+                self._log.error(msg)
+                raise ValueError(msg)
+
+            llm_session_id: str | None = params['args'].get("session")
+            if not llm_session_id:
+                msg = "No session ID provided in parameters for model response."
+                self._log.error(msg)
+                raise ValueError(msg)
+            else:
+                try:
+                    llm_session = uuid.UUID(llm_session_id)
+                except ValueError as e:
+                    msg = f"Invalid session ID provided: {llm_session_id}. Must be a valid UUID."
+                    self._log.error(msg)
+                    raise ValueError(msg) from e
+
             capabilities: Dict[str, Any] = await self._get_capabilities()
             if "error" in capabilities:  # Propagate error from _get_capabilities
                 raise MCPClientRunner.ErrorGettingServerCapabilities(
@@ -346,14 +416,13 @@ class MCPClientRunner:
             if not goal:
                 msg = "User prompt (goal) is required but was empty."
                 self._log.error(msg)
-                # No need to raise ValueError here, just return an error dict
-                return {"error": msg, "type": "ValueError"}
+                raise ValueError(msg)
 
             # Check to see if there are un answer MCP Model calls or User clarification questions
             # If so, we will get answewrs to MCP calls pass them to the LLM via the prompt.
             questions: Dict[str, Any] = params['args'].get("questions", {})
-            mcp_responses: Dict[str, Any] = {}
-            clarifications: Dict[str, Any] = {}
+            mcp_responses: List[Dict[str, Any]] = [{}]
+            clarifications: List[Dict[str, Any]] = [{}]
             if questions:
                 if isinstance(questions, str):
                     try:
@@ -361,14 +430,16 @@ class MCPClientRunner:
                     except json.JSONDecodeError as e:
                         msg = f"Failed to decode questions, expecting valid JSON: {e}"
                         self._log.error(msg)
-                        raise ValueError(msg)
+                        raise ValueError(msg) from e
                 mcp_responses, clarifications = await self._get_mcp_responses_and_clarifications(
-                    questions=questions
+                    questions=questions,
+                    llm_session=llm_session
                 )
 
             llm_call_successful, llm_content = get_llm_response(
                 user_goal=goal,
-                mcp_server_descriptions=json.dumps(capabilities),
+                session_id=llm_session,
+                mcp_server_descriptions=capabilities,
                 mcp_responses=mcp_responses,
                 clarifications=clarifications,
                 model=self._ollama_model_name,
@@ -395,7 +466,7 @@ class MCPClientRunner:
         except Exception as e:
             msg = f"An unexpected error occurred while getting model response: {e}"
             self._log.exception(msg)
-            return {"error": "An internal server error occurred.", "type": "Exception"}
+            return {"error": msg, "type": "Exception"}
 
     def get_model_response(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Synchronous wrapper for the async get_model_response method."""

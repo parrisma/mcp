@@ -3,9 +3,8 @@ import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import PropTypes from "prop-types"; // For prop validation
 
-function Prompt({ baseApiUrl, onApiResponse, isNextStepsMode, onResetAll }) {
+function Prompt({ baseApiUrl, onApiResponse, isNextStepsMode, onResetAll, sessionId, isLoading }) {
   const [promptText, setPromptText] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (event) => {
     setPromptText(event.target.value);
@@ -30,37 +29,18 @@ function Prompt({ baseApiUrl, onApiResponse, isNextStepsMode, onResetAll }) {
       return;
     }
 
-    setIsLoading(true);
-    // Pass the promptText as the second argument to onApiResponse (handlePromptSubmitResponse in App.jsx)
-    onApiResponse({ data: null, loading: true, error: null }, promptText);
+    // Pass the promptText and the current sessionId up to App.jsx
+    // App.jsx will manage the loading state
+    onApiResponse({ data: null, loading: true, error: null }, promptText, sessionId);
 
-    try {
-      const fullUrl = `${baseApiUrl}/model_response?goal=${encodeURIComponent(
-        promptText
-      )}`;
-      const response = await fetch(fullUrl);
-
-      if (!response.ok) {
-        const errorData = await response
-          .json()
-          .catch(() => ({ error: `HTTP error: ${response.status}` }));
-        throw new Error(errorData.error || `HTTP error: ${response.status}`);
-      }
-
-      const responseData = await response.json();
-      onApiResponse({ data: responseData, loading: false, error: null });
-    } catch (err) {
-      onApiResponse({ data: null, loading: false, error: err.message });
-    } finally {
-      setIsLoading(false);
-    }
+    // The actual API call will be made in App.jsx after sessionId is updated
   };
 
   const handleReset = () => {
     setPromptText(""); // Clear promptText locally on reset
-    setIsLoading(false); // Ensure loading is also reset
+    // App.jsx will manage the loading state reset via onResetAll
     if (onResetAll) {
-      onResetAll(); // This will clear apiStatus in App.jsx, making isNextStepsMode false
+      onResetAll(); // This will clear apiStatus in App.jsx, making isNextStepsMode false and loading false
     }
   };
 
@@ -81,7 +61,7 @@ function Prompt({ baseApiUrl, onApiResponse, isNextStepsMode, onResetAll }) {
         onChange={handleInputChange}
         disabled={isLoading}
       />
-      <Box sx={{ display: "flex", justifyContent: "flex-start", gap: 1 }}> {/* Added gap for buttons */}
+      <Box sx={{ display: "flex", justifyContent: "flex-start", gap: 1, alignItems: 'center' }}> {/* Added gap for buttons and alignment */}
         <button
           onClick={handleSubmit}
           disabled={isLoading || isNextStepsMode} // Only disable if loading or in next steps mode
@@ -109,6 +89,22 @@ function Prompt({ baseApiUrl, onApiResponse, isNextStepsMode, onResetAll }) {
         >
           Reset
         </button>
+        <TextField
+          label="Session ID"
+          value={sessionId}
+          variant="outlined"
+          size="small"
+          readOnly={true}
+          sx={{
+            width: '280px', // Adjust width as needed
+            "& .MuiInputBase-root": {
+              fontSize: "0.75rem", // Smaller font size for Session ID
+            },
+            "&:hover .MuiOutlinedInput-notchedOutline": {
+              borderColor: "rgba(0, 0, 0, 0.23)", // Keep border static on hover for readOnly
+            },
+          }}
+        />
       </Box>
     </Box>
   );
@@ -119,11 +115,15 @@ Prompt.propTypes = {
   onApiResponse: PropTypes.func.isRequired,
   isNextStepsMode: PropTypes.bool,
   onResetAll: PropTypes.func.isRequired, // Add prop type for onResetAll
+  sessionId: PropTypes.string, // Add prop type for sessionId
+  isLoading: PropTypes.bool, // Add prop type for isLoading
 };
 
 Prompt.defaultProps = {
   baseApiUrl: "",
   isNextStepsMode: false,
+  sessionId: null, // Default prop for sessionId
+  isLoading: false, // Default prop for isLoading
 };
 
 export default Prompt;

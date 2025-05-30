@@ -1,3 +1,4 @@
+from flask import session
 from langchain.prompts import PromptTemplate
 
 mcp_server_definition = """
@@ -37,18 +38,14 @@ you can do **ONE* of
 2. ask questions to clarify the goal.
 3. provide a final response when you have enough information, where a valid response is to decline where the scope of goal is outside the MCP Server(s) capabilities.
 
-MCP Server call responses you have asked to run will be here as JSON
+MCP Server call responses you have asked to run will be here as JSON and all iterations of this prompt are linked by this session GUID {session_id}
 ```json
-{{
-    {mcp_server_responses}
-}}
+{mcp_server_responses}
 ```
 
 Question responses you have asked to clarify about the goal will be here as JSON
 ```json
-{{
-    {clarification_responses}
-}}
+{clarification_responses}
 ```
 
 Your response must be valid, strictly formatted JSON that adheres to the following rules:
@@ -92,7 +89,11 @@ Your response must be valid, strictly formatted JSON that adheres to the followi
 
 initial_prompt = PromptTemplate(
     input_variables=["mcp_server_definition",
-                     "mcp_server_descriptions", "goal"],
+                     "mcp_server_descriptions",
+                     "goal",
+                     "mcp_server_responses",
+                     "clarification_responses",
+                     "session_id"],
     template=llm_prompt_template
 )
 
@@ -100,9 +101,12 @@ initial_prompt = PromptTemplate(
 def get_llm_prompt(mcp_server_descriptions: str,
                    mcp_responses: str,
                    clarifications: str,
-                   goal: str) -> str:
-    return initial_prompt.format(mcp_server_definition=mcp_server_definition,
+                   goal: str,
+                   session_id: str) -> str:
+    return initial_prompt.format(goal=goal,
+                                 session_id=session_id,
+                                 mcp_server_definition=mcp_server_definition,
                                  mcp_server_descriptions=mcp_server_descriptions,
                                  mcp_server_responses=mcp_responses,
-                                 clarification_responses=clarifications,
-                                 goal=goal)
+                                 clarification_responses=clarifications
+                                 )

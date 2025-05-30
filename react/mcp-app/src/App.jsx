@@ -4,6 +4,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Grid from "@mui/material/Grid";
+import { v4 as uuidv4 } from 'uuid'; // Import UUID generator
 import Status from "./components/Status.jsx";
 import HomeMenu from "./components/HomeMenu.jsx";
 import Prompt from "./components/Prompt.jsx";
@@ -49,6 +50,7 @@ function App() {
     startTime: null,
   });
   const [currentGoalPromptText, setCurrentGoalPromptText] = useState(""); // Store the original goal
+  const [sessionId, setSessionId] = useState(uuidv4().toUpperCase()); // Manage sessionId in App.jsx
 
   const [activeView, setActiveView] = useState("Question");
   const darkTheme = createTheme({
@@ -84,11 +86,40 @@ function App() {
   };
 
   // This is the callback for the main Prompt component
-  const handlePromptSubmitResponse = (statusUpdate, submittedGoal) => {
+  const handlePromptSubmitResponse = async (statusUpdate, submittedGoal) => {
     if (submittedGoal && statusUpdate.loading && !apiStatus.loading) {
       // This is a new submission from Prompt.jsx
       setCurrentGoalPromptText(submittedGoal);
+      // Generate and set a *new* session ID for this new question
+      const newSessionId = uuidv4().toUpperCase();
+      setSessionId(newSessionId);
       setApiStatus({ ...statusUpdate, data: null, error: null, startTime: Date.now() });
+
+      // Now construct and make the API call in App.jsx using the *newly generated* session ID
+      try {
+        const fullUrl = `${baseApiUrl}/model_response?goal=${encodeURIComponent(
+          submittedGoal
+        )}&session=${newSessionId}`; // Use the newly generated session ID
+
+        const response = await fetch(fullUrl);
+
+        if (!response.ok) {
+          const errorData = await response
+            .json()
+            .catch(() => ({ error: `HTTP error: ${response.status}` }));
+          throw new Error(errorData.error || `HTTP error: ${response.status}`);
+        }
+
+        const responseText = await response.text();
+        console.log("Raw server response:", responseText); // Log the raw response
+        const responseData = JSON.parse(responseText); // Parse the text as JSON
+        // Pass the received data back to App.jsx
+        setApiStatus({ data: responseData, loading: false, error: null });
+
+      } catch (err) {
+        // Pass the error back to App.jsx
+        setApiStatus({ data: null, loading: false, error: err.message });
+      }
     } else if (statusUpdate.loading && !apiStatus.loading) {
       // This might be from "Do Next Steps" or a re-submission without changing goal
       // Ensure data isn't prematurely cleared if it's a next step
@@ -96,12 +127,12 @@ function App() {
     } else if (!statusUpdate.loading && apiStatus.loading) {
       setApiStatus({ ...statusUpdate, startTime: null });
     } else {
-      setApiStatus(prevStatus => ({ ...prevStatus, ...statusUpdate }));
+      setApiStatus(prevStatus => ({...prevStatus, ...statusUpdate}));
     }
   };
   
   // This callback can be simplified for Status component's "Do Next Steps"
-  // as it won't set the currentGoalPromptText
+  // as it won't set the currentGoalPromptText and should not change the sessionId
   const handleNextStepsApiResponse = (statusUpdate) => {
      if (statusUpdate.loading && !apiStatus.loading) {
         setApiStatus(prevStatus => ({ ...prevStatus, ...statusUpdate, data: prevStatus.data, startTime: Date.now() }));
@@ -118,12 +149,12 @@ function App() {
       <CssBaseline />
       <Box sx={homeLayout}>
         <Grid {...mainGridProps} sx={homeLayoutGrid}>
-          <Grid item>
+          <Grid>
             <Paper sx={homePaper}>
               <HomeMenu onViewChange={handleViewChange} />
             </Paper>
           </Grid>
-          <Grid item xs>
+          <Grid xs={12}>
             <Paper
               sx={{
                 ...homePaper,
@@ -138,6 +169,9 @@ function App() {
                   onApiResponse={handlePromptSubmitResponse} // Use the new handler
                   isNextStepsMode={isNextStepsAvailable}
                   onResetAll={handleResetAll}
+                  sessionId={sessionId} // Pass sessionId to Prompt
+                  setSessionId={setSessionId} // Pass setSessionId to Prompt
+                  isLoading={apiStatus.loading} // Pass loading state to Prompt
                 />
               )}
               {activeView === "Settings" && (
@@ -153,7 +187,7 @@ function App() {
           {/* Status component is always visible now, or conditionally based on activeView if preferred */}
           {/* For now, let's make it always visible below the main content area if not in settings */}
           {activeView !== "Settings" && (
-            <Grid item>
+            <Grid>
               <Paper sx={homePaper}>
                 <Status
                   apiStatus={apiStatus}
@@ -161,6 +195,7 @@ function App() {
                   onApiResponse={handleNextStepsApiResponse} // Use the specific handler for "Do Next Steps"
                   lastResponseData={apiStatus.data}
                   currentGoalPromptText={currentGoalPromptText} // Pass the original goal
+                  sessionId={sessionId} // Pass sessionId to Status
                 />
               </Paper>
             </Grid>

@@ -7,6 +7,8 @@ from flask_cors import CORS
 from urllib.parse import parse_qs
 import json
 from enum import Enum
+import signal
+import sys
 
 
 class MCPClientWebServer:
@@ -28,8 +30,7 @@ class MCPClientWebServer:
                  host: str,
                  port: int) -> None:
         self._app = Flask(__name__)
-        # Enable CORS for the specific origin of the React app
-        CORS(self._app, resources={r"/*": {"origins": "http://localhost:5173"}})
+        CORS(self._app, resources={r"/*": {"origins": f"http://localhost:*"}})
         self._host: str = host
         self._port: int = port
         self._routes: Dict[str, MCPClientWebServer.WebCallback] = {}
@@ -62,8 +63,34 @@ class MCPClientWebServer:
         self._app.route(path)(wrapped_callback)
         self._routes[path] = wrapped_callback
 
+    def shutdown_server(self):
+        # This function is designed to be called from a request handler
+        # to shut down the Werkzeug server.
+        shutdown = request.environ.get('werkzeug.server.shutdown')
+        if shutdown is None:
+            raise RuntimeError('Not running with the Werkzeug Server')
+        shutdown()
+        return 'Server shutting down...'
+
     def run(self) -> None:
-        self._app.run(host=self._host, port=self._port)
+        # Signal handler for graceful shutdown
+        def signal_handler(sig, frame):
+            print(f"Received signal {sig}, shutting down server...")
+            # In a real application, you might want to do more cleanup here
+            sys.exit(0)
+
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+
+        # Add a shutdown route (optional, mainly for testing)
+        self._app.route('/shutdown')(self.shutdown_server)
+
+        try:
+            self._app.run(host=self._host, port=self._port)
+        finally:
+            # This block might not always be reached on abrupt termination,
+            # but it's good practice for cleaner exits.
+            print("Flask server process finished.")
 
 
 if __name__ == '__main__':

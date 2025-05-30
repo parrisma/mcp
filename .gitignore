@@ -178,3 +178,6 @@ python-sdk/
 
 # General App Logs
 prompt_log.txt
+
+# Secrets
+*api_key*

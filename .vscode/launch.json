@@ -38,7 +38,8 @@
         "--ollama-model=qwen2.5:72b"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}"
+        "PYTHONPATH": "${workspaceFolder}",
+        "OPENROUTER_API_KEY": "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"
       }
     },
     {
@@ -64,10 +65,33 @@
       }
     },
     {
+      "name": "Python Debugger: Openrouter Utils Test",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/client/openrouter_utils.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "OPENROUTER_API_KEY": "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"
+      }
+    },
+    {
       "name": "Python Debugger: MCP Invoke Tests",
       "type": "debugpy",
       "request": "launch",
       "module": "python.src.client.mcp_invoke",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    },
+    {
+      "name": "Python Debugger: Prompts Tests",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "python.src.client.prompts",
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}",
       "env": {

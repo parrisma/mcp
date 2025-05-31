@@ -2,6 +2,7 @@ import React from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button"; // Import Button
 import MCPServerCard from "./MCPServerCard"; // Import the new component
 import PropTypes from "prop-types"; // For prop validation
 
@@ -181,26 +182,16 @@ function SettingsAndStatus({
                 color: "#757575",
                 fontSize: "0.875rem",
               },
-              "&:hover .MuiOutlinedInput-notchedOutline": {
-                borderColor: "rgba(0, 0, 0, 0.23)",
-              },
             }}
           />
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <button
+            <Button
+              variant="contained" // Use contained variant
               onClick={handlePing}
               disabled={pingLoading}
-              style={{
-                padding: "4px 12px",
-                borderRadius: 4,
-                border: "1px solid #1976d2",
-                background: "#1976d2",
-                color: "#fff",
-                cursor: pingLoading ? "not-allowed" : "pointer",
-              }}
             >
               {pingLoading ? "Pinging..." : "Ping"}
-            </button>
+            </Button>
             <TextField
               label="Ping Status"
               variant="outlined"
@@ -225,9 +216,6 @@ function SettingsAndStatus({
                 "& .MuiInputLabel-root": {
                   fontSize: "0.875rem",
                 },
-                "&:hover .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "rgba(0, 0, 0, 0.23)",
-                },
               }}
             />
           </Box>
@@ -243,20 +231,13 @@ function SettingsAndStatus({
               gap: 1,
             }}
           >
-            <button
+            <Button
+              variant="contained" // Use contained variant
               onClick={handleGetConfig}
               disabled={configLoading}
-              style={{
-                padding: "4px 12px",
-                borderRadius: 4,
-                border: "1px solid #1976d2",
-                background: "#1976d2",
-                color: "#fff",
-                cursor: configLoading ? "not-allowed" : "pointer",
-              }}
             >
               {configLoading ? "Fetching..." : "Get Config"}
-            </button>
+            </Button>
             {configError && (
               <Typography
                 variant="caption"
@@ -279,9 +260,6 @@ function SettingsAndStatus({
                 color: "#757575",
                 fontSize: "0.875rem",
               },
-              "&:hover .MuiOutlinedInput-notchedOutline": {
-                borderColor: "rgba(0, 0, 0, 0.23)",
-              },
             }}
           />
           <TextField
@@ -296,9 +274,6 @@ function SettingsAndStatus({
                 color: "#757575",
                 fontSize: "0.875rem",
               },
-              "&:hover .MuiOutlinedInput-notchedOutline": {
-                borderColor: "rgba(0, 0, 0, 0.23)",
-              },
             }}
           />
           <TextField
@@ -312,9 +287,6 @@ function SettingsAndStatus({
               "& .MuiInputBase-input": {
                 color: "#757575",
                 fontSize: "0.875rem",
-              },
-              "&:hover .MuiOutlinedInput-notchedOutline": {
-                borderColor: "rgba(0, 0, 0, 0.23)",
               },
             }}
           />
@@ -333,20 +305,13 @@ function SettingsAndStatus({
         >
           {/* Button and error message container, aligned to the left */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <button
+            <Button
+              variant="contained" // Use contained variant
               onClick={handleGetMcpServers}
               disabled={mcpServersLoading}
-              style={{
-                padding: "4px 12px",
-                borderRadius: 4,
-                border: "1px solid #1976d2",
-                background: "#1976d2",
-                color: "#fff",
-                cursor: mcpServersLoading ? "not-allowed" : "pointer",
-              }}
             >
               {mcpServersLoading ? "Fetching Servers..." : "Get MCP Servers"}
-            </button>
+            </Button>
             {mcpServersError && (
               <Typography
                 variant="caption"

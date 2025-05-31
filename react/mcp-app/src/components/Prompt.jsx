@@ -1,9 +1,17 @@
 import React, { useState } from "react";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button"; // Import Button
 import PropTypes from "prop-types"; // For prop validation
 
-function Prompt({ baseApiUrl, onApiResponse, isNextStepsMode, onResetAll, sessionId, isLoading }) {
+function Prompt({
+  baseApiUrl,
+  onApiResponse,
+  isNextStepsMode,
+  onResetAll,
+  sessionId,
+  isLoading,
+}) {
   const [promptText, setPromptText] = useState("");
 
   const handleInputChange = (event) => {
@@ -31,7 +39,11 @@ function Prompt({ baseApiUrl, onApiResponse, isNextStepsMode, onResetAll, sessio
 
     // Pass the promptText and the current sessionId up to App.jsx
     // App.jsx will manage the loading state
-    onApiResponse({ data: null, loading: true, error: null }, promptText, sessionId);
+    onApiResponse(
+      { data: null, loading: true, error: null },
+      promptText,
+      sessionId
+    );
 
     // The actual API call will be made in App.jsx after sessionId is updated
   };
@@ -46,7 +58,9 @@ function Prompt({ baseApiUrl, onApiResponse, isNextStepsMode, onResetAll, sessio
 
   const promptProps = {
     id: "prompt-textfield",
-    label: "Enter your question",
+    label: "Enter Question & press [Submit]",
+    placeholder:
+      "Enter your question, and then press [submit]. If the model needs more information, it will suggest MCP actions and / or ask you for clarification questions. If it does this press [Do Next Steps] to proceed",
     multiline: true,
     rows: 10,
     value: promptText,
@@ -61,49 +75,51 @@ function Prompt({ baseApiUrl, onApiResponse, isNextStepsMode, onResetAll, sessio
         onChange={handleInputChange}
         disabled={isLoading}
       />
-      <Box sx={{ display: "flex", justifyContent: "flex-start", gap: 1, alignItems: 'center' }}> {/* Added gap for buttons and alignment */}
-        <button
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "flex-start",
+          gap: 1,
+          alignItems: "center",
+        }}
+      >
+        {" "}
+        {/* Added gap for buttons and alignment */}
+        <Button
+          variant="contained" // Use contained variant
           onClick={handleSubmit}
           disabled={isLoading || isNextStepsMode} // Only disable if loading or in next steps mode
-          style={{
-            padding: "4px 12px",
-            borderRadius: 4,
-            border: "1px solid #1976d2",
-            background: (isLoading || isNextStepsMode) ? "#ccc" : "#1976d2", // Background changes if disabled
-            color: "#fff",
-            cursor: (isLoading || isNextStepsMode) ? "not-allowed" : "pointer",
-          }}
         >
           {isLoading ? "Submitting..." : "Submit"}
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="contained" // Use contained variant
           onClick={handleReset}
-          style={{
-            padding: "4px 12px",
-            borderRadius: 4,
-            border: "1px solid #1976d2",
-            background: "#1976d2", // Same blue as Submit
-            color: "#fff",
-            cursor: "pointer",
-          }}
         >
           Reset
-        </button>
+        </Button>
         <TextField
           label="Session ID"
           value={sessionId}
           variant="outlined"
           size="small"
-          readOnly={true}
+          InputProps={{
+            readOnly: true,
+            sx: {
+              fontFamily: "monospace", // Override font to monospace
+            },
+          }}
           sx={{
-            width: '280px', // Adjust width as needed
+            width: "350px", // Adjust width as needed
             "& .MuiInputBase-root": {
-              fontSize: "0.75rem", // Smaller font size for Session ID
+              fontSize: "0.875rem", // Smaller font size for Session ID
+              fontFamily: "monospace", // Ensure monospace font for input
             },
             "&:hover .MuiOutlinedInput-notchedOutline": {
               borderColor: "rgba(0, 0, 0, 0.23)", // Keep border static on hover for readOnly
             },
           }}
+          title="Session Id"
         />
       </Box>
     </Box>

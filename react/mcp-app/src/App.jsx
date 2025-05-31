@@ -60,6 +60,32 @@ function App() {
     typography: {
       fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
     },
+    components: {
+      MuiTextField: {
+        styleOverrides: {
+          root: {
+            "& .MuiInputBase-root": {
+              fontSize: "0.875rem", // Apply to input text
+            },
+            "& .MuiInputLabel-root": {
+              fontSize: "0.875rem", // Apply to label
+            },
+          },
+        },
+      },
+      MuiButton: {
+        styleOverrides: {
+          // Style for the disabled state
+          root: {
+            fontSize: "0.875rem", // Apply font size to buttons
+            '&.Mui-disabled': {
+              backgroundColor: '#ccc', // Gray background
+              color: '#666', // Darker gray text color
+            },
+          },
+        },
+      },
+    },
   });
 
   const handleViewChange = (view) => {

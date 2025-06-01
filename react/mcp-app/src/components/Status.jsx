@@ -13,6 +13,11 @@ import Questions from "./Questions"; // Import Questions component
  * @param {boolean} props.apiStatus.loading - Loading state.
  * @param {string|null} props.apiStatus.error - Error message.
  * @param {number|null} props.apiStatus.startTime - Timestamp when loading started.
+ * @param {function} props.onApiResponse - Callback function to update API status in parent.
+ * @param {object|null} props.lastResponseData - The last received API response data.
+ * @param {string} props.currentGoalPromptText - The original goal prompt text.
+ * @param {string} props.sessionId - The current session ID.
+ * @param {function} props.onClarificationResponsesChange - Callback function to pass clarification responses to parent.
  * @returns {JSX.Element}
  */
 function Status({
@@ -22,10 +27,12 @@ function Status({
   lastResponseData,
   currentGoalPromptText,
   sessionId,
+  onClarificationResponsesChange, // Accept the new prop
 }) {
   const { data, loading, error, startTime } = apiStatus || {};
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isNextStepsLoading, setIsNextStepsLoading] = useState(false);
+  const [clarificationResponses, setClarificationResponses] = useState([]); // State to hold responses from Questions
 
   useEffect(() => {
     let intervalId;
@@ -44,6 +51,14 @@ function Status({
       }
     };
   }, [loading, startTime]);
+
+  // Pass clarification responses up to the parent whenever they change
+  useEffect(() => {
+    if (onClarificationResponsesChange) {
+      onClarificationResponsesChange(clarificationResponses);
+    }
+  }, [clarificationResponses, onClarificationResponsesChange]);
+
 
   let content;
 
@@ -111,10 +126,20 @@ function Status({
       const params = new URLSearchParams();
       params.append("goal", currentGoalPromptText); // Use the original prompt text as the goal
 
-      if (lastResponseData) {
-        // Send the full lastResponseData object as the 'questions' parameter
-        params.append("questions", JSON.stringify(lastResponseData));
+      // Include clarification responses in the 'questions' parameter
+      // Create a deep copy of lastResponseData to avoid modifying the original state directly
+      const questionsData = JSON.parse(JSON.stringify(lastResponseData));
+      
+      // Update the clarifications within the nested 'response' object
+      if (questionsData && questionsData.response) {
+        questionsData.response.clarifications = clarificationResponses;
+      } else {
+        // Handle cases where response or clarifications might be missing initially
+        questionsData.response = { clarifications: clarificationResponses };
       }
+
+      params.append("questions", JSON.stringify(questionsData));
+
       // Add the session id to the parameters
       params.append("session", sessionId);
 
@@ -164,6 +189,7 @@ function Status({
           /* Second column: */
           <Questions
             clarifications={data?.response?.clarifications}
+            onResponsesChange={setClarificationResponses} // Pass the setter to Questions
           />
         }
       </Box>
@@ -220,6 +246,7 @@ Status.propTypes = {
   lastResponseData: PropTypes.any,
   currentGoalPromptText: PropTypes.string, // Add prop type
   sessionId: PropTypes.string, // Add prop type for sessionId
+  onClarificationResponsesChange: PropTypes.func, // Add prop type for the new prop
 };
 
 Status.defaultProps = {
@@ -233,6 +260,7 @@ Status.defaultProps = {
   lastResponseData: null,
   currentGoalPromptText: "", // Add default prop
   sessionId: null, // Add default prop for sessionId
+  onClarificationResponsesChange: null, // Add default prop for the new prop
 };
 
 export default Status;

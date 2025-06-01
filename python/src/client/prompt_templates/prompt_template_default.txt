@@ -62,7 +62,8 @@ STRICT RESPONSE RULES:
   ],
   "clarifications": [
     {{
-      "question": "point of clarification needed to respond to the goal"
+      "question": "point of clarification needed to respond to the goal",
+      "response": "question response from user who set the goal"
     }}
   ],
   "answer": {{

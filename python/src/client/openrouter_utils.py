@@ -46,8 +46,28 @@ class OpenRouter:
         else:
             self._system_prompt: str = "you are an expert assistant that answers questions directly and concisely, without any additional information or disclaimers. You are very helpful and friendly, but you do not provide any additional information or disclaimers. You answer questions directly and concisely, without any additional information or disclaimers"
 
+    def get_url(self) -> str:
+        """Returns the OpenRouter API URL."""
+        return self._url
+
+    def get_model_name(self) -> str:
+        """Returns the model name being used."""
+        return self._model_name
+
+    def get_max_tokens(self) -> Optional[int]:
+        """Returns the maximum number of tokens for the response."""
+        return self._max_tokens
+
+    def get_system_prompt(self) -> str:
+        """Returns the system prompt being used."""
+        return self._system_prompt
+
+    def get_temperature(self) -> float:
+        """Returns the temperature setting for the API call."""
+        return self._temperature
+
     def _clean_json_str(self,
-                        jason_str: str) -> Dict[str, Any]:
+                         jason_str: str) -> Dict[str, Any]:
         jason_str = re.sub(r"[\n\t`']", "", jason_str, flags=re.MULTILINE)
         jason_str = re.sub(r"^json", "", jason_str, flags=re.IGNORECASE)
         response: Dict[str, str] = {}

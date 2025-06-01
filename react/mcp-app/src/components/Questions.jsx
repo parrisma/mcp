@@ -1,11 +1,33 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField"; // Import TextField
 import PropTypes from "prop-types"; // Import PropTypes
 import Typography from "@mui/material/Typography"; // Import Typography
 
-function Questions({ clarifications }) {
-  // Accept clarifications prop
+function Questions({ clarifications, onResponsesChange }) {
+  const [responses, setResponses] = useState([]);
+
+  useEffect(() => {
+    if (clarifications && Array.isArray(clarifications)) {
+      setResponses(Array(clarifications.length).fill(""));
+    } else {
+      setResponses([]);
+    }
+  }, [clarifications]);
+
+  const handleResponseChange = (index, value) => {
+    const newResponses = [...responses];
+    newResponses[index] = value;
+    setResponses(newResponses);
+    const structuredResponses = newResponses.map((response, i) => ({
+      question: clarifications[i].question,
+      response: response === "" ? "No user response" : response
+    }));
+    if (onResponsesChange) {
+      onResponsesChange(structuredResponses);
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -46,7 +68,8 @@ function Questions({ clarifications }) {
               variant="outlined"
               fullWidth
               placeholder="Enter your response here and it will be sent back to the LLM"
-              // You might want to add state here later to capture user input
+              value={responses[index] || ""}
+              onChange={(e) => handleResponseChange(index, e.target.value)}
             />
           </Box>
         ))}
@@ -67,6 +90,7 @@ Questions.propTypes = {
       question: PropTypes.string.isRequired,
     })
   ),
+  onResponsesChange: PropTypes.func,
 };
 
 Questions.defaultProps = {

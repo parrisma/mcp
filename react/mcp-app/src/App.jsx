@@ -4,7 +4,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Grid from "@mui/material/Grid";
-import { v4 as uuidv4 } from 'uuid'; // Import UUID generator
+import { v4 as uuidv4 } from "uuid"; // Import UUID generator
 import Status from "./components/Status.jsx";
 import HomeMenu from "./components/HomeMenu.jsx";
 import Prompt from "./components/Prompt.jsx";
@@ -51,6 +51,7 @@ function App() {
   });
   const [currentGoalPromptText, setCurrentGoalPromptText] = useState(""); // Store the original goal
   const [sessionId, setSessionId] = useState(uuidv4().toUpperCase()); // Manage sessionId in App.jsx
+  const [clarificationResponses, setClarificationResponses] = useState([]); // State to hold clarification responses
 
   const [activeView, setActiveView] = useState("Question");
   const darkTheme = createTheme({
@@ -78,9 +79,9 @@ function App() {
           // Style for the disabled state
           root: {
             fontSize: "0.875rem", // Apply font size to buttons
-            '&.Mui-disabled': {
-              backgroundColor: '#ccc', // Gray background
-              color: '#666', // Darker gray text color
+            "&.Mui-disabled": {
+              backgroundColor: "#ccc", // Gray background
+              color: "#666", // Darker gray text color
             },
           },
         },
@@ -120,7 +121,12 @@ function App() {
       // Generate and set a *new* session ID for this new question
       const newSessionId = uuidv4().toUpperCase();
       setSessionId(newSessionId);
-      setApiStatus({ ...statusUpdate, data: null, error: null, startTime: Date.now() });
+      setApiStatus({
+        ...statusUpdate,
+        data: null,
+        error: null,
+        startTime: Date.now(),
+      });
 
       // Now construct and make the API call in App.jsx using the *newly generated* session ID
       try {
@@ -142,7 +148,6 @@ function App() {
         const responseData = JSON.parse(responseText); // Parse the text as JSON
         // Pass the received data back to App.jsx
         setApiStatus({ data: responseData, loading: false, error: null });
-
       } catch (err) {
         // Pass the error back to App.jsx
         setApiStatus({ data: null, loading: false, error: err.message });
@@ -150,26 +155,77 @@ function App() {
     } else if (statusUpdate.loading && !apiStatus.loading) {
       // This might be from "Do Next Steps" or a re-submission without changing goal
       // Ensure data isn't prematurely cleared if it's a next step
-      setApiStatus(prevStatus => ({ ...prevStatus, ...statusUpdate, startTime: Date.now() }));
+      setApiStatus((prevStatus) => ({
+        ...prevStatus,
+        ...statusUpdate,
+        startTime: Date.now(),
+      }));
     } else if (!statusUpdate.loading && apiStatus.loading) {
       setApiStatus({ ...statusUpdate, startTime: null });
     } else {
-      setApiStatus(prevStatus => ({...prevStatus, ...statusUpdate}));
+      setApiStatus((prevStatus) => ({ ...prevStatus, ...statusUpdate }));
     }
   };
-  
-  // This callback can be simplified for Status component's "Do Next Steps"
-  // as it won't set the currentGoalPromptText and should not change the sessionId
-  const handleNextStepsApiResponse = (statusUpdate) => {
-     if (statusUpdate.loading && !apiStatus.loading) {
-        setApiStatus(prevStatus => ({ ...prevStatus, ...statusUpdate, data: prevStatus.data, startTime: Date.now() }));
-     } else if (!statusUpdate.loading && apiStatus.loading) {
-        setApiStatus({ ...statusUpdate, startTime: null });
-     } else {
-        setApiStatus(prevStatus => ({...prevStatus, ...statusUpdate}));
-     }
+
+  // Handler for clarification responses from Status component
+  const handleClarificationResponses = (responses) => {
+    setClarificationResponses(responses);
   };
 
+  // This callback can be simplified for Status component's "Do Next Steps"
+  // as it won't set the currentGoalPromptText and should not change the sessionId
+  const handleNextStepsApiResponse = async (statusUpdate) => {
+    if (statusUpdate.loading && !apiStatus.loading) {
+      setApiStatus((prevStatus) => ({
+        ...prevStatus,
+        ...statusUpdate,
+        data: prevStatus.data,
+        startTime: Date.now(),
+      }));
+
+      // Make the API call for "Do Next Steps" here, including clarification responses
+      try {
+        const fullUrl = `${baseApiUrl}/model_response`;
+        const params = new URLSearchParams();
+        params.append("goal", currentGoalPromptText);
+        params.append("session", sessionId);
+
+        // Include clarification responses in the request body
+        const requestBody = {
+          ...apiStatus.data, // Include other parts of the last response if needed
+          clarifications: clarificationResponses, // Include captured clarification responses
+        };
+
+        const response = await fetch(fullUrl, {
+          method: "POST", // Use POST for sending body
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+          const errorData = await response
+            .json()
+            .catch(() => ({ error: `HTTP error: ${response.status}` }));
+          throw new Error(errorData.error || `HTTP error: ${response.status}`);
+        }
+
+        const responseData = await response.json();
+        setApiStatus({ data: responseData, loading: false, error: null });
+      } catch (err) {
+        setApiStatus({
+          data: apiStatus.data,
+          loading: false,
+          error: err.message,
+        });
+      }
+    } else if (!statusUpdate.loading && apiStatus.loading) {
+      setApiStatus({ ...statusUpdate, startTime: null });
+    } else {
+      setApiStatus((prevStatus) => ({ ...prevStatus, ...statusUpdate }));
+    }
+  };
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -223,6 +279,7 @@ function App() {
                   lastResponseData={apiStatus.data}
                   currentGoalPromptText={currentGoalPromptText} // Pass the original goal
                   sessionId={sessionId} // Pass sessionId to Status
+                  onClarificationResponsesChange={handleClarificationResponses} // Pass the handler to Status
                 />
               </Paper>
             </Grid>

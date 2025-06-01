@@ -6,11 +6,9 @@ import datetime
 import os
 
 from pathlib import Path
-import re
 from tkinter.filedialog import Open
 from typing import List, Dict, Any, Optional, Tuple
 from click import prompt
-import mcp
 from yarl import URL
 
 from .mcp_client import MCPClient
@@ -22,15 +20,14 @@ from .openrouter_utils import OpenRouter
 import uuid
 
 
+# Custom Exception for LLM call failures
+class FailedLLMCall(Exception):
+    """Custom exception for when a call to the LLM fails."""
+    pass
+
+
 class MCPClientRunner:
-
     class ErrorGettingServerCapabilities(Exception):
-        pass
-
-    class FailedLLMCall(Exception):
-        pass
-
-    class ErrorStartingClientRunner(Exception):
         pass
 
     def __init__(self) -> None:
@@ -62,7 +59,6 @@ class MCPClientRunner:
             args)
         self._web_server = MCPClientWebServer(host=self._web_server_host,
                                               port=self._web_server_port)
-        self._add_web_routes()
 
         self._mcp_responses_cache: Dict[uuid.UUID, Dict[str, Any]] = {}
         self._clarifications_cache: Dict[uuid.UUID, Dict[str, str]] = {}
@@ -78,16 +74,6 @@ class MCPClientRunner:
             self._log.info(f"Openrouter avaialble")
             return OpenRouter(api_key=api_key_env)
         return None
-
-    def _add_web_routes(self) -> None:
-        self._web_server.add_route(
-            route='/config', methods=['GET'], handler=self.get_config)
-        self._web_server.add_route(
-            route='/capability', methods=['GET'], handler=self.get_capabilities)
-        self._web_server.add_route(
-            route='/ping', methods=['GET'], handler=self.ping_callback)
-        self._web_server.add_route(
-            route='/model_response', methods=['GET', 'POST'], handler=self.get_model_response)
 
     def _parse_command_line(self) -> argparse.Namespace:
         """
@@ -152,12 +138,6 @@ class MCPClientRunner:
             default=os.environ.get("MCP_CLIENT_WEB_PORT", "9312"),
             help="Port for the client's web server. Overrides MCP_CLIENT_WEB_PORT env var."
         )
-        parser.add_argument(
-            "--routes-file",
-            type=Path,
-            default=None,  # Default to None if not provided
-            help="Path to a JSON file containing route configurations, including allowed methods."
-        )
         args: argparse.Namespace = parser.parse_args()
         return args
 
@@ -212,11 +192,11 @@ class MCPClientRunner:
                         if not isinstance(server_item, dict) or \
                            "host" not in server_item or \
                            "port" not in server_item:
-                            self._log.warning(
+                             self._log.warning(
                                 f"Skipping invalid server entry in file: {server_item}. "
                                 "Each entry must be an object with 'host' and 'port'."
                             )
-                            continue
+                             continue
                         try:
                             port = int(server_item["port"])
                             connections_to_process.append(
@@ -246,7 +226,7 @@ class MCPClientRunner:
                 host_to_use = os.environ.get("MCP_CLIENT_HOST", "127.0.0.1")
             if not port_to_use_str:  # Not from arg, try env or hardcoded default
                 port_to_use_str = os.environ.get("MCP_CLIENT_PORT", "6277")
-
+            
             if host_to_use and port_to_use_str:
                 try:
                     port_val = int(port_to_use_str)
@@ -255,12 +235,12 @@ class MCPClientRunner:
                     msg: str = f"Invalid port value '{port_to_use_str}' for single server connection."
                     self._log.error(msg)
                     raise ValueError(msg) from ve
-            else:  # Should not happen if defaults are set, but as a fallback
-                self._log.error(
-                    "No server host or port configured via arguments, host list file, or environment variables.")
+            else: # Should not happen if defaults are set, but as a fallback
+                self._log.error("No server host or port configured via arguments, host list file, or environment variables.")
+
 
         for host, port in connections_to_process:
-            if not NetworkUtils.is_resolvable_hostname(host):  # Corrected call
+            if not NetworkUtils.is_resolvable_hostname(host): # Corrected call
                 self._log.error(
                     f"Hostname '{host}' is not resolvable. Skipping this connection."
                 )
@@ -302,8 +282,7 @@ class MCPClientRunner:
             self._log.error(msg)
             raise ValueError(msg)
 
-        self._log.info(
-            f"Validated web server address: http://{web_host}:{web_port}")
+        self._log.info(f"Validated web server address: http://{web_host}:{web_port}")
         return web_host, web_port
 
     def _ensure_ollama_ready(self) -> None:
@@ -312,8 +291,7 @@ class MCPClientRunner:
             msg: str = f"Ollama server at {self._ollama_host_url} is not running or model '{self._ollama_model_name}' is not loaded."
             self._log.error(msg)
             raise ValueError(msg)
-        self._log.info(
-            f"Ollama server at {self._ollama_host_url} is running and model '{self._ollama_model_name}' is loaded.")
+        self._log.info(f"Ollama server at {self._ollama_host_url} is running and model '{self._ollama_model_name}' is loaded.")
 
     def _current_time_as_dict(self) -> Dict[str, Any]:
         now = datetime.datetime.now(datetime.timezone.utc).astimezone()
@@ -329,10 +307,8 @@ class MCPClientRunner:
 
     def ping_callback(self,
                       params: Dict) -> Dict:
-        path: str = params.get(
-            MCPClientWebServer.QueryParamKeys.PATH.value, "")
-        args: Dict[str, Any] = params.get(
-            MCPClientWebServer.QueryParamKeys.ARGS.value, {})
+        path: str = params.get(MCPClientWebServer.QueryParamKeys.PATH.value, "")
+        args: Dict[str, Any] = params.get(MCPClientWebServer.QueryParamKeys.ARGS.value, {})
 
         return {
             "ping": self._current_time_as_dict(),
@@ -360,8 +336,7 @@ class MCPClientRunner:
         Adds mcp_responses to the session cache and returns the merged responses.
         """
         try:
-            mcp_sesson_responses: Dict[str, Any] = self._mcp_responses_cache.get(
-                llm_session, {})
+            mcp_sesson_responses: Dict[str, Any] = self._mcp_responses_cache.get(llm_session, {})
             for mcp_response in mcp_responses:
                 mcp_sesson_responses[mcp_response["source"]] = mcp_response
             self._mcp_responses_cache[llm_session] = mcp_sesson_responses
@@ -378,8 +353,7 @@ class MCPClientRunner:
         Adds clarifications to the session cache and returns the merged clarifications.
         """
         try:
-            clarifications_session: Dict[str, Any] = self._clarifications_cache.get(
-                llm_session, {})
+            clarifications_session: Dict[str, Any] = self._clarifications_cache.get(llm_session, {})
             for clarification in clarifications:
                 clarifications_session[clarification["source"]] = clarification
             self._clarifications_cache[llm_session] = clarifications_session
@@ -419,7 +393,7 @@ class MCPClientRunner:
                 self._log.error(msg)
                 raise
 
-            if not params.get("args"):  # Ensure 'args' key exists
+            if not params.get("args"): # Ensure 'args' key exists
                 msg = "No 'args' provided in parameters for model response."
                 self._log.error(msg)
                 raise ValueError(msg)
@@ -442,10 +416,10 @@ class MCPClientRunner:
                     self._log.error(msg)
                     raise ValueError(msg) from e
 
+
             capabilities: Dict[str, Any] = await self._get_capabilities()
-            if "error" in capabilities:  # Propagate error from _get_capabilities
-                raise MCPClientRunner.ErrorGettingServerCapabilities(
-                    capabilities["error"])
+            if "error" in capabilities: # Propagate error from _get_capabilities
+                raise MCPClientRunner.ErrorGettingServerCapabilities(capabilities["error"])
 
             goal: str = params['args'].get("goal", "")
             if not goal:
@@ -471,6 +445,7 @@ class MCPClientRunner:
                     llm_session=llm_session
                 )
 
+
             full_prompt: Optional[str] = get_llm_prompt(user_goal=goal,
                                                         session_id=llm_session,
                                                         mcp_server_descriptions=capabilities,
@@ -493,24 +468,22 @@ class MCPClientRunner:
             else:
                 llm_call_successful, llm_content = get_llm_response(prompt=full_prompt,
                                                                     model=self._ollama_model_name,
-                                                                    host=str(
-                                                                        self._ollama_host_url),
+                                                                    host=str(self._ollama_host_url),
                                                                     temperature=0.3
                                                                     )
 
             if not llm_call_successful:
-                error_message = str(
-                    llm_content) if llm_content else "Unknown LLM error during get_initial_response"
-                raise MCPClientRunner.FailedLLMCall(error_message)
+                error_message = str(llm_content) if llm_content else "Unknown LLM error during get_initial_response"
+                raise FailedLLMCall(error_message)
 
             # Assuming llm_content is the actual response data from the model on success
             return {"response": llm_content, "status": "success"}
 
-        except MCPClientRunner.FailedLLMCall as flc:
+        except FailedLLMCall as flc:
             msg = f"LLM call failed: {flc}"
             self._log.error(msg)
             return {"error": msg, "type": "FailedLLMCall"}
-        except ValueError as ve:  # This will now catch ValueErrors raised explicitly if any
+        except ValueError as ve: # This will now catch ValueErrors raised explicitly if any
             msg = f"Input error for model response: {ve}"
             self._log.error(msg)
             return {"error": msg, "type": "ValueError"}
@@ -519,43 +492,67 @@ class MCPClientRunner:
             self._log.exception(msg)
             return {"error": msg, "type": "Exception"}
 
-    def get_model_response(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Synchronous wrapper for the async get_model_response method."""
-        return asyncio.run(self._get_model_response(params))
 
     async def _get_capabilities(self) -> Dict[str, Any]:
         """
-        Retrieves the capabilities of the MCP server.
-        Returns a dictionary with server capabilities.
+        Retrieves capabilities from all configured MCP servers.
+        Returns a dictionary where keys are server URLs and values are their capabilities,
+        or an error dictionary if retrieval fails for any server.
         """
         try:
-            return await self._mcp_client.get_details_of_all_servers()
+            capabilities: Dict[str, Any] = await self._mcp_client.get_all_server_capabilities()
+            return capabilities
         except Exception as e:
-            msg: str = f"Failed to get MCP server capabilities: {e}"
-            self._log.error(msg=msg)
+            msg: str = f"Error getting server capabilities: {e}"
+            self._log.error(msg)
             return {"error": msg}
 
-    def get_capabilities(self,
-                         params: Dict) -> Dict:
-        return asyncio.run(self._get_capabilities())
 
     async def _start_services(self) -> None:
-        """
-        Ensures Ollama is ready, and starts the web server.
-        """
-        self._ensure_ollama_ready()
-        self._web_server.run()
+        """Starts the web server and connects to MCP servers."""
+        self._log.info("Starting MCP Client Runner services...")
+        await self._web_server.start()
+        self._log.info(f"Web server started at http://{self._web_server_host}:{self._web_server_port}")
+
+        # Register web server callbacks
+        self._web_server.register_callback(
+            "/ping", self.ping_callback)
+        self._web_server.register_callback(
+            "/config", self.get_config)
+        self._web_server.register_callback(
+            "/model_response", self._get_model_response)
+
+        # Connect to MCP servers
+        await self._mcp_client.connect_to_servers()
+        self._log.info("Attempted connection to all configured MCP servers.")
+
 
     async def run(self) -> None:
-        await self._start_services()
+        """Runs the MCP Client Runner."""
+        try:
+            # Ensure Ollama is ready before starting services that might use it
+            if not self._openrouter: # Only check Ollama if OpenRouter is not available
+                self._ensure_ollama_ready()
+
+            await self._start_services()
+
+            # Keep the server running
+            await asyncio.Future()
+        except ValueError as ve:
+            self._log.error(f"Configuration error: {ve}")
+        except Exception as e:
+            self._log.exception(f"An unexpected error occurred: {e}")
 
 
-async def main() -> None:
+if __name__ == "__main__":
     runner = MCPClientRunner()
-    await runner.run()
-
-if __name__ == "__main__":
-    asyncio.run(main())
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(runner.run())
+    except KeyboardInterrupt:
+        print("\nMCP Client Runner stopped by user.")
+    except ValueError as ve:
+        print(f"\nConfiguration error: {ve}")
+    except Exception as e:
+        print(f"\nAn unexpected error occurred: {e}")
+        import traceback
+        traceback.print_exc()

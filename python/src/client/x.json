@@ -1,18 +1,20 @@
 {
   "response": {
-    "answer": {},
-    "clarifications": [],
-    "mcp_server_calls": [
+    "answer": null,
+    "clarifications": [
       {
-        "mcp_capability": "tools",
-        "mcp_capability_name": "add",
-        "mcp_server_name": "Demo",
-        "parameters": { "a": 6, "b": 3 }
+        "question": "What is the primary objective of these clarification questions?",
+        "response": "to help testing"
+      },
+      {
+        "question": "Are there any specific topics or constraints for these clarification questions?",
+        "response": "no, none"
       }
     ],
+    "mcp_server_calls": [],
     "thinking": {
-      "next_steps": "Execute the add tool with parameters a=6 and b=3.",
-      "reasoning": "The goal is to add 6 and 3. The add tool from the Demo server can perform this operation."
+      "next_steps": "Wait for the user to reply to these clarification questions. Once replies are received, I will confirm the goal as complete.",
+      "reasoning": "The goal is to make up two clarification questions. I have formulated two general clarification questions as requested."
     }
   },
   "status": "success"

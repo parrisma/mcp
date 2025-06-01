@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 from typing import List, Dict, Any, Optional, Protocol
 from .mcp_client import MCPClient
 
@@ -105,56 +106,136 @@ class MCPInvoke:
             if len(mcp_server_calls) == 0:
                 msg = "No MCP server calls to process."
                 self._log.info(msg)
-                raise ValueError(msg)
+            else:
+                for call in mcp_server_calls:
+                    if not isinstance(call, dict):
+                        msg = "Each MCP server call must be a dictionary."
+                        self._log.error(msg)
+                        raise ValueError(msg)
 
-            for call in mcp_server_calls:
-                if not isinstance(call, dict):
-                    msg = "Each MCP server call must be a dictionary."
-                    self._log.error(msg)
-                    raise ValueError(msg)
+                    server_name = call.get("mcp_server_name")
+                    if not server_name:
+                        msg = "MCP server name is required in the call."
+                        self._log.error(msg)
+                        raise ValueError(msg)
 
-                server_name = call.get("mcp_server_name")
-                if not server_name:
-                    msg = "MCP server name is required in the call."
-                    self._log.error(msg)
-                    raise ValueError(msg)
+                    capability = call.get("mcp_capability")
+                    if not capability:
+                        msg = "MCP capability (e.g. Tool, Prompt etc) is required in the call."
+                        self._log.error(msg)
+                        raise ValueError(msg)
 
-                capability = call.get("mcp_capability")
-                if not capability:
-                    msg = "MCP capability (e.g. Tool, Prompt etc) is required in the call."
-                    self._log.error(msg)
-                    raise ValueError(msg)
+                    capability_name = call.get("mcp_capability_name")
+                    if not capability_name:
+                        msg = "MCP capability (e.g. tool name) is required in the call."
+                        self._log.error(msg)
+                        raise ValueError(msg)
 
-                capability_name = call.get("mcp_capability_name")
-                if not capability_name:
-                    msg = "MCP capability (e.g. tool name) is required in the call."
-                    self._log.error(msg)
-                    raise ValueError(msg)
+                    parameters = call.get("parameters", {})
+                    if not isinstance(parameters, dict):
+                        msg = "Parameters must be a dictionary."
+                        self._log.error(msg)
+                        raise ValueError(msg)
 
-                parameters = call.get("parameters", {})
-                if not isinstance(parameters, dict):
-                    msg = "Parameters must be a dictionary."
-                    self._log.error(msg)
-                    raise ValueError(msg)
+                    handler: MCPInvoke.MCPCapabilityHandler = self._capability_handlers.get(
+                        capability, self._handle_unsupported_call)
 
-                handler: MCPInvoke.MCPCapabilityHandler = self._capability_handlers.get(
-                    capability, self._handle_unsupported_call)
-
-                results.append(
-                    await handler(server_name, capability_name, parameters))
+                    results.append(
+                        await handler(server_name, capability_name, parameters))
         except Exception as e:
             msg = f"Error processing MCP server calls: {e}"
             self._log.error(msg)
             results.append({"error": msg})
         return results
 
-    async def process_mcp_responses(self, response: Dict[str, Any]) -> Dict[str, Any]:
+    async def _get_clarification_responses(self,
+                                           clarifications: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        results: List[Dict[str, Any]] = []
+        try:
+            if not isinstance(clarifications, list):
+                msg = "Invalid input: 'clarifications' must be a list."
+                self._log.error(msg)
+                raise ValueError(msg)
+            if len(clarifications) == 0:
+                msg = "No clarifications to process."
+                self._log.info(msg)
+                raise ValueError(msg)
+
+            for clarification in clarifications:
+                if not isinstance(clarification, dict):
+                    msg: str = f"Each clarification request must be a dictionary, but got [{type(clarification)}]."
+                    self._log.error(msg)
+                    raise ValueError(msg)
+
+                question: str | None = clarification.get("question")
+                if not question:
+                    msg = "Clarification question is required in the call."
+                    self._log.error(msg)
+                    raise ValueError(msg)
+
+                user_response: str | None = clarification.get("response")
+                if not user_response:
+                    msg = "User response is required in the call."
+                    self._log.error(msg)
+                    raise ValueError(msg)
+
+                results.append({
+                    "question": question,
+                    "response": user_response
+                })
+        except Exception as e:
+            msg = f"Error processing clarification questions: {e}"
+            self._log.error(msg)
+            results.append({"error": msg})
+        return results
+
+    def _extract_mcp_server_calls_from_response(self,
+                                                response_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        mcp_server_calls: List[Dict[str, Any]] = []
+        try:
+            mcp_server_calls = response_data.get("mcp_server_calls", {})
+            if len(mcp_server_calls) == 0:
+                self._log.info(
+                    "No MCP server calls found in the response.")
+            else:
+                if not isinstance(mcp_server_calls, list):
+                    msg = "MCP server calls must be a list."
+                    self._log.error(msg)
+                    raise ValueError(msg)
+        except Exception as e:
+            msg = f"Unexpected error extracting MCP server calls from response: {e}"
+            self._log.exception(msg=msg)
+            raise ValueError(msg)
+
+        return mcp_server_calls
+
+    def _extract_clarifications_from_response(self,
+                                              response_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        clarification_responses: List[Dict[str, Any]] = []
+        try:
+            clarification_responses = response_data.get("clarifications", {})
+            if len(clarification_responses) == 0:
+                self._log.info(
+                    "No clarification found in the response.")
+            else:
+                if not isinstance(clarification_responses, list):
+                    msg = "Clarifications must be a list."
+                    self._log.error(msg)
+                    raise ValueError(msg)
+        except Exception as e:
+            msg = f"Unexpected error extracting Clarifications from response: {e}"
+            self._log.exception(msg=msg)
+            raise ValueError(msg)
+
+        return clarification_responses
+
+    async def extract_and_process_llm_responses(self, response: Dict[str, Any]) -> Dict[str, Any]:
         """
         Parses a list of JSON LLM responses and invokes the appropriate MCP actions if any MCP actions are specified.
         """
         results: Dict[str, Any] = {}
         mcp_server_responses: List[Dict[str, Any]] = []
-        clarification_responses: Dict[str, Any] = {}
+        clarification_responses: List[Dict[str, Any]] = []
         try:
             if not isinstance(response, Dict):
                 msg = "Invalid input: 'response' must be a dictionary."
@@ -174,21 +255,11 @@ class MCPInvoke:
                     self._log.error(msg)
                     raise ValueError(msg)
 
-                mcp_server_calls = response_data.get("mcp_server_calls", {})
-                if len(mcp_server_calls) == 0:
-                    self._log.info(
-                        "No MCP server calls found in the response.")
-                if not isinstance(mcp_server_calls, list):
-                    msg = "MCP server calls must be a list."
-                    self._log.error(msg)
-                    raise ValueError(msg)
-                else:
-                    mcp_server_responses = await self._get_mcp_server_responses(
-                        mcp_server_calls)
+                mcp_server_responses = await self._get_mcp_server_responses(
+                    self._extract_mcp_server_calls_from_response(response_data))
 
-                clarifications = response_data.get("clarifications", {})
-                if len(clarifications) == 0:
-                    self._log.info("No clarifications found in the response.")
+                clarification_responses = await self._get_clarification_responses(self._extract_clarifications_from_response(
+                    response_data))
             else:
                 msg = "Response does not contain 'response' key."
                 self._log.error(msg)
@@ -234,7 +305,7 @@ async def test():
     ]
 
     for test_response in test_responses:
-        results = await invoker.process_mcp_responses(test_response)
+        results = await invoker.extract_and_process_llm_responses(test_response)
         for key, value in results.items():
             print(f"{key}: {value}")
 

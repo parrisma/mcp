@@ -69,18 +69,28 @@ function Status({
   } else if (data && data.response) {
     // Check for the nested 'response' object
     const responseData = data.response;
-    if (
+    if (responseData.answer) {
+      // Display the answer if available
+      if (typeof responseData.answer === 'object' && responseData.answer !== null && responseData.answer.body !== undefined && responseData.answer.confidence !== undefined) {
+        content = `${responseData.answer.body} with confidence ${responseData.answer.confidence}`;
+      } else if (typeof responseData.answer === 'object' && responseData.answer !== null) {
+        content = JSON.stringify(responseData.answer, null, 2);
+      }
+       else {
+        content = responseData.answer;
+      }
+    } else if (
       responseData.mcp_server_calls &&
       responseData.mcp_server_calls.length > 0
     ) {
-      // Only show MCP server calls if present
+      // Otherwise, show MCP server calls if present
       content = `Pending MCP Server Calls:\n${JSON.stringify(
         responseData.mcp_server_calls,
         null,
         2
       )}`;
     } else {
-      // Otherwise, content is empty
+      // Default content if no answer or MCP calls
       content = "";
     }
   } else {
@@ -177,7 +187,7 @@ function Status({
       <Box  mb={2} sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}> {/* Changed to 2fr 1fr */}
         {/* First column: the main TextField */}
         <TextField
-          label={data?.response?.answer ? "Answer" : "(MCP) Actions"}
+          label={data?.response?.answer ? "Answer" : "(MCP) Requested Actions"}
           multiline
           rows={10}
           value={content}
@@ -247,6 +257,7 @@ Status.propTypes = {
   currentGoalPromptText: PropTypes.string, // Add prop type
   sessionId: PropTypes.string, // Add prop type for sessionId
   onClarificationResponsesChange: PropTypes.func, // Add prop type for the new prop
+  onResetAll: PropTypes.func, // Add prop type for onResetAll
 };
 
 Status.defaultProps = {
@@ -261,6 +272,7 @@ Status.defaultProps = {
   currentGoalPromptText: "", // Add default prop
   sessionId: null, // Add default prop for sessionId
   onClarificationResponsesChange: null, // Add default prop for the new prop
+  onResetAll: null, // Add default prop for onResetAll
 };
 
 export default Status;

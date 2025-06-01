@@ -1,5 +1,5 @@
 from operator import call
-from typing import Dict, Protocol, Any, Literal
+from typing import Dict, Protocol, Any, Literal, List
 from functools import partial, update_wrapper
 from unittest import result
 from flask import Flask, Response, jsonify, request
@@ -55,13 +55,16 @@ class MCPClientWebServer:
         return jsonify(result)
 
     def add_route(self,
-                  path: str,
+                  route: str,
+                  methods: List[Literal['GET', 'POST', 'PUT', 'DELETE']],
                   handler: "MCPClientWebServer.WebUserCallback") -> None:
         wrapped_callback: MCPClientWebServer.WebCallback = partial(
             self._web_user_callback_wrapper, callback=handler)
         update_wrapper(wrapped_callback, handler)
-        self._app.route(path)(wrapped_callback)
-        self._routes[path] = wrapped_callback
+        self._app.route(route)(wrapped_callback)
+        self._routes[route] = wrapped_callback
+        self._app.add_url_rule(
+            route, view_func=self._routes[route], methods=methods)
 
     def shutdown_server(self):
         # This function is designed to be called from a request handler
@@ -103,5 +106,9 @@ if __name__ == '__main__':
 
     test_callback = TestCallback()
     client = MCPClientWebServer(host='0.0.0.0', port=5000)
-    client.add_route('/test', test_callback.any_callback)
+    methods: List[str] = ['GET', 'POST']
+    route = '/test'
+    client.add_route(route=route,
+                     methods=['GET', 'POST'],
+                     handler=test_callback.any_callback)
     client.run()

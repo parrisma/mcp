@@ -280,6 +280,7 @@ function App() {
                   currentGoalPromptText={currentGoalPromptText} // Pass the original goal
                   sessionId={sessionId} // Pass sessionId to Status
                   onClarificationResponsesChange={handleClarificationResponses} // Pass the handler to Status
+                  onResetAll={handleResetAll} // Pass the reset handler to Status
                 />
               </Paper>
             </Grid>

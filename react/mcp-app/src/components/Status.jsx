@@ -29,28 +29,9 @@ function Status({
   sessionId,
   onClarificationResponsesChange, // Accept the new prop
 }) {
-  const { data, loading, error, startTime } = apiStatus || {};
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const { data, loading, error } = apiStatus || {};
   const [isNextStepsLoading, setIsNextStepsLoading] = useState(false);
   const [clarificationResponses, setClarificationResponses] = useState([]); // State to hold responses from Questions
-
-  useEffect(() => {
-    let intervalId;
-    if (loading && startTime) {
-      setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000)); // Initial calculation
-      intervalId = setInterval(() => {
-        setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000));
-      }, 1000);
-    } else {
-      setElapsedSeconds(0); // Reset when not loading or no startTime
-    }
-
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [loading, startTime]);
 
   // Pass clarification responses up to the parent whenever they change
   useEffect(() => {
@@ -69,12 +50,22 @@ function Status({
     const responseData = data.response;
     if (responseData.answer) {
       // Display the answer if available
-      if (typeof responseData.answer === 'object' && responseData.answer !== null && responseData.answer.body !== undefined && responseData.answer.confidence !== undefined) {
-        content = `${responseData.answer.body} with confidence ${responseData.answer.confidence}`;
-      } else if (typeof responseData.answer === 'object' && responseData.answer !== null) {
-        content = JSON.stringify(responseData.answer, null, 2);
-      }
-       else {
+      if (typeof responseData.answer === 'object' && responseData.answer !== null) {
+        let bodyContent = responseData.answer.body;
+        if (typeof bodyContent === 'object' && bodyContent !== null) {
+          bodyContent = JSON.stringify(bodyContent, null, 2);
+        }
+
+        if (responseData.answer.confidence !== undefined) {
+          content = `${bodyContent} with confidence ${responseData.answer.confidence}`;
+        } else if (bodyContent !== undefined) {
+          content = bodyContent;
+        } else {
+          // If answer is an object but has no body or confidence, stringify the whole answer object
+          content = JSON.stringify(responseData.answer, null, 2);
+        }
+      } else if (responseData.answer !== undefined) {
+        // If answer exists but is not an object, display it directly
         content = responseData.answer;
       }
     } else if (

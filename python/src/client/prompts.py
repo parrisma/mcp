@@ -1,11 +1,8 @@
-from math import e
 import os
 from enum import Enum
 from pathlib import Path
 from typing import Dict, Optional, Protocol, List, Any
-from exceptiongroup import catch
 from langchain.prompts import PromptTemplate
-from numpy import var
 
 
 class Prompts:

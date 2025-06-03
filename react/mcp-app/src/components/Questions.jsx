@@ -50,7 +50,9 @@ function Questions({ clarifications, onResponsesChange }) {
       >
         {" "}
         {/* Added fontSize */}
-        Questions needing your clarification
+        {clarifications && Array.isArray(clarifications) && clarifications.length > 0
+          ? "Please respond to these questions"
+          : "No, Questions needing your clarification"}
       </Typography>
       {/* Dynamically add TextFields for each clarification question */}
       {clarifications &&
@@ -77,7 +79,6 @@ function Questions({ clarifications, onResponsesChange }) {
         !Array.isArray(clarifications) ||
         clarifications.length === 0) && (
         <Box sx={{ textAlign: "center", color: "text.secondary" }}>
-          No clarification questions.
         </Box>
       )}
     </Box>

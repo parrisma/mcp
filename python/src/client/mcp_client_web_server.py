@@ -17,7 +17,7 @@ class MCPClientWebServer:
         PATH = "path"
         ARGS = "args"
 
-        def __str__(self) -> Literal["path", "args"]:
+        def __str__(self) -> str:
             return self.value
 
     class WebUserCallback(Protocol):

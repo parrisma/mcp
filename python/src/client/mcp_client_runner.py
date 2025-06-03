@@ -16,7 +16,7 @@ from yarl import URL
 
 from .mcp_client import MCPClient
 from ..server.network_utils import NetworkUtils
-from .ollama_utils import ollama_running_and_model_loaded, ollama_host, ollama_model, get_llm_response, get_llm_prompt
+from .ollama_utils import Ollama
 from .mcp_client_web_server import MCPClientWebServer
 from .mcp_invoke import MCPInvoke
 from .openrouter_utils import OpenRouter
@@ -52,6 +52,7 @@ class MCPClientRunner:
         if self._ollama_enabled:
             self._ollama_host_url, self._ollama_model_name = self._get_ollama_url_and_model(
                 args)
+            self._ollama: Ollama = Ollama()
         else:
             self._log.info(
                 "Ollama integration is disabled, no Ollama conenction will be made.")
@@ -354,8 +355,8 @@ class MCPClientRunner:
                 msg: str = "Ollama host URL or model name is not set."
                 self._log.error(msg)
                 raise ValueError(msg)
-            if (not ollama_running_and_model_loaded(host_url=self._ollama_host_url,
-                                                    model_name=self._ollama_model_name)):
+            if (not self._ollama.ollama_running_and_model_loaded(host_url=self._ollama_host_url,
+                                                                 model_name=self._ollama_model_name)):
                 msg: str = f"Ollama server at {self._ollama_host_url} is not running or model '{self._ollama_model_name}' is not loaded."
                 self._log.error(msg)
                 raise ValueError(msg)
@@ -524,11 +525,11 @@ class MCPClientRunner:
                     llm_session=llm_session
                 )
 
-            full_prompt: Optional[str] = get_llm_prompt(user_goal=goal,
-                                                        session_id=llm_session,
-                                                        mcp_server_descriptions=capabilities,
-                                                        mcp_responses=mcp_responses,
-                                                        clarifications=clarifications)
+            full_prompt: Optional[str] = self._ollama.get_llm_prompt(user_goal=goal,
+                                                                     session_id=llm_session,
+                                                                     mcp_server_descriptions=capabilities,
+                                                                     mcp_responses=mcp_responses,
+                                                                     clarifications=clarifications)
 
             llm_call_successful: bool = False
             llm_content: Dict[str, Any] = {}
@@ -544,12 +545,13 @@ class MCPClientRunner:
                     prompt=full_prompt
                 )
             else:
-                llm_call_successful, llm_content = get_llm_response(prompt=full_prompt,
-                                                                    model=self._ollama_model_name,
-                                                                    host=str(
-                                                                        self._ollama_host_url),
-                                                                    temperature=0.3
-                                                                    )
+                llm_call_successful, llm_content = self._ollama.get_llm_response(prompt=full_prompt,
+                                                                                 model=str(
+                                                                                     self._ollama_model_name),
+                                                                                 host=str(
+                                                                                     self._ollama_host_url),
+                                                                                 temperature=0.3
+                                                                                 )
 
             if not llm_call_successful:
                 error_message = str(

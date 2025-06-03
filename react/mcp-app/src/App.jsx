@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
@@ -52,6 +52,25 @@ function App() {
   const [currentGoalPromptText, setCurrentGoalPromptText] = useState(""); // Store the original goal
   const [sessionId, setSessionId] = useState(uuidv4().toUpperCase()); // Manage sessionId in App.jsx
   const [clarificationResponses, setClarificationResponses] = useState([]); // State to hold clarification responses
+  const [elapsedSeconds, setElapsedSeconds] = useState(0); // State for elapsed time
+
+  useEffect(() => {
+    let intervalId;
+    if (apiStatus.loading && apiStatus.startTime) {
+      setElapsedSeconds(Math.floor((Date.now() - apiStatus.startTime) / 1000)); // Initial calculation
+      intervalId = setInterval(() => {
+        setElapsedSeconds(Math.floor((Date.now() - apiStatus.startTime) / 1000));
+      }, 1000);
+    } else {
+      setElapsedSeconds(0); // Reset when not loading or no startTime
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [apiStatus.loading, apiStatus.startTime]);
 
   const [activeView, setActiveView] = useState("Question");
   const darkTheme = createTheme({
@@ -255,6 +274,7 @@ function App() {
                   sessionId={sessionId} // Pass sessionId to Prompt
                   setSessionId={setSessionId} // Pass setSessionId to Prompt
                   isLoading={apiStatus.loading} // Pass loading state to Prompt
+                  activityStatus={apiStatus.loading ? `thinking, please be patient [${elapsedSeconds}s]` : ''} // Pass activity status
                 />
               )}
               {activeView === "Settings" && (

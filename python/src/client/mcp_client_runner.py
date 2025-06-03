@@ -7,6 +7,7 @@ import os
 
 from pathlib import Path
 import re
+from tkinter import N
 from tkinter.filedialog import Open
 from typing import List, Dict, Any, Optional, Tuple
 from click import prompt
@@ -45,10 +46,15 @@ class MCPClientRunner:
         self._debug_mode: bool = False  # Initialize debug_mode
         self._set_logging(args)
 
-        self._ollama_host_url: URL
-        self._ollama_model_name: str
-        self._ollama_host_url, self._ollama_model_name = self._get_ollama_url_and_model(
-            args)
+        self._ollama_host_url: URL | None = None
+        self._ollama_model_name: str | None = None
+        self._ollama_enabled: bool = args.ollama_enabled
+        if self._ollama_enabled:
+            self._ollama_host_url, self._ollama_model_name = self._get_ollama_url_and_model(
+                args)
+        else:
+            self._log.info(
+                "Ollama integration is disabled, no Ollama conenction will be made.")
 
         self._mcp_host_urls: List[str] = self._get_mcp_host_urls(args)
         self._mcp_client: MCPClient = MCPClient(
@@ -67,16 +73,27 @@ class MCPClientRunner:
         self._mcp_responses_cache: Dict[uuid.UUID, Dict[str, Any]] = {}
         self._clarifications_cache: Dict[uuid.UUID, Dict[str, str]] = {}
 
-        self._openrouter: OpenRouter | None = self._setup_openrouter()
+        self._openrouter_url: URL = URL(args.openrouter_url)
+        self._openrouter_model: str = args.openrouter_model
+        self._openrouter_api_key: str = args.openrouter_api_key
+        self._openrouter: OpenRouter | None = self._setup_openrouter(openrouter_url=self._openrouter_url,
+                                                                     openrouter_model=self._openrouter_model,
+                                                                     openrouter_api_key=self._openrouter_api_key)
 
-    def _setup_openrouter(self) -> Optional[OpenRouter]:
-        api_key_env = os.environ.get("OPENROUTER_API_KEY")
-        if not api_key_env:
-            self._log.info(
-                "Please set the OPENROUTER_API_KEY environment variable to use OpenRouter API.")
+    def _setup_openrouter(self,
+                          openrouter_url: URL,
+                          openrouter_model: str,
+                          openrouter_api_key: str) -> Optional[OpenRouter]:
+        if not openrouter_url or not openrouter_model or not openrouter_api_key:
+            self._log.warning(
+                "OpenRouter is not enabled: need all of URL, model & API key to be fully defined, "
+                f"got URL: {openrouter_url}, model: {openrouter_model}, API key: {'set' if openrouter_api_key else 'not set'}."
+            )
         else:
             self._log.info(f"Openrouter avaialble")
-            return OpenRouter(api_key=api_key_env)
+            return OpenRouter(openrouter_url=openrouter_url.name,
+                              model_name=openrouter_model,
+                              api_key=openrouter_api_key,)
         return None
 
     def _add_web_routes(self) -> None:
@@ -122,6 +139,13 @@ class MCPClientRunner:
                  "If provided, --host and --port arguments are ignored."
         )
         parser.add_argument(
+            "--ollama-enabled",
+            action="store_true",
+            default=os.environ.get("MCP_OLLAMA_ENABLED",
+                                   "false").lower() == "true",
+            help="Enable Ollama integration. Overrides MCP_OLLAMA_ENABLED env var. Defaults to false."
+        )
+        parser.add_argument(
             "--ollama-host-url",
             type=str,
             default=os.environ.get("MCP_OLLAMA_HOST_URL"),
@@ -153,12 +177,27 @@ class MCPClientRunner:
             help="Port for the client's web server. Overrides MCP_CLIENT_WEB_PORT env var."
         )
         parser.add_argument(
-            "--routes-file",
-            type=Path,
-            default=None,  # Default to None if not provided
-            help="Path to a JSON file containing route configurations, including allowed methods."
+            "--openrouter-url",
+            type=str,
+            default=os.environ.get(
+                "OPENROUTER_URL", "https://openrouter.ai/api/v1"),
+            help="URL of the OpenRouter server. Overrides OPENROUTER_URL env var. Defaults to https://openrouter.ai/api/v1"
+        )
+        parser.add_argument(
+            "--openrouter-model",
+            type=str,
+            default=os.environ.get(
+                "OPENROUTER_MODEL", "google/gemini-2.5-pro-preview"),
+            help="Model name for OpenRouter. Overrides OPENROUTER_MODEL env var. Defaults to 'google/gemini-2.5-pro-preview'."
+        )
+        parser.add_argument(
+            "--openrouter-api-key",
+            type=str,
+            default=os.environ.get("OPENROUTER_API_KEY", ""),
+            help="API key for OpenRouter. Overrides OPENROUTER_API_KEY env var. Defaults to empty string."
         )
         args: argparse.Namespace = parser.parse_args()
+
         return args
 
     def _configure_logging(self) -> logging.Logger:
@@ -307,13 +346,22 @@ class MCPClientRunner:
         return web_host, web_port
 
     def _ensure_ollama_ready(self) -> None:
-        if (not ollama_running_and_model_loaded(host_url=self._ollama_host_url,
-                                                model_name=self._ollama_model_name)):
-            msg: str = f"Ollama server at {self._ollama_host_url} is not running or model '{self._ollama_model_name}' is not loaded."
-            self._log.error(msg)
-            raise ValueError(msg)
-        self._log.info(
-            f"Ollama server at {self._ollama_host_url} is running and model '{self._ollama_model_name}' is loaded.")
+        if not self._ollama_enabled:
+            self._log.info(
+                "Ollama integration is disabled, skipping readiness check.")
+        else:
+            if self._ollama_host_url is None or self._ollama_model_name is None:
+                msg: str = "Ollama host URL or model name is not set."
+                self._log.error(msg)
+                raise ValueError(msg)
+            if (not ollama_running_and_model_loaded(host_url=self._ollama_host_url,
+                                                    model_name=self._ollama_model_name)):
+                msg: str = f"Ollama server at {self._ollama_host_url} is not running or model '{self._ollama_model_name}' is not loaded."
+                self._log.error(msg)
+                raise ValueError(msg)
+            self._log.info(
+                f"Ollama server at {self._ollama_host_url} is running and model '{self._ollama_model_name}' is loaded.")
+        return
 
     def _current_time_as_dict(self) -> Dict[str, Any]:
         now = datetime.datetime.now(datetime.timezone.utc).astimezone()
@@ -343,9 +391,13 @@ class MCPClientRunner:
 
     def _get_config(self) -> Dict[str, Any]:
         return {
-            "ollama_host_url": str(self._ollama_host_url) if self._ollama_host_url else None,
-            "ollama_model_name": self._ollama_model_name,
+            "ollama_host_url": str(self._ollama_host_url) if self._ollama_host_url else "Not Set",
+            "ollama_model_name": self._ollama_model_name if self._ollama_host_url else "Not Set",
+            "ollama_enabled": self._ollama_enabled,
             "mcp_host_urls": self._mcp_host_urls,
+            "openrouter_url": str(self._openrouter_url) if self._openrouter_url else "Not Set",
+            "openrouter_model": self._openrouter_model if self._openrouter_model else "Not Set",
+            "openrouter_api_key": self._openrouter_api_key if self._openrouter_api_key else "Not Set",
             "time": self._current_time_as_dict()
         }
 
@@ -381,7 +433,8 @@ class MCPClientRunner:
             clarifications_session: Dict[str, Any] = self._clarifications_cache.get(
                 llm_session, {})
             for clarification in clarifications:
-                clarifications_session[clarification["source"]] = clarification
+                clarifications_session[clarification["question"]
+                                       ] = clarification
             self._clarifications_cache[llm_session] = clarifications_session
             return list(clarifications_session.values())
         except Exception as e:

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button"; // Import Button
@@ -11,8 +11,19 @@ function Prompt({
   onResetAll,
   sessionId,
   isLoading,
+  activityStatus, // Add new prop for activity status
 }) {
   const [promptText, setPromptText] = useState("");
+  const [activityText, setActivityText] = useState(""); // State for Activity TextField
+
+  // Update activityText when activityStatus prop changes
+  useEffect(() => {
+    if (activityStatus) {
+      setActivityText(activityStatus);
+    } else {
+      setActivityText("");
+    }
+  }, [activityStatus]);
 
   const handleInputChange = (event) => {
     setPromptText(event.target.value);
@@ -115,11 +126,28 @@ function Prompt({
               fontSize: "0.875rem", // Smaller font size for Session ID
               fontFamily: "monospace", // Ensure monospace font for input
             },
-            "&:hover .MuiOutlinedInput-notchedOutline": {
-              borderColor: "rgba(0, 0, 0, 0.23)", // Keep border static on hover for readOnly
-            },
           }}
           title="Session Id"
+        />
+        <TextField
+          label="Activity"
+          value={activityText}
+          variant="outlined"
+          size="small"
+          InputProps={{
+            readOnly: true,
+            sx: {
+              fontFamily: "monospace", // Override font to monospace
+            },
+          }}
+          sx={{
+            flexGrow: 1, // Allow the field to grow and take available space
+            "& .MuiInputBase-root": {
+              fontSize: "0.875rem", // Smaller font size for Activity
+              fontFamily: "monospace", // Ensure monospace font for input
+            },
+          }}
+          title="Current Activity"
         />
       </Box>
     </Box>
@@ -133,6 +161,7 @@ Prompt.propTypes = {
   onResetAll: PropTypes.func.isRequired, // Add prop type for onResetAll
   sessionId: PropTypes.string, // Add prop type for sessionId
   isLoading: PropTypes.bool, // Add prop type for isLoading
+  activityStatus: PropTypes.string, // Add prop type for activityStatus
 };
 
 Prompt.defaultProps = {
@@ -140,6 +169,7 @@ Prompt.defaultProps = {
   isNextStepsMode: false,
   sessionId: null, // Default prop for sessionId
   isLoading: false, // Default prop for isLoading
+  activityStatus: "", // Default prop for activityStatus
 };
 
 export default Prompt;

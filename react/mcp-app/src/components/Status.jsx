@@ -62,9 +62,7 @@ function Status({
 
   let content;
 
-  if (loading) {
-    content = `thinking, please be patient [${elapsedSeconds}s]`;
-  } else if (error) {
+  if (error) {
     content = `Error: ${error}`;
   } else if (data && data.response) {
     // Check for the nested 'response' object
@@ -194,6 +192,19 @@ function Status({
           variant="outlined"
           fullWidth
           readOnly={true}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                borderColor: error ? 'red' : (data?.response?.answer ? 'green' : undefined),
+              },
+              '&:hover fieldset': {
+                borderColor: error ? 'red' : (data?.response?.answer ? 'green' : undefined),
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: error ? 'red' : (data?.response?.answer ? 'green' : undefined),
+              },
+            },
+          }}
         />
         {
           /* Second column: */

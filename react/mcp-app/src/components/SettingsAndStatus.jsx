@@ -29,6 +29,15 @@ function SettingsAndStatus({
   const [ollamaModelDisplayValue, setOllamaModelDisplayValue] = React.useState(
     "Press Get Config..."
   );
+  const [ollamaEnabledDisplayValue, setOllamaEnabledDisplayValue] = React.useState(
+    "Press Get Config..."
+  );
+  const [openrouterUrlDisplayValue, setOpenrouterUrlDisplayValue] =
+    React.useState("Press Get Config...");
+  const [openrouterModelDisplayValue, setOpenrouterModelDisplayValue] =
+    React.useState("Press Get Config...");
+  const [openrouterApiKeyDisplayValue, setOpenrouterApiKeyDisplayValue] =
+    React.useState("Press Get Config...");
 
   const [configLoading, setConfigLoading] = React.useState(false);
   const [configError, setConfigError] = React.useState(null);
@@ -86,6 +95,18 @@ function SettingsAndStatus({
       if (data.ollama_model_name) {
         setOllamaModelDisplayValue(data.ollama_model_name);
       }
+      if (data.ollama_enabled !== undefined) { // Check specifically for undefined as it could be boolean false
+       setOllamaEnabledDisplayValue(data.ollama_enabled.toString());
+      }
+      if (data.openrouter_url) {
+        setOpenrouterUrlDisplayValue(data.openrouter_url);
+      }
+      if (data.openrouter_model) {
+        setOpenrouterModelDisplayValue(data.openrouter_model);
+      }
+      if (data.openrouter_api_key) {
+        setOpenrouterApiKeyDisplayValue(data.openrouter_api_key);
+      }
     } catch (err) {
       setConfigError(err.message);
       // Optionally, display this error to the user
@@ -137,8 +158,9 @@ function SettingsAndStatus({
     >
       {/* First row */}
       {/* Main 3-column layout */}
+      {/* Main 3-column layout */}
       <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 2 }}>
-        {/* Column 1: Client Host, Client Port, URL */}
+        {/* Column 1: Client Host, Client Port, URL, Ping functionality */}
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <TextField
             label="Client Host"
@@ -166,10 +188,7 @@ function SettingsAndStatus({
               },
             }}
           />
-        </Box>
-
-        {/* Column 2: URL, Ping functionality */}
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {/* Moved URL TextField */}
           <TextField
             label="URL"
             variant="outlined"
@@ -184,6 +203,7 @@ function SettingsAndStatus({
               },
             }}
           />
+          {/* Moved Ping Button and Status */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <Button
               variant="contained" // Use contained variant
@@ -221,7 +241,7 @@ function SettingsAndStatus({
           </Box>
         </Box>
 
-        {/* Column 3: Get Config, MCP Host, Ollama Host, Ollama Model */}
+        {/* Column 2: Get Config, MCP Host, Ollama Host, Ollama Model */}
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <Box
             sx={{
@@ -281,6 +301,69 @@ function SettingsAndStatus({
             variant="outlined"
             size="small"
             value={ollamaModelDisplayValue}
+            readOnly={true}
+            sx={{
+              width: "100%",
+              "& .MuiInputBase-input": {
+                color: "#757575",
+                fontSize: "0.875rem",
+              },
+            }}
+          />
+          {/* New Ollama Enabled TextField */}
+          <TextField
+            label="Ollama Enabled"
+            variant="outlined"
+            size="small"
+            value={ollamaEnabledDisplayValue}
+            readOnly={true}
+            sx={{
+              width: "100%",
+              "& .MuiInputBase-input": {
+                color: "#757575",
+                fontSize: "0.875rem",
+              },
+            }}
+          />
+        </Box>
+
+        {/* Column 3: OpenRouter Config */}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {/* Add an empty Box for alignment */}
+          <Box sx={{ height: '40px' }} /> {/* Adjust height as needed for alignment */}
+          <TextField
+            label="OpenRouter URL"
+            variant="outlined"
+            size="small"
+            value={openrouterUrlDisplayValue}
+            readOnly={true}
+            sx={{
+              width: "100%",
+              "& .MuiInputBase-input": {
+                color: "#757575",
+                fontSize: "0.875rem",
+              },
+            }}
+          />
+          <TextField
+            label="OpenRouter Model"
+            variant="outlined"
+            size="small"
+            value={openrouterModelDisplayValue}
+            readOnly={true}
+            sx={{
+              width: "100%",
+              "& .MuiInputBase-input": {
+                color: "#757575",
+                fontSize: "0.875rem",
+              },
+            }}
+          />
+          <TextField
+            label="OpenRouter API Key"
+            variant="outlined"
+            size="small"
+            value={openrouterApiKeyDisplayValue}
             readOnly={true}
             sx={{
               width: "100%",

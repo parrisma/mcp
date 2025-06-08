@@ -1,21 +1,102 @@
-{
-  "response": {
-    "answer": null,
-    "clarifications": [
-      {
-        "question": "What is the primary objective of these clarification questions?",
-        "response": "to help testing"
+[
+  {
+    "Demo": {
+      "server_detail": {
+        "server_url": "http://localhost:6277",
+        "name": "Demo",
+        "instructions": "MCP Server - Model Context Protocol Server Implementation",
+        "version": "1.9.2"
       },
-      {
-        "question": "Are there any specific topics or constraints for these clarification questions?",
-        "response": "no, none"
-      }
-    ],
-    "mcp_server_calls": [],
-    "thinking": {
-      "next_steps": "Wait for the user to reply to these clarification questions. Once replies are received, I will confirm the goal as complete.",
-      "reasoning": "The goal is to make up two clarification questions. I have formulated two general clarification questions as requested."
+      "tools": [
+        {
+          "name": "add",
+          "description": "Add two integers together",
+          "inputSchema": {
+            "properties": {
+              "a": {
+                "description": "First integer to add",
+                "title": "A",
+                "type": "integer"
+              },
+              "b": {
+                "description": "Second integer to add",
+                "title": "B",
+                "type": "integer"
+              }
+            },
+            "required": ["a", "b"],
+            "title": "_addArguments",
+            "type": "object"
+          },
+          "annotations": {
+            "title": "Simple arithmetic add",
+            "readOnlyHint": true,
+            "destructiveHint": false,
+            "idempotentHint": true,
+            "openWorldHint": false
+          }
+        },
+        {
+          "name": "multiply",
+          "description": "Multiply two integers together",
+          "inputSchema": {
+            "properties": {
+              "a": {
+                "description": "First integer to multiply",
+                "title": "A",
+                "type": "integer"
+              },
+              "b": {
+                "description": "Second integer to multiply",
+                "title": "B",
+                "type": "integer"
+              }
+            },
+            "required": ["a", "b"],
+            "title": "multiplyArguments",
+            "type": "object"
+          },
+          "annotations": {
+            "title": "Simple arithmetic multiplication",
+            "readOnlyHint": true,
+            "destructiveHint": false,
+            "idempotentHint": true,
+            "openWorldHint": false
+          }
+        }
+      ],
+      "resources": [
+        {
+          "name": "alive",
+          "uri": "alive://",
+          "description": "Return server status and server timestamp"
+        }
+      ],
+      "resource_templates": [
+        {
+          "name": "message",
+          "uriTemplate": "message://{name}",
+          "description": "Generate a greeting message for a given name"
+        }
+      ],
+      "prompts": [
+        {
+          "name": "sme",
+          "description": "Get a subject matter expert prompt for a specific topic",
+          "arguments": [
+            {
+              "name": "topic",
+              "description": "Topics supported: coding, math, writing",
+              "required": true
+            },
+            {
+              "name": "subject",
+              "description": "The subject to get details on for the given topic",
+              "required": true
+            }
+          ]
+        }
+      ]
     }
-  },
-  "status": "success"
-}
+  }
+]

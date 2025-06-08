@@ -69,6 +69,15 @@ class MCPInvoke:
             self._log.error(msg)
             raise ValueError(msg)
 
+        if len(parameters) > 0:
+            # Validate that parameters are a dictionary
+            if not isinstance(parameters, dict):
+                msg = "Resource Template Parameters must be a dictionary."
+                self._log.error(msg)
+                raise ValueError(msg)
+            self._log.debug(
+                f"Parameters for resource template call: {parameters}")
+
         try:
             try:
                 for mcp_client in self._mcp_clients:
@@ -93,8 +102,12 @@ class MCPInvoke:
                                              capability_name: str,
                                              capability_uri: Optional[str],
                                              parameters: Dict[str, Any]) -> Dict[str, Any]:
-        raise (NotImplementedError(
-            "Resource template handling is not implemented yet."))
+        # Calls are the same, resource template will have paramaters that are enocded in the URI
+        return await self._handle_resource_call(
+            server_name=server_name,
+            capability_name=capability_name,
+            capability_uri=capability_uri,
+            parameters=parameters)
 
     async def _handle_prompt_call(self,
                                   server_name: str,

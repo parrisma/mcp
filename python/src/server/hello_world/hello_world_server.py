@@ -56,7 +56,7 @@ class HelloWorldServer(IMCPServer):
     #
 
     def get_message(self,
-                    name: Annotated[str, Field(description="The name of teh person to generate the message for")]) -> str:
+                    name: Annotated[str, Field(description="The name of the person to generate the message for")]) -> str:
         self._log.info(f"Generating message for {name}")
         return f"Greetings, {name}!"
 

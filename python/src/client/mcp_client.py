@@ -1,11 +1,11 @@
 # pylint: disable=C0301
-
 import asyncio
 import logging
+import urllib.parse
 from calendar import c
 from enum import Enum
 from math import e
-from typing import List, Dict, Any, Optional, Text, Union, Literal
+from typing import List, Dict, Any, Optional, Text, Union, Literal, final
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 from pydantic import AnyUrl
@@ -352,6 +352,25 @@ class MCPClient:
         params_flat = ", ".join(f"{k}={v!r}" for k, v in arguments.items())
         return f"Capability [{capability_name}] called on server [{server_name}] with parameters: [{params_flat}]"
 
+    def _encode_arguments_into_url(self,
+                                   url: str,
+                                   arguments: dict[str, Any]) -> pydantic.AnyUrl:
+        try:
+            params: str = ""
+            if len(arguments) > 0:
+                if len(arguments) == 1:
+                    params = f"{urllib.parse.quote(str(next(iter(arguments.values()))))}"
+                else:
+                    for key, value in arguments.items():
+                        if len(params) > 0:
+                            params = f"{params}/"
+                        params = f"{key}/{urllib.parse.quote(value)}"
+            return pydantic.AnyUrl(f"{url.split("//")[0] + "//"}{params}")
+        except Exception as e:
+            msg = f"_encode_arguments_into_url: An error occurred while encoding arguments into URL '{url}': {e}"
+            self._log.error(msg=msg)
+            raise ValueError(msg) from e
+
     async def execute_resource(
         self,
         server_name: str,
@@ -374,8 +393,8 @@ class MCPClient:
                         initialize_result: types.InitializeResult = await session.initialize()
                         self._log.info(
                             f"Successfully connected to {sse_url} to get resource '{resource_name}' on server '{initialize_result.serverInfo.name}'.")
-                        # Convert resource_name (assumed to be a URI string) to a URI object
-                        resource_any_uri: pydantic.AnyUrl = pydantic.AnyUrl(resource_uri)
+                        resource_any_uri: pydantic.AnyUrl = self._encode_arguments_into_url(
+                            url=resource_uri, arguments=arguments)
                         resource_result: types.ReadResourceResult = await session.read_resource(resource_any_uri)
                         if resource_result is None:
                             raise MCPClient.FailedToInvokeMCPServerCapability(

@@ -73,8 +73,7 @@ class MCPServerRunner:
             server_config_file_name = args.config_file if isinstance(
                 args.config_file, str) else args.config_file.name
 
-            server: MCPServer = MCPServer(name="MCP Demo Server",  # This name could also be from config or args
-                                          host=args.host,
+            server: MCPServer = MCPServer(host=args.host,
                                           port=args.port,
                                           config_dir=args.config_dir,
                                           config_file=Path(server_config_file_name))

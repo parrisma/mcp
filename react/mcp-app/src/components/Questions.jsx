@@ -21,7 +21,7 @@ function Questions({ clarifications, onResponsesChange }) {
     setResponses(newResponses);
     const structuredResponses = newResponses.map((response, i) => ({
       question: clarifications[i].question,
-      response: response === "" ? "No user response" : response
+      response: response === "" ? "No user response" : response,
     }));
     if (onResponsesChange) {
       onResponsesChange(structuredResponses);
@@ -50,9 +50,11 @@ function Questions({ clarifications, onResponsesChange }) {
       >
         {" "}
         {/* Added fontSize */}
-        {clarifications && Array.isArray(clarifications) && clarifications.length > 0
+        {clarifications &&
+        Array.isArray(clarifications) &&
+        clarifications.length > 0
           ? "Please respond to these questions"
-          : "No, Questions needing your clarification"}
+          : "No Questions needing your clarification"}
       </Typography>
       {/* Dynamically add TextFields for each clarification question */}
       {clarifications &&
@@ -78,8 +80,7 @@ function Questions({ clarifications, onResponsesChange }) {
       {(!clarifications ||
         !Array.isArray(clarifications) ||
         clarifications.length === 0) && (
-        <Box sx={{ textAlign: "center", color: "text.secondary" }}>
-        </Box>
+        <Box sx={{ textAlign: "center", color: "text.secondary" }}></Box>
       )}
     </Box>
   );

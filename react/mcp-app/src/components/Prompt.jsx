@@ -30,6 +30,9 @@ function Prompt({
   };
 
   const handleSubmit = async () => {
+    if (isLoading) { // Prevent double submission
+      return;
+    }
     if (!baseApiUrl) {
       console.error("Base API URL is not provided to Prompt component.");
       onApiResponse({

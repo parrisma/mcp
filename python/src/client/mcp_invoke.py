@@ -159,7 +159,6 @@ class MCPInvoke:
             if len(clarifications) == 0:
                 msg = "No clarifications to process."
                 self._log.info(msg)
-                raise ValueError(msg)
 
             for clarification in clarifications:
                 if not isinstance(clarification, dict):

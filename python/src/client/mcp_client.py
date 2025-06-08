@@ -96,8 +96,8 @@ class MCPClient:
         pass
 
     async def get_server_capabilities(self, server_base_url: str) -> Dict[str, Any]:
+
         sse_url: str = self.get_full_server_url(server_base_url)
-        self._log.info(f"Attempting to connect to MCP server at: {sse_url}")
 
         if server_base_url in self._capabilities_cache:
             self._log.info(
@@ -112,13 +112,15 @@ class MCPClient:
         capabilities[MCPClient.MCPServerCapabilities.PROMPTS.value] = []
 
         try:
+            self._log.info(
+                f"Attempting to connect to MCP server at: {sse_url}")
             async with sse_client(sse_url) as (read_stream, write_stream):
                 async with ClientSession(read_stream, write_stream) as session:
                     initialize_result: types.InitializeResult = await session.initialize()
                     await asyncio.sleep(1)
 
                     self._log.info(
-                        f"Successfully connected to {sse_url}. Fetching capabilities...")
+                        f"Successfully connected to {sse_url}. Fetching capabilities from {initialize_result.serverInfo.name}")
 
                     capabilities[MCPClient.MCPServerCapabilities.SERVER_DETAIL.value][
                         MCPClient.MCPServerDetail.SERVER_URL.value] = server_base_url
@@ -302,7 +304,7 @@ class MCPClient:
                         initialize_result: types.InitializeResult = await session.initialize()
                         await asyncio.sleep(1)
                         self._log.info(
-                            f"Successfully connected to {sse_url}. Fetching capabilities...")
+                            f"Successfully connected to {sse_url}. created new session with {initialize_result.serverInfo.name}")
 
         except Exception as e:
             msg = f"_get_server_session: An error occurred while getting session for server '{server_name}': {e}"
@@ -350,9 +352,9 @@ class MCPClient:
                 sse_url = self.get_full_server_url(sse_url)
                 async with sse_client(sse_url) as (read_stream, write_stream):
                     async with ClientSession(read_stream, write_stream) as session:
-                        await session.initialize()
+                        initialize_result: types.InitializeResult = await session.initialize()
                         self._log.info(
-                            f"Successfully connected to {sse_url}. Fetching capabilities...")
+                            f"Successfully connected to {sse_url} to execute tool '{tool_name}' on server '{initialize_result.serverInfo.name}'.")
                         tool_result: types.CallToolResult = await session.call_tool(tool_name, arguments)
                         if tool_result is None:
                             raise MCPClient.FailedToInvokeMCPServerCapability(

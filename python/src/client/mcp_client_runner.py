@@ -4,14 +4,13 @@ import json
 import logging
 import datetime
 import os
+import uuid
 
 from pathlib import Path
-import re
 from tkinter import N
 from tkinter.filedialog import Open
 from typing import List, Dict, Any, Optional, Tuple
 from click import prompt
-import mcp
 from yarl import URL
 
 from .mcp_client import MCPClient
@@ -20,7 +19,7 @@ from .ollama_utils import Ollama
 from .mcp_client_web_server import MCPClientWebServer
 from .mcp_invoke import MCPInvoke
 from .openrouter_utils import OpenRouter
-import uuid
+from .prompts import Prompts
 
 
 class MCPClientRunner:
@@ -80,6 +79,7 @@ class MCPClientRunner:
         self._openrouter: OpenRouter | None = self._setup_openrouter(openrouter_url=self._openrouter_url,
                                                                      openrouter_model=self._openrouter_model,
                                                                      openrouter_api_key=self._openrouter_api_key)
+        self._prompts: Prompts = Prompts()
 
     def _setup_openrouter(self,
                           openrouter_url: URL,
@@ -525,11 +525,11 @@ class MCPClientRunner:
                     llm_session=llm_session
                 )
 
-            full_prompt: Optional[str] = self._ollama.get_llm_prompt(user_goal=goal,
-                                                                     session_id=llm_session,
-                                                                     mcp_server_descriptions=capabilities,
-                                                                     mcp_responses=mcp_responses,
-                                                                     clarifications=clarifications)
+            full_prompt: Optional[str] = self._prompts.build_prompt(user_goal=goal,
+                                                                    session_id=llm_session,
+                                                                    mcp_server_descriptions=capabilities,
+                                                                    mcp_responses=mcp_responses,
+                                                                    clarifications=clarifications)
 
             llm_call_successful: bool = False
             llm_content: Dict[str, Any] = {}
@@ -540,7 +540,6 @@ class MCPClientRunner:
                 raise ValueError(msg)
 
             if self._openrouter:
-                # If OpenRouter is available, use it to get the response
                 llm_call_successful, llm_content = self._openrouter.get_llm_response(
                     prompt=full_prompt
                 )

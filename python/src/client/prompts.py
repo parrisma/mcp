@@ -1,7 +1,11 @@
 import os
+import logging
+import uuid
+import json
 from enum import Enum
 from pathlib import Path
 from typing import Dict, Optional, Protocol, List, Any
+from datetime import datetime
 from langchain.prompts import PromptTemplate
 
 
@@ -27,6 +31,14 @@ class Prompts:
     def __init__(self,
                  template_root_folder: Optional[Path] = None,
                  default_prompt_file_name: Optional[str] = None) -> None:
+
+        self._log: logging.Logger = logging.getLogger(__name__)
+        if not logging.getLogger().hasHandlers():
+            logging.basicConfig(
+                level=logging.INFO,  # Default to INFO, can be overridden by application
+                format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                handlers=[logging.StreamHandler()]
+            )
 
         if template_root_folder:
             self._template_root_folder: Path = Path(template_root_folder)
@@ -162,6 +174,44 @@ class Prompts:
         except Exception as e:
             raise ValueError(f"Error formatting prompt: {e}"
                              )
+
+    def _log_prompt(self,
+                    prompt: str) -> None:
+        try:
+            with open("prompt_log.txt", "a", encoding="utf-8") as f:
+                f.write("=" * 80 + "\n\n")
+                f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')}\n\n")
+                f.write(prompt + "\n")
+                f.write("=" * 80 + "\n\n")
+        except Exception as e:
+            self._log.error(f"Failed to log prompt: {e}")
+
+    def build_prompt(self,
+                     user_goal: str,
+                     session_id: uuid.UUID,
+                     mcp_server_descriptions: Dict[str, Any],
+                     mcp_responses: List[Dict[str, Any]],
+                     clarifications: List[Dict[str, Any]]
+                     ) -> Optional[str]:
+        try:
+            prompt: str = self.get_prompt(
+                goal=user_goal,
+                session_id=str(session_id),
+                variables={
+                    "mcp_server_descriptions": json.dumps(mcp_server_descriptions),
+                    "mcp_server_responses": json.dumps(mcp_responses, ensure_ascii=False, indent=2),
+                    "clarification_responses": json.dumps(clarifications, ensure_ascii=False, indent=2)
+                }
+            )
+
+            self._log_prompt(prompt)
+
+            return prompt
+
+        except Exception as e:
+            msg: str = f"Error in forming fully qualified propmt: {e}"
+            self._log.error(msg)
+            return None
 
 
 def tests() -> None:

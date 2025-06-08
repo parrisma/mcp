@@ -9,7 +9,6 @@ from typing import Optional, Tuple, Dict, Any, List
 from enum import Enum
 from datetime import datetime
 from yarl import URL
-from .prompts import Prompts
 
 
 class Ollama:
@@ -23,7 +22,6 @@ class Ollama:
             return self.value
 
     def __init__(self) -> None:
-        self._prompts: Prompts = Prompts()
 
         self._log: logging.Logger = logging.getLogger(__name__)
         if not logging.getLogger().hasHandlers():
@@ -90,7 +88,7 @@ class Ollama:
             ollama_host: str = os.environ.get('OLLAMA_HOST', host_and_port_url)
             url: str = f"{ollama_host}/api/chat"
             headers: Dict[str, str] = {'Content-Type': 'application/json'}
-            payload = {
+            payload: Dict[str, Any] = {
                 'model': model,
                 'messages': [{'role': 'user', 'content': prompt}],
                 'stream': False,
@@ -101,7 +99,7 @@ class Ollama:
                                                         data=json.dumps(payload))
             response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
 
-            data = response.json()
+            data: Dict[str, Any] = response.json()
             json_str: str = self.clean_json_str(data['message']['content'])
 
             end_time: str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -119,44 +117,6 @@ class Ollama:
             return (False, {"error": "Unexpected response format from Ollama."})
         except Exception as e:
             return (False, {"error": f"An unexpected error occurred: {e}"})
-
-    def _log_prompt(self,
-                    prompt: str) -> None:
-        try:
-            with open("prompt_log.txt", "a", encoding="utf-8") as f:
-                f.write("=" * 80 + "\n\n")
-                f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')}\n\n")
-                f.write(prompt + "\n")
-                f.write("=" * 80 + "\n\n")
-        except Exception as e:
-            self._log.error(f"Failed to log prompt: {e}")
-
-    def get_llm_prompt(self,
-                       user_goal: str,
-                       session_id: uuid.UUID,
-                       mcp_server_descriptions: Dict[str, Any],
-                       mcp_responses: List[Dict[str, Any]],
-                       clarifications: List[Dict[str, Any]]
-                       ) -> Optional[str]:
-        try:
-            prompt: str = self._prompts.get_prompt(
-                goal=user_goal,
-                session_id=str(session_id),
-                variables={
-                    "mcp_server_descriptions": json.dumps(mcp_server_descriptions),
-                    "mcp_server_responses": json.dumps(mcp_responses, ensure_ascii=False, indent=2),
-                    "clarification_responses": json.dumps(clarifications, ensure_ascii=False, indent=2)
-                }
-            )
-
-            self._log_prompt(prompt)
-
-            return prompt
-
-        except Exception as e:
-            msg: str = f"Error in forming fully qualified propmt: {e}"
-            self._log.error(msg)
-            return None
 
     def get_llm_response(self,
                          prompt: str,

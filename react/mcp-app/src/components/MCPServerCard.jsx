@@ -9,6 +9,10 @@ import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import MCPServerTool from "./MCPServerTool";
+import MCPServerResource from "./MCPServerResource";
+import MCPServerResourceTemplate from "./MCPServerResourceTemplate";
+import MCPServerPrompt from "./MCPServerPrompt";
 
 const textFieldSx = {
   width: "100%",
@@ -130,31 +134,7 @@ const MCPServerCard = ({ jsonData, title }) => {
               Tools
             </Typography>
             {tools.map((tool, index) => (
-              <Box
-                key={index}
-                sx={{ mb: 1, pl: 1, borderLeft: "2px solid #eee" }}
-              >
-                <Typography variant="body2" sx={{ fontWeight: "medium" }}>
-                  {tool.name}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  component="div"
-                >
-                  {tool.description}
-                </Typography>
-                {tool.inputSchema?.properties && (
-                  <Typography
-                    variant="caption"
-                    component="div"
-                    sx={{ mt: 0.5 }}
-                  >
-                    Arguments:{" "}
-                    {Object.keys(tool.inputSchema.properties).join(", ")}
-                  </Typography>
-                )}
-              </Box>
+              <MCPServerTool key={index} tool={tool} />
             ))}
             <Divider sx={{ my: 2 }} />
           </Box>
@@ -170,28 +150,7 @@ const MCPServerCard = ({ jsonData, title }) => {
               Resources
             </Typography>
             {resources.map((resource, index) => (
-              <Box
-                key={index}
-                sx={{ mb: 1, pl: 1, borderLeft: "2px solid #eee" }}
-              >
-                <Typography variant="body2" sx={{ fontWeight: "medium" }}>
-                  {resource.name}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  component="div"
-                >
-                  {resource.description}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  component="div"
-                  sx={{ mt: 0.5, fontFamily: "monospace" }}
-                >
-                  URI: {resource.uri}
-                </Typography>
-              </Box>
+              <MCPServerResource key={index} resource={resource} />
             ))}
             <Divider sx={{ my: 2 }} />
           </Box>
@@ -209,28 +168,10 @@ const MCPServerCard = ({ jsonData, title }) => {
                 Resource Templates
               </Typography>
               {resourceTemplates.map((template, index) => (
-                <Box
+                <MCPServerResourceTemplate
                   key={index}
-                  sx={{ mb: 1, pl: 1, borderLeft: "2px solid #eee" }}
-                >
-                  <Typography variant="body2" sx={{ fontWeight: "medium" }}>
-                    {template.name}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    component="div"
-                  >
-                    {template.description}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    component="div"
-                    sx={{ mt: 0.5, fontFamily: "monospace" }}
-                  >
-                    URI Template: {template.uriTemplate}
-                  </Typography>
-                </Box>
+                  template={template}
+                />
               ))}
               <Divider sx={{ my: 2 }} />
             </Box>
@@ -246,42 +187,7 @@ const MCPServerCard = ({ jsonData, title }) => {
               Prompts
             </Typography>
             {prompts.map((prompt, index) => (
-              <Box
-                key={index}
-                sx={{ mb: 1, pl: 1, borderLeft: "2px solid #eee" }}
-              >
-                <Typography variant="body2" sx={{ fontWeight: "medium" }}>
-                  {prompt.name}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  component="div"
-                >
-                  {prompt.description}
-                </Typography>
-                {prompt.arguments &&
-                  Array.isArray(prompt.arguments) &&
-                  prompt.arguments.length > 0 && (
-                    <Box sx={{ mt: 0.5, pl: 1 }}>
-                      <Typography
-                        variant="caption"
-                        sx={{ fontWeight: "medium" }}
-                      >
-                        Arguments:
-                      </Typography>
-                      {prompt.arguments.map((arg, argIndex) => (
-                        <Box key={argIndex} sx={{ pl: 1 }}>
-                          <Typography variant="caption" component="div">
-                            <strong>{arg.name}</strong> (
-                            {arg.required ? "required" : "optional"}):{" "}
-                            {arg.description}
-                          </Typography>
-                        </Box>
-                      ))}
-                    </Box>
-                  )}
-              </Box>
+              <MCPServerPrompt key={index} prompt={prompt} />
             ))}
             <Divider sx={{ my: 2 }} />
           </Box>

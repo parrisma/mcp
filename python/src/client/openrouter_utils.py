@@ -140,8 +140,10 @@ class OpenRouter:
         try:
             self._log.debug(
                 f"Sending request to OpenRouter: URL='{self._url}', Model='{self._model_name}', Payload='{json.dumps(payload, indent=2)}'")
-            response: requests.Response = requests.post(self._url, headers=headers,
-                                                        json=payload, timeout=120)  # 120s timeout
+            response: requests.Response = requests.post(self._url, 
+                                                        headers=headers,
+                                                        json=payload, 
+                                                        timeout=120) 
             response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
 
             response_data = response.json()

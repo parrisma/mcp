@@ -1,18 +1,16 @@
 import logging
 import os
-import time
 import json
 from enum import Enum
-from typing import Any, Dict, Literal, Annotated, List, Callable, Tuple, Union
+from re import I
+from typing import Any, Literal, List, Callable, Tuple, Union
 from functools import partial
 from pathlib import Path
-
-from pydantic import Field
-from langchain.prompts import PromptTemplate
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 from network_utils import NetworkUtils
-
+from i_mcp_server import IMCPServer
+from hello_world.hello_world_server import HelloWorldServer
 
 
 class MCPServer:
@@ -26,7 +24,6 @@ class MCPServer:
         def __str__(self) -> Literal['name', 'instructions', 'version']:
             return self.value
 
-
     class MCPServerCapabilityType(str, Enum):
         TOOLS = "tools"
         RESOURCES = "resources"
@@ -35,7 +32,6 @@ class MCPServer:
 
         def __str__(self) -> Literal['tools', 'resources', 'prompts', 'resource_templates']:
             return self.value
-
 
     class MCPServerToolMetaData(str, Enum):
         NAME = "name"
@@ -49,7 +45,6 @@ class MCPServer:
         def __str__(self) -> Literal['name', 'description', 'annotations.title', 'annotations.readOnlyHint', 'annotations.destructiveHint', 'annotations.idempotentHint', 'annotations.openWorldHint']:
             return self.value
 
-
     class MCPServerResourceMetaData(str, Enum):
         NAME = "name"
         DESCRIPTION = "description"
@@ -59,7 +54,6 @@ class MCPServer:
         def __str__(self) -> Literal['name', 'description', 'annotations.title', 'uri']:
             return self.value
 
-
     class MCPServerPromptMetaData(str, Enum):
         NAME = "name"
         DESCRIPTION = "description"
@@ -67,14 +61,11 @@ class MCPServer:
         def __str__(self) -> Literal['name', 'description']:
             return self.value
 
-
     def __init__(self,
-                 name: str,
                  host: str,
                  port: int,
                  config_dir: Path,
                  config_file: Path) -> None:
-        self._name: str = name
         self._host: str = host
         self._port: int = port
         self._config_dir: Path = config_dir
@@ -112,7 +103,11 @@ class MCPServer:
             self.logger.error(msg, exc_info=True)
             raise ValueError(msg) from e
 
-        self.logger.info(f"MCP Server to be created with name'[{self._name}]'")
+        self._server: IMCPServer = HelloWorldServer(
+            logger=self.logger, json_config=self._meta)
+
+        self.logger.info(
+            f"MCP Server to be created with name'[{self._server.server_name}]'")
         self.logger.info(f"host: '[{self._host}]'")
         self.logger.info(f"port: [{self._port}]")
 
@@ -122,9 +117,9 @@ class MCPServer:
                             port=self._port)
         self.logger.info("MCP Server instance created")
 
-        self._register_tools()
-        self._register_resources()
-        self._register_prompts()
+        self._register_tools(self._server.supported_tools)
+        self._register_resources(self._server.supported_resources)
+        self._register_prompts(self._server.supported_prompts)
         self.logger.info("MCP Server instanc fully initialized")
 
     def _get_meta(self,
@@ -171,10 +166,8 @@ class MCPServer:
             raise ValueError(
                 f"Metadata not found for {full_path_str}. Details: {str(ke_original)}") from ke_original
 
-    def _register_tools(self) -> None:
-        tools_to_add: List[Tuple[str, Callable]] = [("add", self._add),
-                                                    ("multiply", self.multiply)
-                                                    ]
+    def _register_tools(self,
+                        tools_to_add: List[Tuple[str, Callable]]) -> None:
         self.logger.info("MCP Server Registering tools started")
         for tool_name, tool_func in tools_to_add:
             try:
@@ -182,7 +175,8 @@ class MCPServer:
                     self._get_meta, MCPServer.MCPServerCapabilityType.TOOLS, tool_name)
                 self._mcp.tool(
                     name=get_meta(MCPServer.MCPServerToolMetaData.NAME),
-                    description=get_meta(MCPServer.MCPServerToolMetaData.DESCRIPTION),
+                    description=get_meta(
+                        MCPServer.MCPServerToolMetaData.DESCRIPTION),
                     annotations=ToolAnnotations(
                         title=get_meta(MCPServer.MCPServerToolMetaData.TITLE),
                         readOnlyHint=get_meta(
@@ -201,10 +195,8 @@ class MCPServer:
                     f"Failed to register tool [{tool_name}]: {e}") from e
         self.logger.info("MCP Server Registering tools completed")
 
-    def _register_resources(self):
-        resources_to_add = [("message", self.get_message),
-                            ("alive", self.alive)]
-
+    def _register_resources(self,
+                            resources_to_add: List[Tuple[str, Callable]]) -> None:
         self.logger.info("MCP Server Registering resources started")
         for resource_name, resource_func in resources_to_add:
             try:
@@ -213,7 +205,8 @@ class MCPServer:
                 self._mcp.resource(
                     uri=get_meta(MCPServer.MCPServerResourceMetaData.URI),
                     name=get_meta(MCPServer.MCPServerResourceMetaData.NAME),
-                    description=get_meta(MCPServer.MCPServerResourceMetaData.DESCRIPTION)
+                    description=get_meta(
+                        MCPServer.MCPServerResourceMetaData.DESCRIPTION)
                 )(resource_func)
                 self.logger.info(f"Resource [{resource_name}] registered")
             except Exception as e:
@@ -221,8 +214,8 @@ class MCPServer:
                     f"Failed to register resource [{resource_name}]: {e}") from e
         self.logger.info("MCP Server Registering resources completed")
 
-    def _register_prompts(self) -> None:
-        prompts_to_add = [("sme", self.get_sme_prompt)]
+    def _register_prompts(self,
+                          prompts_to_add: List[Tuple[str, Callable]]) -> None:
 
         self.logger.info("MCP Server Registering prompts started")
         for prompt_name, prompt_func in prompts_to_add:
@@ -231,7 +224,8 @@ class MCPServer:
                     self._get_meta, MCPServer.MCPServerCapabilityType.PROMPTS, prompt_name)
                 self._mcp.prompt(
                     name=get_meta(MCPServer.MCPServerPromptMetaData.NAME),
-                    description=get_meta(MCPServer.MCPServerPromptMetaData.DESCRIPTION)
+                    description=get_meta(
+                        MCPServer.MCPServerPromptMetaData.DESCRIPTION)
                 )(prompt_func)
                 self.logger.info(f"Prompt [{prompt_name}] registered")
             except Exception as e:
@@ -239,71 +233,18 @@ class MCPServer:
                     f"Failed to register prompt [{prompt_name}]: {e}") from e
         self.logger.info("MCP Server Registering prompts completed")
 
-    #
-    # Tool implementions
-    #
-
-    def _add(self,
-             a: Annotated[int, Field(description="First integer to add")],
-             b: Annotated[int, Field(description="Second integer to add")]) -> int:
-        self.logger.info(f"Tool [add] - calculating {a} plus {b}")
-        return a + b
-
-    def multiply(self,
-                 a: Annotated[int, Field(description="First integer to multiply")],
-                 b: Annotated[int, Field(description="Second integer to multiply")]) -> int:
-        self.logger.info(f"Tool [Multiply] calculating {a} times {b}")
-        return a * b
-
-    #
-    # Resource implementations
-    #
-
-    def get_message(self,
-                    name: Annotated[str, Field(description="The name of teh person to generate the message for")]) -> str:
-        self.logger.info(f"Generating message for {name}")
-        return f"Greetings, {name}!"
-
-    def alive(self) -> Dict[str, Any]:
-        self.logger.info("Received a still alive request")
-        return {
-            "status": "ok",
-            "timestamp": int(time.time()),  # time import is now present
-            "version": self._meta.get("serverInfo", {}).get("version", "unknown")
-        }
-
-    #
-    # Prompt implementations
-    #
-
-    def get_sme_prompt(self,
-                       topic: Annotated[Literal["coding", "math", "writing"], Field(description="Topics supported: coding, math, writing")],
-                       subject: Annotated[str, Field(description="The subject to get details on for the given topic")]) -> str:
-        self.logger.info(
-            f"Generating an SME prompt for topic: {topic}, subject: {subject}")
-        prompts_config: Dict[str, str] = {
-            "coding": "You are an expert programmer with deep knowledge of software development, please explain {subject}",
-            "math": "You are a high school mathematics tutor, please explain {subject}",
-            "writing": "You are a professional writer and editor with expertise in creative writing, please write a paragraph on {subject}"
-        }
-        template_str: str = prompts_config.get(str(topic).lower(
-        ), "You are a helpful assistant. Please provide information about {subject}")
-        prompt_template: PromptTemplate = PromptTemplate.from_template(
-            template_str)
-        return prompt_template.format(subject=subject)
-
     def run(self,
             transport: Literal['stdio', 'sse', 'streamable-http'] = "sse"):
 
         self.logger.info(
-            f"Running MCP server '{self._name}' on {self._host}:{self._port}")
+            f"Running MCP server '{self._server.server_name}' on {self._host}:{self._port}")
         try:
             self._mcp.run(transport=transport)
             self.logger.info(
-                f"Exited MCP server '{self._name}' on {self._host}:{self._port}")
+                f"Exited MCP server '{self._server.server_name}' on {self._host}:{self._port}")
         except Exception as e:
             raise RuntimeError(
-                f"Error running MCP server '{self._name}': {e}") from e
+                f"Error running MCP server '{self._server.server_name}': {e}") from e
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python Debugger: MCP Server",
+      "name": "Python Debugger: MCP Simple Server",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
@@ -102,8 +102,8 @@
       "name": "React UI",
       "type": "chrome",
       "request": "launch",
-      "url": "http://localhost:5173",
-      "webRoot": "${workspaceFolder}/src"
+      "url": "http://localhost:5173/",
+      "webRoot": "${workspaceFolder}/react/mcp-app/src"
     }
   ]
 }

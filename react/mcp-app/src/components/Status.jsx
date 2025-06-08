@@ -40,7 +40,6 @@ function Status({
     }
   }, [clarificationResponses, onClarificationResponsesChange]);
 
-
   let content;
 
   if (error) {
@@ -50,9 +49,12 @@ function Status({
     const responseData = data.response;
     if (responseData.answer) {
       // Display the answer if available
-      if (typeof responseData.answer === 'object' && responseData.answer !== null) {
+      if (
+        typeof responseData.answer === "object" &&
+        responseData.answer !== null
+      ) {
         let bodyContent = responseData.answer.body;
-        if (typeof bodyContent === 'object' && bodyContent !== null) {
+        if (typeof bodyContent === "object" && bodyContent !== null) {
           bodyContent = JSON.stringify(bodyContent, null, 2);
         }
 
@@ -95,6 +97,11 @@ function Status({
     : thinkingData?.next_steps || "";
 
   const handleDoNextSteps = async () => {
+    // Prevent duplicate calls if already processing
+    if (isNextStepsLoading) {
+      return;
+    }
+
     if (!baseApiUrl) {
       console.error(
         "Base API URL is not provided to Status component for Next Steps."
@@ -128,7 +135,7 @@ function Status({
       // Include clarification responses in the 'questions' parameter
       // Create a deep copy of lastResponseData to avoid modifying the original state directly
       const questionsData = JSON.parse(JSON.stringify(lastResponseData));
-      
+
       // Update the clarifications within the nested 'response' object
       if (questionsData && questionsData.response) {
         questionsData.response.clarifications = clarificationResponses;
@@ -142,9 +149,15 @@ function Status({
       // Add the session id to the parameters
       params.append("session", sessionId);
 
-      const fullUrl = `${baseApiUrl}/model_response?${params.toString()}`;
+      const fullUrl = `${baseApiUrl}/model_response`;
 
-      const response = await fetch(fullUrl);
+      const response = await fetch(fullUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(Object.fromEntries(params)),
+      });
 
       if (!response.ok) {
         const errorData = await response
@@ -173,7 +186,12 @@ function Status({
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <Box  mb={2} sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}> {/* Changed to 2fr 1fr */}
+      <Box
+        mb={2}
+        sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
+      >
+        {" "}
+        {/* Changed to 2fr 1fr */}
         {/* First column: the main TextField */}
         <TextField
           label={data?.response?.answer ? "Answer" : "(MCP) Requested Actions"}
@@ -184,15 +202,27 @@ function Status({
           fullWidth
           readOnly={true}
           sx={{
-            '& .MuiOutlinedInput-root': {
-              '& fieldset': {
-                borderColor: error ? 'red' : (data?.response?.answer ? 'green' : undefined),
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: error
+                  ? "red"
+                  : data?.response?.answer
+                  ? "green"
+                  : undefined,
               },
-              '&:hover fieldset': {
-                borderColor: error ? 'red' : (data?.response?.answer ? 'green' : undefined),
+              "&:hover fieldset": {
+                borderColor: error
+                  ? "red"
+                  : data?.response?.answer
+                  ? "green"
+                  : undefined,
               },
-              '&.Mui-focused fieldset': {
-                borderColor: error ? 'red' : (data?.response?.answer ? 'green' : undefined),
+              "&.Mui-focused fieldset": {
+                borderColor: error
+                  ? "red"
+                  : data?.response?.answer
+                  ? "green"
+                  : undefined,
               },
             },
           }}
@@ -206,7 +236,9 @@ function Status({
         }
       </Box>
       {/* The rest of the fields below the grid */}
-      <Box mb={2}> {/* Added margin bottom */}
+      <Box mb={2}>
+        {" "}
+        {/* Added margin bottom */}
         <TextField
           label="Reasoning"
           multiline
@@ -217,7 +249,9 @@ function Status({
           readOnly={true}
         />
       </Box>
-      <Box mb={2}> {/* Added margin bottom */}
+      <Box mb={2}>
+        {" "}
+        {/* Added margin bottom */}
         <TextField
           label="Next Steps"
           multiline
@@ -228,7 +262,9 @@ function Status({
           readOnly={true}
         />
       </Box>
-      <Box sx={{ display: "flex", justifyContent: "flex-start" }} mb={2}> {/* Added margin bottom */}
+      <Box sx={{ display: "flex", justifyContent: "flex-start" }} mb={2}>
+        {" "}
+        {/* Added margin bottom */}
         <Button
           variant="contained" // Use contained variant for a filled button
           onClick={handleDoNextSteps}

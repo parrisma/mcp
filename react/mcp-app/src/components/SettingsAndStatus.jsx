@@ -29,9 +29,8 @@ function SettingsAndStatus({
   const [ollamaModelDisplayValue, setOllamaModelDisplayValue] = React.useState(
     "Press Get Config..."
   );
-  const [ollamaEnabledDisplayValue, setOllamaEnabledDisplayValue] = React.useState(
-    "Press Get Config..."
-  );
+  const [ollamaEnabledDisplayValue, setOllamaEnabledDisplayValue] =
+    React.useState("Press Get Config...");
   const [openrouterUrlDisplayValue, setOpenrouterUrlDisplayValue] =
     React.useState("Press Get Config...");
   const [openrouterModelDisplayValue, setOpenrouterModelDisplayValue] =
@@ -95,8 +94,9 @@ function SettingsAndStatus({
       if (data.ollama_model_name) {
         setOllamaModelDisplayValue(data.ollama_model_name);
       }
-      if (data.ollama_enabled !== undefined) { // Check specifically for undefined as it could be boolean false
-       setOllamaEnabledDisplayValue(data.ollama_enabled.toString());
+      if (data.ollama_enabled !== undefined) {
+        // Check specifically for undefined as it could be boolean false
+        setOllamaEnabledDisplayValue(data.ollama_enabled.toString());
       }
       if (data.openrouter_url) {
         setOpenrouterUrlDisplayValue(data.openrouter_url);
@@ -330,7 +330,8 @@ function SettingsAndStatus({
         {/* Column 3: OpenRouter Config */}
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {/* Add an empty Box for alignment */}
-          <Box sx={{ height: '40px' }} /> {/* Adjust height as needed for alignment */}
+          <Box sx={{ height: "40px" }} />{" "}
+          {/* Adjust height as needed for alignment */}
           <TextField
             label="OpenRouter URL"
             variant="outlined"

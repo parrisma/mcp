@@ -1,10 +1,8 @@
 from operator import call
 from typing import Dict, Protocol, Any, Literal, List
 from functools import partial, update_wrapper
-from unittest import result
 from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
-from urllib.parse import parse_qs
 import json
 from enum import Enum
 import signal
@@ -50,7 +48,18 @@ class MCPClientWebServer:
                                    callback: "MCPClientWebServer.WebUserCallback") -> Response:
         query_params: Dict[str, Any] = {}
         query_params[self.QueryParamKeys.PATH.value] = request.path
-        query_params[self.QueryParamKeys.ARGS.value] = request.args.to_dict()
+        
+        # Handle both GET and POST parameters
+        args_dict = request.args.to_dict()
+        
+        # If this is a POST request with JSON body, merge it with args
+        if request.method == 'POST' and request.is_json:
+            json_data = request.get_json()
+            if isinstance(json_data, dict):
+                # Merge JSON data with query parameters
+                args_dict.update(json_data)
+        
+        query_params[self.QueryParamKeys.ARGS.value] = args_dict
         result: Dict[str, Any] = call(callback, query_params)
         return jsonify(result)
 

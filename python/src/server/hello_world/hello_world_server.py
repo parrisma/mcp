@@ -5,6 +5,7 @@ from i_mcp_server import IMCPServer
 from pydantic import Field
 from langchain.prompts import PromptTemplate
 import uuid
+from datetime import datetime, timezone
 
 
 class HelloWorldServer(IMCPServer):
@@ -63,7 +64,7 @@ class HelloWorldServer(IMCPServer):
         self._log.info("Received a still alive request")
         return {
             "status": "ok",
-            "timestamp": int(time.time()),  # time import is now present
+            "datetime": datetime.now(timezone.utc).astimezone().isoformat(),
             "version": self._config.get("serverInfo", {}).get("version", "unknown")
         }
 

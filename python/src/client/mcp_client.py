@@ -1,18 +1,16 @@
 # pylint: disable=C0301
 
 import asyncio
-from calendar import c
-from json import tool
 import logging
+from calendar import c
 from enum import Enum
 from math import e
 from typing import List, Dict, Any, Optional, Text, Union, Literal
-from unittest import result
-from flask import session
-from h11 import SERVER
-import mcp.types as types
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
+from pydantic import AnyUrl
+import pydantic
+import mcp.types as types
 
 
 class MCPClient:
@@ -330,11 +328,71 @@ class MCPClient:
 
         return result
 
-    def _request_source(self, server_name: str,
-                        tool_name: str,
+    def _extract_resource_result(self,
+                                 resource_result: types.ReadResourceResult) -> List[str]:
+        result: List[str] = []
+        if resource_result is None:
+            result = ["Error, No result retruned from tool execution."]
+        res: List[str] = []
+        for content in resource_result.contents:
+            if isinstance(content, types.TextResourceContents):
+                res.append(str(content.text))
+            else:
+                result = [
+                    f"Error, Unsupported tool result type: [{type(content)}]"]
+        if len(res) > 0:
+            result = res
+
+        return result
+
+    def _request_source(self,
+                        server_name: str,
+                        capability_name: str,
                         arguments: dict[str, Any]) -> Optional[str]:
         params_flat = ", ".join(f"{k}={v!r}" for k, v in arguments.items())
-        return f"Tool [{tool_name}] called on server [{server_name}] with parameters: [{params_flat}]"
+        return f"Capability [{capability_name}] called on server [{server_name}] with parameters: [{params_flat}]"
+
+    async def execute_resource(
+        self,
+        server_name: str,
+        resource_name: str,
+        resource_uri: str,
+        arguments: dict[str, Any]
+    ) -> Any:
+        session: Optional[ClientSession] = None
+        result: Optional[Dict[str, Any]] = {}
+        result["source"] = self._request_source(
+            server_name=server_name,
+            capability_name=resource_name,
+            arguments=arguments)
+        try:
+            sse_url: Optional[str] = await self._get_server_url(server_name)
+            if sse_url:
+                sse_url = self.get_full_server_url(sse_url)
+                async with sse_client(sse_url) as (read_stream, write_stream):
+                    async with ClientSession(read_stream, write_stream) as session:
+                        initialize_result: types.InitializeResult = await session.initialize()
+                        self._log.info(
+                            f"Successfully connected to {sse_url} to get resource '{resource_name}' on server '{initialize_result.serverInfo.name}'.")
+                        # Convert resource_name (assumed to be a URI string) to a URI object
+                        resource_any_uri: pydantic.AnyUrl = pydantic.AnyUrl(resource_uri)
+                        resource_result: types.ReadResourceResult = await session.read_resource(resource_any_uri)
+                        if resource_result is None:
+                            raise MCPClient.FailedToInvokeMCPServerCapability(
+                                f"Resource '{resource_name}' returned no result from server '{server_name}'.")
+                        result["results"] = self._extract_resource_result(
+                            resource_result)
+            else:
+                raise MCPClient.FailedToFindMCPServerURL(
+                    f"Server URL for '{server_name}' could not be found in the cache.")
+        except Exception as e:
+            msg = f"execute_resource: An error occurred while executing tool '{resource_name}' on server '{server_name}': {e}"
+            self._log.error(msg=msg)
+            result = {
+                "error": msg,
+                "details": str(e)
+            }
+        return result
 
     async def execute_tool(
         self,
@@ -345,7 +403,9 @@ class MCPClient:
         session: Optional[ClientSession] = None
         result: Optional[Dict[str, Any]] = {}
         result["source"] = self._request_source(
-            server_name, tool_name, arguments)
+            server_name=server_name,
+            capability_name=tool_name,
+            arguments=arguments)
         try:
             sse_url: Optional[str] = await self._get_server_url(server_name)
             if sse_url:

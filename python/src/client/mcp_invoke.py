@@ -10,7 +10,10 @@ class MCPInvoke:
     Handles parsing of MCP responses and invoking actions on MCP servers.
     """
     class MCPCapabilityHandler(Protocol):
-        async def __call__(self, server_name: str, capability_name: str,
+        async def __call__(self,
+                           server_name: str,
+                           capability_name: str,
+                           capability_uri: Optional[str],
                            parameters: Dict) -> Dict[str, Any]: ...
 
     def __init__(self,
@@ -47,6 +50,7 @@ class MCPInvoke:
     async def _handle_unsupported_call(self,
                                        server_name: str,
                                        capability_name: str,
+                                       capability_uri: Optional[str],
                                        parameters: Dict[str, Any]) -> Dict[str, Any]:
         raise RuntimeError(
             f"Unsupported MCP capability: {capability_name} for server: {server_name}. ")
@@ -54,12 +58,40 @@ class MCPInvoke:
     async def _handle_resource_call(self,
                                     server_name: str,
                                     capability_name: str,
+                                    capability_uri: Optional[str],
                                     parameters: Dict[str, Any]) -> Dict[str, Any]:
-        raise (NotImplementedError("Resource handling is not implemented yet."))
+        self._log.debug(
+            f"Handling resource call for server [{server_name}], capability [{capability_name}]")
+        result: Dict[str, Any] = {}
+
+        if not capability_uri:
+            msg = f"Capability URI is required for resource call on server [{server_name}] with capability [{capability_name}]."
+            self._log.error(msg)
+            raise ValueError(msg)
+
+        try:
+            try:
+                for mcp_client in self._mcp_clients:
+                    result = await mcp_client.execute_resource(
+                        server_name=server_name,
+                        resource_name=capability_name,
+                        resource_uri=capability_uri,
+                        arguments=parameters)
+                    if result:  # Take result from first client with a server that can respond
+                        break
+            except Exception as ex:
+                result = {
+                    "error": f"Failed to execute resource '{capability_name}' on server '{server_name}': {str(ex)}"}
+        except Exception as e:
+            result = {
+                "error": f"Unexpected error while handling resource call: {str(e)}"}
+
+        return result
 
     async def _handle_resource_template_call(self,
                                              server_name: str,
                                              capability_name: str,
+                                             capability_uri: Optional[str],
                                              parameters: Dict[str, Any]) -> Dict[str, Any]:
         raise (NotImplementedError(
             "Resource template handling is not implemented yet."))
@@ -67,12 +99,14 @@ class MCPInvoke:
     async def _handle_prompt_call(self,
                                   server_name: str,
                                   capability_name: str,
+                                  capability_uri: Optional[str],
                                   parameters: Dict[str, Any]) -> Dict[str, Any]:
         raise (NotImplementedError("Prompt handling is not implemented yet."))
 
     async def _handle_tool_call(self,
                                 server_name: str,
                                 capability_name: str,
+                                capability_uri: Optional[str],
                                 parameters: Dict[str, Any]) -> Dict[str, Any]:
         self._log.debug(
             f"Handling tool call for server [{server_name}], capability [{capability_name}]")
@@ -131,17 +165,29 @@ class MCPInvoke:
                         self._log.error(msg)
                         raise ValueError(msg)
 
+                    capability_uri: str | None = None
+                    if capability in [MCPClient.MCPServerCapabilities.RESOURCES.value,
+                                      MCPClient.MCPServerCapabilities.RESOURCE_TEMPLATES.value]:
+                        capability_uri = call.get("mcp_capability_uri")
+                        if not capability_name:
+                            msg = "MCP capability URI required for a reosurce or resource template call."
+                            self._log.error(msg)
+                            raise ValueError(msg)
+
                     parameters = call.get("parameters", {})
                     if not isinstance(parameters, dict):
                         msg = "Parameters must be a dictionary."
                         self._log.error(msg)
                         raise ValueError(msg)
 
-                    handler: MCPInvoke.MCPCapabilityHandler = self._capability_handlers.get(
-                        capability, self._handle_unsupported_call)
+                    handler: MCPInvoke.MCPCapabilityHandler = self._capability_handlers.get(capability,
+                                                                                            self._handle_unsupported_call)
 
                     results.append(
-                        await handler(server_name, capability_name, parameters))
+                        await handler(server_name=server_name,
+                                      capability_name=capability_name,
+                                      capability_uri=capability_uri,
+                                      parameters=parameters))
         except Exception as e:
             msg = f"Error processing MCP server calls: {e}"
             self._log.error(msg)
@@ -287,7 +333,6 @@ async def test():
                 "clarifications": [],
                 "mcp_server_calls": [
                     {
-                        "id": "1",
                         "mcp_capability": "tools",
                         "mcp_server_name": "Demo",
                         "mcp_capability_name": "add",

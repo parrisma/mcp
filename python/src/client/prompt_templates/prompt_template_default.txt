@@ -55,6 +55,7 @@ STRICT RESPONSE RULES:
        "mcp_server_name": "server name supplies in server descriptions",
        "mcp_capability": "tools|resources|resource_templates|prompts",
        "mcp_capability_name": "name of the capability",
+       "mcp_capability_uri": "optional URI if capability has one defined"
        "parameters": {{
           "parameter_name": "parameter_value"
        }}

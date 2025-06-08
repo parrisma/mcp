@@ -181,3 +181,6 @@ prompt_log.txt
 
 # Secrets
 *api_key*
+
+# Vi
+*.swp

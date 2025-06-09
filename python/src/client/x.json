@@ -1,32 +1,5 @@
 {
-  "response": {
-    "answer": null,
-    "clarifications": [
-      {
-        "question": "Just to confirm, should the final result be returned as a sentence or just the number?",
-        "response": null
-      }
-    ],
-    "mcp_server_calls": [
-      {
-        "mcp_capability": "tools",
-        "mcp_capability_name": "add",
-        "mcp_server_name": "Demo",
-        "parameters": { "a": 5, "b": 7 }
-      }
-    ],
-    "thinking": {
-      "next_steps": "Await the result of the add tool call and the users response to the clarification question to formulate the final answer.",
-      "reasoning": "The users goal is to receive one made-up clarification question and a call to the add tool with the values 5 and 7. I have created a tool call to add(5, 7) and a sample clarification question as requested. I am providing both in a single response as the goal seems to override the single response type rule, and the provided JSON structure supports it."
-    }
-  },
-  "status": "success",
+  "response": { "clarifications": [] },
   "goal": "respond with one made up question of clarification and a call to the add tool with values 5 and 7, when you see the responses consider this goal met",
-  "session": "750C7768-9B33-4513-BC8E-A6D045326B34",
-  "clarifications": [
-    {
-      "question": "Just to confirm, should the final result be returned as a sentence or just the number?",
-      "response": "just the number"
-    }
-  ]
+  "session": "2E3DE6FD-930D-48F5-9324-D72F2CFEF0A4"
 }

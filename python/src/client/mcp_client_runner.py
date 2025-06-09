@@ -485,24 +485,23 @@ class MCPClientRunner:
                 self._log.error(msg)
                 raise ValueError(msg)
 
-            # Extract previous LLM response structure and user clarifications
-            previous_llm_response_structure: Dict[str, Any] = args.get("response", {})
-            user_clarifications: List[Dict[str, Any]] = args.get("clarifications", [])
+            # Get the clarification and mcp_server_calls from the args
+            response_structure: Dict[str, Any] = args.get("response", {})
 
-            # Process MCP server calls from the previous LLM response
-            previous_mcp_calls = previous_llm_response_structure.get("mcp_server_calls", [])
-            mcp_responses: List[Dict[str, Any]] = await self._invoker.get_mcp_server_responses(previous_mcp_calls)
-
-            # Process user responses to clarifications
+            # Check user clarifications are in correct format and extract juste the question and response elements
+            user_clarifications: List[Dict[str, Any]] = response_structure.get(
+                "clarifications", [])
             clarification_responses: List[Dict[str, Any]] = await self._invoker.get_clarification_responses(user_clarifications)
-
-            # Cache and merge responses and clarifications
-            merged_mcp_responses = self._get_cache_and_merge_mcp_responses_by_session(
-                mcp_responses=mcp_responses,
-                llm_session=llm_session
-            )
             merged_clarifications = self._get_cache_and_merge_clarifications_by_session(
                 clarifications=clarification_responses,
+                llm_session=llm_session
+            )
+
+            # Process MCP server calls, by calling the MCP server & adding results to the cache
+            previous_mcp_calls = response_structure.get("mcp_server_calls", [])
+            mcp_responses: List[Dict[str, Any]] = await self._invoker.get_mcp_server_responses(previous_mcp_calls)
+            merged_mcp_responses = self._get_cache_and_merge_mcp_responses_by_session(
+                mcp_responses=mcp_responses,
                 llm_session=llm_session
             )
 
@@ -525,7 +524,7 @@ class MCPClientRunner:
                     prompt=full_prompt
                 )
             elif self._ollama_enabled and self._ollama:
-                 llm_call_successful, llm_content = self._ollama.get_llm_response(prompt=full_prompt,
+                llm_call_successful, llm_content = self._ollama.get_llm_response(prompt=full_prompt,
                                                                                  model=str(
                                                                                      self._ollama_model_name),
                                                                                  host=str(
@@ -536,7 +535,6 @@ class MCPClientRunner:
                 msg = "No LLM provider (OpenRouter or Ollama) is enabled or configured."
                 self._log.error(msg)
                 raise MCPClientRunner.FailedLLMCall(msg)
-
 
             if not llm_call_successful:
                 error_message = str(

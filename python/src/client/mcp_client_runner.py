@@ -443,93 +443,74 @@ class MCPClientRunner:
             self._log.error(msg)
             return clarifications
 
-    async def _get_mcp_responses_and_clarifications(self,
-                                                    questions: Dict[str, Any],
-                                                    llm_session: uuid.UUID) -> Tuple[List[Dict[str, Any]], List[Dict[str, str]]]:
-        mcp_responses: List[Dict[str, Any]] = [{}]
-        clarifications: List[Dict[str, Any]] = [{}]
-
-        if not questions:
-            raise ValueError("Questions parameter cannot be empty.")
-        if not isinstance(questions, dict):
-            raise ValueError("Questions parameter must be a dictionary.")
-        try:
-            mcp_res: Dict[str, Any] = await self._invoker.extract_and_process_llm_responses(response=questions)
-            mcp_responses = self._get_cache_and_merge_mcp_responses_by_session(mcp_responses=mcp_res.get("mcp_server_responses", {}),
-                                                                               llm_session=llm_session)
-            clarifications = self._get_cache_and_merge_clarifications_by_session(
-                clarifications=mcp_res.get("clarification_responses", {}), llm_session=llm_session)
-        except Exception as e:
-            msg: str = f"Error processing MCP responses and clarifications: {e}"
-            self._log.error(msg)
-
-        return mcp_responses, clarifications
-
     async def _get_model_response(self,
                                   params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Handles the /model_response endpoint, processing incoming data,
+        invoking MCP actions, and calling the LLM.
+        """
         try:
-            if not params:
-                msg = "No parameters provided for model response."
-                self._log.error(msg)
-                raise
-
-            if not params.get("args"):  # Ensure 'args' key exists
-                msg = "No 'args' provided in parameters for model response."
+            if not params or not isinstance(params, dict):
+                msg = "Invalid or empty parameters provided for model response."
                 self._log.error(msg)
                 raise ValueError(msg)
 
-            if not isinstance(params['args'], dict):
-                msg = "'args' must be a dictionary containing the user prompt and other parameters."
+            args: Dict[str, Any] = params.get("args", {})
+            if not args or not isinstance(args, dict):
+                msg = "No or invalid 'args' provided in parameters for model response."
                 self._log.error(msg)
                 raise ValueError(msg)
 
-            llm_session_id: str | None = params['args'].get("session")
+            llm_session_id: str | None = args.get("session")
             if not llm_session_id:
                 msg = "No session ID provided in parameters for model response."
                 self._log.error(msg)
                 raise ValueError(msg)
-            else:
-                try:
-                    llm_session = uuid.UUID(llm_session_id)
-                except ValueError as e:
-                    msg = f"Invalid session ID provided: {llm_session_id}. Must be a valid UUID."
-                    self._log.error(msg)
-                    raise ValueError(msg) from e
+
+            try:
+                llm_session = uuid.UUID(llm_session_id)
+            except ValueError as e:
+                msg = f"Invalid session ID provided: {llm_session_id}. Must be a valid UUID."
+                self._log.error(msg)
+                raise ValueError(msg) from e
 
             capabilities: Dict[str, Any] = await self._get_capabilities()
             if "error" in capabilities:  # Propagate error from _get_capabilities
                 raise MCPClientRunner.ErrorGettingServerCapabilities(
                     capabilities["error"])
 
-            goal: str = params['args'].get("goal", "")
+            goal: str = args.get("goal", "")
             if not goal:
                 msg = "User prompt (goal) is required but was empty."
                 self._log.error(msg)
                 raise ValueError(msg)
 
-            # Check to see if there are un answer MCP Model calls or User clarification questions
-            # If so, we will get answewrs to MCP calls pass them to the LLM via the prompt.
-            questions: Dict[str, Any] = params['args'].get("questions", {})
-            mcp_responses: List[Dict[str, Any]] = [{}]
-            clarifications: List[Dict[str, Any]] = [{}]
-            if questions:
-                if isinstance(questions, str):
-                    try:
-                        questions = json.loads(questions)
-                    except json.JSONDecodeError as e:
-                        msg = f"Failed to decode questions, expecting valid JSON: {e}"
-                        self._log.error(msg)
-                        raise ValueError(msg) from e
-                mcp_responses, clarifications = await self._get_mcp_responses_and_clarifications(
-                    questions=questions,
-                    llm_session=llm_session
-                )
+            # Extract previous LLM response structure and user clarifications
+            previous_llm_response_structure: Dict[str, Any] = args.get("response", {})
+            user_clarifications: List[Dict[str, Any]] = args.get("clarifications", [])
+
+            # Process MCP server calls from the previous LLM response
+            previous_mcp_calls = previous_llm_response_structure.get("mcp_server_calls", [])
+            mcp_responses: List[Dict[str, Any]] = await self._invoker.get_mcp_server_responses(previous_mcp_calls)
+
+            # Process user responses to clarifications
+            clarification_responses: List[Dict[str, Any]] = await self._invoker.get_clarification_responses(user_clarifications)
+
+            # Cache and merge responses and clarifications
+            merged_mcp_responses = self._get_cache_and_merge_mcp_responses_by_session(
+                mcp_responses=mcp_responses,
+                llm_session=llm_session
+            )
+            merged_clarifications = self._get_cache_and_merge_clarifications_by_session(
+                clarifications=clarification_responses,
+                llm_session=llm_session
+            )
 
             full_prompt: Optional[str] = self._prompts.build_prompt(user_goal=goal,
                                                                     session_id=llm_session,
                                                                     mcp_server_descriptions=capabilities,
-                                                                    mcp_responses=mcp_responses,
-                                                                    clarifications=clarifications)
+                                                                    mcp_responses=merged_mcp_responses,
+                                                                    clarifications=merged_clarifications)
 
             llm_call_successful: bool = False
             llm_content: Dict[str, Any] = {}
@@ -543,14 +524,19 @@ class MCPClientRunner:
                 llm_call_successful, llm_content = self._openrouter.get_llm_response(
                     prompt=full_prompt
                 )
-            else:
-                llm_call_successful, llm_content = self._ollama.get_llm_response(prompt=full_prompt,
+            elif self._ollama_enabled and self._ollama:
+                 llm_call_successful, llm_content = self._ollama.get_llm_response(prompt=full_prompt,
                                                                                  model=str(
                                                                                      self._ollama_model_name),
                                                                                  host=str(
                                                                                      self._ollama_host_url),
                                                                                  temperature=0.3
                                                                                  )
+            else:
+                msg = "No LLM provider (OpenRouter or Ollama) is enabled or configured."
+                self._log.error(msg)
+                raise MCPClientRunner.FailedLLMCall(msg)
+
 
             if not llm_call_successful:
                 error_message = str(
@@ -564,7 +550,7 @@ class MCPClientRunner:
             msg = f"LLM call failed: {flc}"
             self._log.error(msg)
             return {"error": msg, "type": "FailedLLMCall"}
-        except ValueError as ve:  # This will now catch ValueErrors raised explicitly if any
+        except ValueError as ve:
             msg = f"Input error for model response: {ve}"
             self._log.error(msg)
             return {"error": msg, "type": "ValueError"}
@@ -572,6 +558,10 @@ class MCPClientRunner:
             msg = f"An unexpected error occurred while getting model response: {e}"
             self._log.exception(msg)
             return {"error": msg, "type": "Exception"}
+
+    # Removed _get_mcp_responses_and_clarifications as it's no longer needed
+    # async def _get_mcp_responses_and_clarifications(self, ...):
+    #     ...
 
     def get_model_response(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Synchronous wrapper for the async get_model_response method."""

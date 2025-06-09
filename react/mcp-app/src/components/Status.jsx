@@ -22,15 +22,9 @@ import Questions from "./Questions"; // Import Questions component
  */
 function Status({
   apiStatus,
-  baseApiUrl,
-  onApiResponse,
-  lastResponseData,
-  currentGoalPromptText,
-  sessionId,
   onClarificationResponsesChange, // Accept the new prop
 }) {
-  const { data, loading, error } = apiStatus || {};
-  const [isNextStepsLoading, setIsNextStepsLoading] = useState(false);
+  const { data, error } = apiStatus || {};
   const [clarificationResponses, setClarificationResponses] = useState([]); // State to hold responses from Questions
 
   // Pass clarification responses up to the parent whenever they change
@@ -40,53 +34,56 @@ function Status({
     }
   }, [clarificationResponses, onClarificationResponsesChange]);
 
-  let content;
+  let requestedActionsContent;
+  let finalAnswerContent = "";
 
   if (error) {
-    content = `Error: ${error}`;
+    requestedActionsContent = `Error: ${error}`;
   } else if (data && data.response) {
     // Check for the nested 'response' object
     const responseData = data.response;
+
+    // Populate finalAnswerContent if answer is available
     if (responseData.answer) {
-      // Display the answer if available
       if (
         typeof responseData.answer === "object" &&
-        responseData.answer !== null
+        responseData.answer !== null &&
+        responseData.answer.body !== undefined
       ) {
         let bodyContent = responseData.answer.body;
         if (typeof bodyContent === "object" && bodyContent !== null) {
-          bodyContent = JSON.stringify(bodyContent, null, 2);
-        }
-
-        if (responseData.answer.confidence !== undefined) {
-          content = `${bodyContent} with confidence ${responseData.answer.confidence}`;
-        } else if (bodyContent !== undefined) {
-          content = bodyContent;
+          finalAnswerContent = JSON.stringify(bodyContent, null, 2);
         } else {
-          // If answer is an object but has no body or confidence, stringify the whole answer object
-          content = JSON.stringify(responseData.answer, null, 2);
+          finalAnswerContent = bodyContent;
         }
       } else if (responseData.answer !== undefined) {
-        // If answer exists but is not an object, display it directly
-        content = responseData.answer;
+        // If answer exists but is not an object with a body, display it directly
+        finalAnswerContent = responseData.answer;
       }
-    } else if (
+    }
+
+    // Populate requestedActionsContent with MCP server calls if present and no final answer
+    if (
+      !responseData.answer && // Only show requested actions if no final answer
       responseData.mcp_server_calls &&
       responseData.mcp_server_calls.length > 0
     ) {
-      // Otherwise, show MCP server calls if present
-      content = `Pending MCP Server Calls:\n${JSON.stringify(
+      requestedActionsContent = `Pending MCP Server Calls:\n${JSON.stringify(
         responseData.mcp_server_calls,
         null,
         2
       )}`;
+    } else if (!responseData.answer) {
+       // If no answer and no MCP calls, requestedActionsContent is empty
+       requestedActionsContent = "";
     } else {
-      // Default content if no answer or MCP calls
-      content = "";
+      // If there is a final answer, requestedActionsContent should be empty
+      requestedActionsContent = "";
     }
+
   } else {
     // Default content when no data or response
-    content = "";
+    requestedActionsContent = "";
   }
 
   // Correctly access thinking from data.response.thinking
@@ -95,94 +92,6 @@ function Status({
   const nextStepsText = Array.isArray(thinkingData?.next_steps)
     ? thinkingData.next_steps.join("\n") || ""
     : thinkingData?.next_steps || "";
-
-  const handleDoNextSteps = async () => {
-    // Prevent duplicate calls if already processing
-    if (isNextStepsLoading) {
-      return;
-    }
-
-    if (!baseApiUrl) {
-      console.error(
-        "Base API URL is not provided to Status component for Next Steps."
-      );
-      onApiResponse({
-        data: null,
-        loading: false,
-        error: "Configuration error: Base API URL missing for Next Steps.",
-      });
-      return;
-    }
-    if (!nextStepsText || nextStepsText.toLowerCase().trim() === "none") {
-      onApiResponse({
-        data: null,
-        loading: false,
-        error: "No next steps to perform.",
-      });
-      return;
-    }
-
-    setIsNextStepsLoading(true);
-    // Use onApiResponse to signal loading, preserving existing data if appropriate
-    // The App.jsx onApiResponse handler should manage startTime for this new loading sequence
-    onApiResponse({ data: lastResponseData, loading: true, error: null });
-
-    try {
-      // Construct query parameters
-      const params = new URLSearchParams();
-      params.append("goal", currentGoalPromptText); // Use the original prompt text as the goal
-
-      // Include clarification responses in the 'questions' parameter
-      // Create a deep copy of lastResponseData to avoid modifying the original state directly
-      const questionsData = JSON.parse(JSON.stringify(lastResponseData));
-
-      // Update the clarifications within the nested 'response' object
-      if (questionsData && questionsData.response) {
-        questionsData.response.clarifications = clarificationResponses;
-      } else {
-        // Handle cases where response or clarifications might be missing initially
-        questionsData.response = { clarifications: clarificationResponses };
-      }
-
-      params.append("questions", JSON.stringify(questionsData));
-
-      // Add the session id to the parameters
-      params.append("session", sessionId);
-
-      const fullUrl = `${baseApiUrl}/model_response`;
-
-      const response = await fetch(fullUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(Object.fromEntries(params)),
-      });
-
-      if (!response.ok) {
-        const errorData = await response
-          .json()
-          .catch(() => ({ error: `HTTP error: ${response.status}` }));
-        throw new Error(errorData.error || `HTTP error: ${response.status}`);
-      }
-
-      const responseData = await response.json();
-      onApiResponse({ data: responseData, loading: false, error: null });
-    } catch (err) {
-      onApiResponse({
-        data: lastResponseData,
-        loading: false,
-        error: err.message,
-      });
-    } finally {
-      setIsNextStepsLoading(false);
-    }
-  };
-
-  const canDoNextSteps =
-    nextStepsText &&
-    nextStepsText.trim() !== "" &&
-    nextStepsText.toLowerCase().trim() !== "none";
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -194,35 +103,23 @@ function Status({
         {/* Changed to 2fr 1fr */}
         {/* First column: the main TextField */}
         <TextField
-          label={data?.response?.answer ? "Answer" : "(MCP) Requested Actions"}
+          label="(MCP) Requested Actions" // Always display this label
           multiline
           rows={10}
-          value={content}
+          value={requestedActionsContent} // Use the new variable
           variant="outlined"
           fullWidth
           readOnly={true}
           sx={{
             "& .MuiOutlinedInput-root": {
               "& fieldset": {
-                borderColor: error
-                  ? "red"
-                  : data?.response?.answer
-                  ? "green"
-                  : undefined,
+                borderColor: error ? "red" : undefined, // Only red border on error
               },
               "&:hover fieldset": {
-                borderColor: error
-                  ? "red"
-                  : data?.response?.answer
-                  ? "green"
-                  : undefined,
+                borderColor: error ? "red" : undefined, // Only red border on error
               },
               "&.Mui-focused fieldset": {
-                borderColor: error
-                  ? "red"
-                  : data?.response?.answer
-                  ? "green"
-                  : undefined,
+                borderColor: error ? "red" : undefined, // Only red border on error
               },
             },
           }}
@@ -236,6 +133,34 @@ function Status({
         }
       </Box>
       {/* The rest of the fields below the grid */}
+      {/* Final Answer TextField */}
+      <Box mb={2}>
+        {" "}
+        {/* Added margin bottom */}
+        <TextField
+            label="Final Answer"
+            multiline
+            rows={3}
+            value={finalAnswerContent} // Use the new variable
+            variant="outlined"
+            fullWidth
+            readOnly={true}
+            // Apply green border if it's the final answer
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: data?.response?.answer ? "green" : undefined,
+                },
+                "&:hover fieldset": {
+                  borderColor: data?.response?.answer ? "green" : undefined,
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: data?.response?.answer ? "green" : undefined,
+                },
+              },
+            }}
+          />
+        </Box>
       <Box mb={2}>
         {" "}
         {/* Added margin bottom */}
@@ -265,18 +190,6 @@ function Status({
       <Box sx={{ display: "flex", justifyContent: "flex-start" }} mb={2}>
         {" "}
         {/* Added margin bottom */}
-        <Button
-          variant="contained" // Use contained variant for a filled button
-          onClick={handleDoNextSteps}
-          disabled={
-            !canDoNextSteps ||
-            loading ||
-            isNextStepsLoading ||
-            data?.response?.answer?.body !== undefined
-          }
-        >
-          {isNextStepsLoading ? "Processing..." : "Do Next Steps"}
-        </Button>
       </Box>
     </Box>
   );

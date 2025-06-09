@@ -54,6 +54,7 @@ function App() {
   const [clarificationResponses, setClarificationResponses] = useState([]); // State to hold clarification responses
   const [elapsedSeconds, setElapsedSeconds] = useState(0); // State for elapsed time
   const [isProcessingNextSteps, setIsProcessingNextSteps] = useState(false); // New state for "Do Next Steps" processing
+  const [isFinalAnswerAvailable, setIsFinalAnswerAvailable] = useState(false); // State for whether a final answer is available
 
   useEffect(() => {
     let intervalId;
@@ -147,8 +148,7 @@ function App() {
     ) {
       // This is a new submission from Prompt.jsx
       setCurrentGoalPromptText(submittedGoal);
-      const newSessionId = uuidv4().toUpperCase();
-      setSessionId(newSessionId);
+      // Do NOT generate a new session ID here. The session ID is managed on initial load and reset.
       setApiStatus({
         ...statusUpdate,
         data: null,
@@ -156,12 +156,18 @@ function App() {
         startTime: Date.now(),
       });
 
-      // Now construct and make the API call in App.jsx using the *newly generated* session ID
+      // Now construct and make the API call in App.jsx using the *current* session ID
       try {
         const fullUrl = `${baseApiUrl}/model_response`;
         const requestBody = {
-          goal: submittedGoal,
-          session: newSessionId
+          response: {
+            // ...apiStatus.data?.response, - MP prev not needed ? Include previous response data if available
+            clarifications: clarificationResponses, // Include current clarification responses
+            mcp_server_calls: apiStatus.data?.response?.mcp_server_calls // Include previous MCP calls if available
+          },
+          status: apiStatus.data?.status, // Include previous status
+          goal: submittedGoal, // Use the submitted goal
+          session: sessionId, // Use the current session ID
         };
         console.log("SUBMIT - Making POST request to:", fullUrl, "with body:", requestBody); // Updated console log
 
@@ -185,9 +191,12 @@ function App() {
         const responseData = JSON.parse(responseText); // Parse the text as JSON
         // Pass the received data back to App.jsx
         setApiStatus({ data: responseData, loading: false, error: null });
+        // Set state based on whether a non-null/undefined answer is available
+        setIsFinalAnswerAvailable(responseData?.response?.answer != null);
       } catch (err) {
         // Pass the error back to App.jsx
         setApiStatus({ data: null, loading: false, error: err.message });
+        setIsFinalAnswerAvailable(false); // Reset state on error
       }
     } else if (statusUpdate.loading && !apiStatus.loading) {
       // This might be from "Do Next Steps" or a re-submission without changing goal
@@ -239,16 +248,21 @@ function App() {
         params.append("session", sessionId);
 
         const requestBody = {
-          ...apiStatus.data,
-          goal: currentGoalPromptText, // Explicitly include goal in body
-          session: sessionId, // Explicitly include session in body
-          clarifications: clarificationResponses, // Include captured clarification responses
+          response: {
+            ...apiStatus.data?.response, // Spread the existing response object properties
+            clarifications: clarificationResponses // Replace the clarifications array within response
+          },
+          status: apiStatus.data?.status, // Include previous status
+          goal: currentGoalPromptText, // Use the stored goal
+          session: sessionId,
+          // The top-level clarifications are now moved inside the response object
         };
 
         const fullUrlWithParams = `${fullUrl}?${params.toString()}`; // Construct URL with params for logging
         console.log(`[ID:${invocationId}] NEXT STEPS - Making POST request to:`, fullUrlWithParams);
         console.log(`[ID:${invocationId}] NEXT STEPS - Request body:`, requestBody);
         console.log(`[ID:${invocationId}] NEXT STEPS - clarificationResponses:`, clarificationResponses);
+        console.log(`[ID:${invocationId}] POST body sent to /model_response:`, JSON.stringify(requestBody, null, 2));
 
         const response = await fetch(fullUrl, {
           method: "POST", // Use POST for sending body
@@ -271,6 +285,9 @@ function App() {
         console.log(`[ID:${invocationId}] NEXT STEPS - Setting apiStatus with data and loading=false`);
         setApiStatus({ data: responseData, loading: false, error: null });
         setIsProcessingNextSteps(false); // End processing indicator on success
+        // Set state based on whether a non-null/undefined answer is available
+        setIsFinalAnswerAvailable(responseData?.response?.answer != null);
+        setClarificationResponses([]); // Clear clarification responses after successful submission
       } catch (err) {
         console.log(`[ID:${invocationId}] NEXT STEPS - Caught error:`, err.message);
         setApiStatus({
@@ -279,6 +296,7 @@ function App() {
           error: err.message,
         });
         setIsProcessingNextSteps(false); // End processing indicator on error
+        setIsFinalAnswerAvailable(false); // Reset state on error
       }
     } else if (!statusUpdate.loading && apiStatus.loading) {
       setApiStatus({ ...statusUpdate, startTime: null });
@@ -286,6 +304,8 @@ function App() {
       setApiStatus((prevStatus) => ({ ...prevStatus, ...statusUpdate }));
     }
   };
+
+  console.log("Rendering App. isLoading:", apiStatus.loading || isProcessingNextSteps, "isFinalAnswerAvailable:", isFinalAnswerAvailable);
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -315,8 +335,11 @@ function App() {
                   sessionId={sessionId} // Pass sessionId to Prompt
                   setSessionId={setSessionId} // Pass setSessionId to Prompt
                   isLoading={apiStatus.loading || isProcessingNextSteps} // Pass combined loading state to Prompt
+                  isFinalAnswerAvailable={isFinalAnswerAvailable} // Pass the new prop
                   activityStatus={
-                    apiStatus.loading || isProcessingNextSteps
+                    isFinalAnswerAvailable
+                      ? "Done"
+                      : apiStatus.loading || isProcessingNextSteps
                       ? `thinking, please be patient [${elapsedSeconds}s]`
                       : ""
                   } // Pass activity status based on combined state

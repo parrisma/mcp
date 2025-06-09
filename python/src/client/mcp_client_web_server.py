@@ -50,14 +50,15 @@ class MCPClientWebServer:
         query_params[self.QueryParamKeys.PATH.value] = request.path
 
         # Handle both GET and POST parameters
-        args_dict = request.args.to_dict()
+        # Handle both GET and POST parameters
+        args_dict: Dict[str, Any] = request.args.to_dict()
 
-        # If this is a POST request with JSON body, merge it with args
+        # If this is a POST request with JSON body, use the JSON data directly for args
         if request.method == 'POST' and request.is_json:
             json_data = request.get_json()
             if isinstance(json_data, dict):
-                # Merge JSON data with query parameters
-                args_dict.update(json_data)
+                args_dict = json_data # Use JSON data directly
+
 
         query_params[self.QueryParamKeys.ARGS.value] = args_dict
         result: Dict[str, Any] = call(callback, query_params)

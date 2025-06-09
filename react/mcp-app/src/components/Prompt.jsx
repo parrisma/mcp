@@ -7,11 +7,12 @@ import PropTypes from "prop-types"; // For prop validation
 function Prompt({
   baseApiUrl,
   onApiResponse,
-  isNextStepsMode,
   onResetAll,
   sessionId,
   isLoading,
   activityStatus, // Add new prop for activity status
+  isFinalAnswerDisplayed, // Add new prop
+  isFinalAnswerContentDisplayed, // Add new prop
 }) {
   const [promptText, setPromptText] = useState("");
   const [activityText, setActivityText] = useState(""); // State for Activity TextField
@@ -102,9 +103,9 @@ function Prompt({
         <Button
           variant="contained" // Use contained variant
           onClick={handleSubmit}
-          disabled={isLoading || isNextStepsMode} // Only disable if loading or in next steps mode
+          disabled={isLoading || isFinalAnswerContentDisplayed} // Disable when loading or when final answer content is displayed
         >
-          {isLoading ? "Submitting..." : "Submit"}
+          {isFinalAnswerContentDisplayed ? "Done" : (isLoading ? "Submitting..." : "Submit")}
         </Button>
         <Button
           variant="contained" // Use contained variant
@@ -160,19 +161,20 @@ function Prompt({
 Prompt.propTypes = {
   baseApiUrl: PropTypes.string,
   onApiResponse: PropTypes.func.isRequired,
-  isNextStepsMode: PropTypes.bool,
   onResetAll: PropTypes.func.isRequired, // Add prop type for onResetAll
   sessionId: PropTypes.string, // Add prop type for sessionId
   isLoading: PropTypes.bool, // Add prop type for isLoading
   activityStatus: PropTypes.string, // Add prop type for activityStatus
+  isFinalAnswerDisplayed: PropTypes.bool, // Add prop type
+  isFinalAnswerContentDisplayed: PropTypes.bool, // Add new prop type
 };
 
 Prompt.defaultProps = {
   baseApiUrl: "",
-  isNextStepsMode: false,
   sessionId: null, // Default prop for sessionId
   isLoading: false, // Default prop for isLoading
   activityStatus: "", // Default prop for activityStatus
+  isFinalAnswerContentDisplayed: false, // Add new default prop
 };
 
 export default Prompt;

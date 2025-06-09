@@ -142,8 +142,11 @@ class MCPInvoke:
 
         return result
 
-    async def _get_mcp_server_responses(self,
-                                        mcp_server_calls: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    async def get_mcp_server_responses(self,
+                                       mcp_server_calls: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Processes a list of MCP server calls and invokes the appropriate actions.
+        """
         results: List[Dict[str, Any]] = []
         try:
             if not isinstance(mcp_server_calls, list):
@@ -151,8 +154,7 @@ class MCPInvoke:
                 self._log.error(msg)
                 raise ValueError(msg)
             if len(mcp_server_calls) == 0:
-                msg = "No MCP server calls to process."
-                self._log.info(msg)
+                self._log.info("No MCP server calls to process.")
             else:
                 for call in mcp_server_calls:
                     if not isinstance(call, dict):
@@ -207,8 +209,11 @@ class MCPInvoke:
             results.append({"error": msg})
         return results
 
-    async def _get_clarification_responses(self,
-                                           clarifications: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    async def get_clarification_responses(self,
+                                          clarifications: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Processes a list of clarification requests and extracts user responses.
+        """
         results: List[Dict[str, Any]] = []
         try:
             if not isinstance(clarifications, list):
@@ -216,8 +221,7 @@ class MCPInvoke:
                 self._log.error(msg)
                 raise ValueError(msg)
             if len(clarifications) == 0:
-                msg = "No clarifications to process."
-                self._log.info(msg)
+                self._log.info("No clarifications to process.")
 
             for clarification in clarifications:
                 if not isinstance(clarification, dict):
@@ -313,10 +317,10 @@ class MCPInvoke:
                     self._log.error(msg)
                     raise ValueError(msg)
 
-                mcp_server_responses = await self._get_mcp_server_responses(
+                mcp_server_responses = await self.get_mcp_server_responses(
                     self._extract_mcp_server_calls_from_response(response_data))
 
-                clarification_responses = await self._get_clarification_responses(self._extract_clarifications_from_response(
+                clarification_responses = await self.get_clarification_responses(self._extract_clarifications_from_response(
                     response_data))
             else:
                 msg = "Response does not contain 'response' key."

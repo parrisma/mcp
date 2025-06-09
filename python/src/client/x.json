@@ -1,102 +1,32 @@
-[
-  {
-    "Demo": {
-      "server_detail": {
-        "server_url": "http://localhost:6277",
-        "name": "Demo",
-        "instructions": "MCP Server - Model Context Protocol Server Implementation",
-        "version": "1.9.2"
-      },
-      "tools": [
-        {
-          "name": "add",
-          "description": "Add two integers together",
-          "inputSchema": {
-            "properties": {
-              "a": {
-                "description": "First integer to add",
-                "title": "A",
-                "type": "integer"
-              },
-              "b": {
-                "description": "Second integer to add",
-                "title": "B",
-                "type": "integer"
-              }
-            },
-            "required": ["a", "b"],
-            "title": "_addArguments",
-            "type": "object"
-          },
-          "annotations": {
-            "title": "Simple arithmetic add",
-            "readOnlyHint": true,
-            "destructiveHint": false,
-            "idempotentHint": true,
-            "openWorldHint": false
-          }
-        },
-        {
-          "name": "multiply",
-          "description": "Multiply two integers together",
-          "inputSchema": {
-            "properties": {
-              "a": {
-                "description": "First integer to multiply",
-                "title": "A",
-                "type": "integer"
-              },
-              "b": {
-                "description": "Second integer to multiply",
-                "title": "B",
-                "type": "integer"
-              }
-            },
-            "required": ["a", "b"],
-            "title": "multiplyArguments",
-            "type": "object"
-          },
-          "annotations": {
-            "title": "Simple arithmetic multiplication",
-            "readOnlyHint": true,
-            "destructiveHint": false,
-            "idempotentHint": true,
-            "openWorldHint": false
-          }
-        }
-      ],
-      "resources": [
-        {
-          "name": "alive",
-          "uri": "alive://",
-          "description": "Return server status and server timestamp"
-        }
-      ],
-      "resource_templates": [
-        {
-          "name": "message",
-          "uriTemplate": "message://{name}",
-          "description": "Generate a greeting message for a given name"
-        }
-      ],
-      "prompts": [
-        {
-          "name": "sme",
-          "description": "Get a subject matter expert prompt for a specific topic",
-          "arguments": [
-            {
-              "name": "topic",
-              "description": "Topics supported: coding, math, writing",
-              "required": true
-            },
-            {
-              "name": "subject",
-              "description": "The subject to get details on for the given topic",
-              "required": true
-            }
-          ]
-        }
-      ]
+{
+  "response": {
+    "answer": null,
+    "clarifications": [
+      {
+        "question": "Just to confirm, should the final result be returned as a sentence or just the number?",
+        "response": null
+      }
+    ],
+    "mcp_server_calls": [
+      {
+        "mcp_capability": "tools",
+        "mcp_capability_name": "add",
+        "mcp_server_name": "Demo",
+        "parameters": { "a": 5, "b": 7 }
+      }
+    ],
+    "thinking": {
+      "next_steps": "Await the result of the add tool call and the users response to the clarification question to formulate the final answer.",
+      "reasoning": "The users goal is to receive one made-up clarification question and a call to the add tool with the values 5 and 7. I have created a tool call to add(5, 7) and a sample clarification question as requested. I am providing both in a single response as the goal seems to override the single response type rule, and the provided JSON structure supports it."
     }
-  }
-]
+  },
+  "status": "success",
+  "goal": "respond with one made up question of clarification and a call to the add tool with values 5 and 7, when you see the responses consider this goal met",
+  "session": "750C7768-9B33-4513-BC8E-A6D045326B34",
+  "clarifications": [
+    {
+      "question": "Just to confirm, should the final result be returned as a sentence or just the number?",
+      "response": "just the number"
+    }
+  ]
+}

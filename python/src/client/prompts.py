@@ -6,7 +6,9 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, Optional, Protocol, List, Any
 from datetime import datetime
+from flask import session
 from langchain.prompts import PromptTemplate
+import mcp
 
 
 class Prompts:
@@ -39,6 +41,9 @@ class Prompts:
                 format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                 handlers=[logging.StreamHandler()]
             )
+
+        self._prompt_version_by_session: Dict[uuid.UUID, int] = {}
+        self._prompt_log_folder: Path = Path("prompt_logs")
 
         if template_root_folder:
             self._template_root_folder: Path = Path(template_root_folder)
@@ -175,10 +180,37 @@ class Prompts:
             raise ValueError(f"Error formatting prompt: {e}"
                              )
 
+    def extract_version(self,
+                        prompt_log_file_name: Path) -> int:
+        try:
+            return int(str(prompt_log_file_name).split("_")[-1].split(".")[0])
+        except Exception:
+            return 0
+
+    def get_prompts_by_session_id(self,
+                                  session_id: uuid.UUID) -> Dict[str, str]:
+        try:
+            session_files = list(Path(self._prompt_log_folder).glob(
+                f"prompt_{str(session_id)}_*.txt"))
+            session_files.sort(key=self.extract_version)
+            return {str(f): f.read_text(encoding="utf-8") for f in session_files if f.is_file()}
+        except Exception as e:
+            self._log.error(f"Failed to log prompt: {e}")
+            return {}
+
     def _log_prompt(self,
+                    session_id: uuid.UUID,
                     prompt: str) -> None:
         try:
-            with open("prompt_log.txt", "a", encoding="utf-8") as f:
+            prompt_version: int = self._prompt_version_by_session.get(
+                session_id, 0) + 1
+            self._prompt_version_by_session[session_id] = prompt_version
+            self._log.info(
+                f"Logging prompt version {prompt_version} for session {session_id}")
+
+            prompt_log_file_name: Path = Path(
+                self._prompt_log_folder) / f"prompt_{str(session_id)}_{prompt_version}.txt"
+            with open(prompt_log_file_name, "a", encoding="utf-8") as f:
                 f.write("=" * 80 + "\n\n")
                 f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')}\n\n")
                 f.write(prompt + "\n")
@@ -204,7 +236,8 @@ class Prompts:
                 }
             )
 
-            self._log_prompt(prompt)
+            self._log_prompt(session_id=session_id,
+                             prompt=prompt)
 
             return prompt
 
@@ -218,16 +251,22 @@ def tests() -> None:
     try:
         prompts = Prompts(template_root_folder=None,
                           default_prompt_file_name=None)
-        test_prompt: str = prompts.get_prompt(
-            goal="Test goal",
-            session_id="12345",
-            variables={"mcp_server_descriptions": '{"server1": "description1"}',
-                       "mcp_server_responses": '{"response1": "data1"}',
-                       "clarification_responses": '{"clarification1": "info1"}'},
-            makePromptTemplate=None,
-            prompt_name=None
-        )
-        print(f"Test prompt: {test_prompt}")
+        session_id: uuid.UUID = uuid.uuid4()
+        for i in range(3):
+            test_prompt: str | None = prompts.build_prompt(user_goal=f"Test goal {i}",
+                                                           session_id=session_id,
+                                                           mcp_server_descriptions={
+                                                               f"server{i}": "description1"},
+                                                           mcp_responses=[
+                                                               {f"response{i}": "data1"}],
+                                                           clarifications=[{f"clarification{i}": "info1"}])
+            if test_prompt is not None:
+                print(f"Test prompt: {test_prompt}")
+            else:
+                print("Test prompt generation failed.")
+
+        for k in prompts.get_prompts_by_session_id(session_id).keys():
+            print(f"Prompt file: {k}")
 
         print("Prompts instance created successfully.")
     except Exception as e:

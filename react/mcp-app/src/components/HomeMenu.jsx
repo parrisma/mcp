@@ -6,6 +6,7 @@ function HomeMenu({ onViewChange }) {
   return (
     <Box sx={{ display: "flex", gap: 1 }}>
       <Button color="primary" onClick={() => onViewChange('Question')}>Question</Button>
+      <Button color="primary" onClick={() => onViewChange('Prompts')}>Prompts</Button>
       <Button color="primary" onClick={() => onViewChange('Settings')}>Settings</Button>
     </Box>
   );

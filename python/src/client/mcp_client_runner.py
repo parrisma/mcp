@@ -21,6 +21,8 @@ from .mcp_client_web_server import MCPClientWebServer
 from .mcp_invoke import MCPInvoke
 from .openrouter_utils import OpenRouter
 from .prompts import Prompts
+from python.src.client import prompts
+import re
 
 
 class MCPClientRunner:
@@ -133,6 +135,8 @@ class MCPClientRunner:
             route='/capability', methods=['GET'], handler=self.get_capabilities)
         self._web_server.add_route(
             route='/ping', methods=['GET'], handler=self.ping_callback)
+        self._web_server.add_route(
+            route='/prompts', methods=['GET'], handler=self.get_prompts)
         self._web_server.add_route(
             route='/model_response', methods=['POST'], handler=self.get_model_response)
 
@@ -588,9 +592,70 @@ class MCPClientRunner:
             self._log.exception(msg)
             return {"error": msg, "type": "Exception"}
 
-    # Removed _get_mcp_responses_and_clarifications as it's no longer needed
-    # async def _get_mcp_responses_and_clarifications(self, ...):
-    #     ...
+    def _parse_prompt_dist_to_json(self,
+                                   prompt_dict: Dict[str, str]) -> Dict[str, Any]:
+        """
+        Converts a dict of {filename: prompt_text} into the specified JSON format.
+        Assumes filename format: prompt_<uuid>_<version>.txt
+        """
+        prompt_pattern = re.compile(r"^prompt_([0-9a-fA-F\-]{36})_(\d+)\.txt$")
+        prompts_list = []
+        session_id = None
+        filename = None
+
+        for fname, prompt_text in prompt_dict.items():
+            fname = os.path.basename(fname)
+            match = prompt_pattern.match(fname)
+            if not match:
+                self._log.warning(
+                    f"Filename '{fname}' does not match expected pattern. Skipping.")
+                continue
+            session_id_candidate, version = match.groups()
+            if session_id is None:
+                session_id = session_id_candidate.upper()
+            filename = fname  # last filename processed
+            prompts_list.append({
+                "version": f"{int(version)}.0",
+                "prompt": prompt_text
+            })
+
+        return {
+            "response": {
+                "session_id": session_id,
+                "prompts": prompts_list
+            }
+        }
+
+    def get_prompts(self,
+                    params: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            if params is None or not isinstance(params, dict):
+                msg = "Invalid or empty parameters provided, [session_id] required as parameter as prompts are retrived by session ID"
+                self._log.error(msg)
+                return {"error": msg, "type": "ValueError"}
+
+            args = params.get("args", None)
+            if not args or not isinstance(args, dict):
+                msg = "No or invalid 'args' provided in parameters for prompts."
+                self._log.error(msg)
+                return {"error": msg, "type": "ValueError"}
+
+            session_id: str | None = args.get("session_id", None)
+
+            if session_id is None:
+                msg = "No [session_id] provided, prompts are retrived by session ID."
+                self._log.error(msg)
+                return {"error": msg, "type": "ValueError"}
+
+            prompts: Dict[str, Any] = self._prompts.get_prompts_by_session_id(
+                session_id=uuid.UUID(session_id))
+
+            return self._parse_prompt_dist_to_json(prompts)
+
+        except Exception as e:
+            msg = f"An unexpected error occurred while getting model prompts: {e}"
+            self._log.exception(msg)
+            return {"error": msg, "type": "Exception"}
 
     def get_model_response(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Synchronous wrapper for the async get_model_response method."""

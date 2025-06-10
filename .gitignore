@@ -178,9 +178,13 @@ python-sdk/
 
 # General App Logs
 prompt_log.txt
+prompt_logs/
 
 # Secrets
 *api_key*
 
 # Vi
 *.swp
+
+# General
+**/x.json

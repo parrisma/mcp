@@ -4,11 +4,15 @@ import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Grid from "@mui/material/Grid";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button"; // Import Button
 import { v4 as uuidv4 } from "uuid"; // Import UUID generator
 import Status from "./components/Status.jsx";
 import HomeMenu from "./components/HomeMenu.jsx";
 import Prompt from "./components/Prompt.jsx";
 import SettingsAndStatus from "./components/SettingsAndStatus.jsx";
+import MenuItem from "@mui/material/MenuItem"; // Import MenuItem
+import ReadOnlyPrompt from "./components/ReadOnlyPrompt.jsx"; // Import ReadOnlyPrompt
 
 const homePaper = {
   padding: 2,
@@ -117,6 +121,52 @@ function App() {
     setActiveView(view);
   };
 
+  const [promptVersions, setPromptVersions] = useState([]); // New state for prompt versions
+  const [selectedPromptVersion, setSelectedPromptVersion] = useState(""); // New state for selected version
+  const [promptsResponse, setPromptsResponse] = useState(""); // New state for the response message
+  const [promptsData, setPromptsData] = useState([]); // New state to store the full prompts data
+
+  const handleGetPrompts = async () => {
+    const fullUrl = `${baseApiUrl}/prompts?session_id=${sessionId}`;
+    console.log("Making GET request to:", fullUrl);
+    try {
+      const response = await fetch(fullUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log("Prompts received:", data);
+      if (data?.response?.prompts && data.response.prompts.length > 0) {
+        setPromptsData(data.response.prompts); // Store the full prompts data
+        const versions = data.response.prompts.map((p) => p.version);
+        setPromptVersions(versions);
+        console.log("Prompt versions set:", versions); // Added logging
+        setSelectedPromptVersion(versions[0]); // Select the first version by default
+        setPromptsResponse(""); // Clear previous response message on success
+      } else {
+        console.log("No matching prompts found for this session ID."); // Updated logging
+        setPromptsData([]); // Clear prompts data
+        setPromptVersions([]);
+        setSelectedPromptVersion("");
+        setPromptsResponse("No matching prompts"); // Set message for empty list
+      }
+    } catch (error) {
+      console.error("Error fetching prompts:", error);
+      setPromptsData([]); // Clear prompts data
+      setPromptVersions([]);
+      setSelectedPromptVersion("");
+      setPromptsResponse(`Error fetching prompts: ${error.message}`); // Set error message
+    }
+  };
+
+  // Find the prompt text for the selected version
+  const selectedPromptText =
+    promptsData.find((p) => p.version === selectedPromptVersion)?.prompt || "";
+
+  const handleVersionChange = (event) => {
+    setSelectedPromptVersion(event.target.value);
+  };
+
   const baseApiUrl = `http://${clientHostValue}:${clientPortValue}`;
 
   // Determine if "Next Steps" are available and not "None"
@@ -163,13 +213,18 @@ function App() {
           response: {
             // ...apiStatus.data?.response, - MP prev not needed ? Include previous response data if available
             clarifications: clarificationResponses, // Include current clarification responses
-            mcp_server_calls: apiStatus.data?.response?.mcp_server_calls // Include previous MCP calls if available
+            mcp_server_calls: apiStatus.data?.response?.mcp_server_calls, // Include previous MCP calls if available
           },
           status: apiStatus.data?.status, // Include previous status
           goal: submittedGoal, // Use the submitted goal
           session: sessionId, // Use the current session ID
         };
-        console.log("SUBMIT - Making POST request to:", fullUrl, "with body:", requestBody); // Updated console log
+        console.log(
+          "SUBMIT - Making POST request to:",
+          fullUrl,
+          "with body:",
+          requestBody
+        ); // Updated console log
 
         const response = await fetch(fullUrl, {
           method: "POST",
@@ -224,15 +279,17 @@ function App() {
   // as it won't set the currentGoalPromptText and should not change the sessionId
   const handleNextStepsApiResponse = async (statusUpdate) => {
     // Add a unique identifier for each invocation of this function
-    const invocationId = Date.now() + '-' + Math.floor(Math.random() * 1000);
-    
+    const invocationId = Date.now() + "-" + Math.floor(Math.random() * 1000);
+
     console.log(
       `[ID:${invocationId}] handleNextStepsApiResponse called with statusUpdate:`,
       statusUpdate
     );
 
     if (statusUpdate.loading && !apiStatus.loading) {
-      console.log(`[ID:${invocationId}] Starting processing - setting isProcessingNextSteps=true`);
+      console.log(
+        `[ID:${invocationId}] Starting processing - setting isProcessingNextSteps=true`
+      );
       setIsProcessingNextSteps(true); // Start processing indicator
       setApiStatus((prevStatus) => ({
         ...prevStatus,
@@ -250,7 +307,7 @@ function App() {
         const requestBody = {
           response: {
             ...apiStatus.data?.response, // Spread the existing response object properties
-            clarifications: clarificationResponses // Replace the clarifications array within response
+            clarifications: clarificationResponses, // Replace the clarifications array within response
           },
           status: apiStatus.data?.status, // Include previous status
           goal: currentGoalPromptText, // Use the stored goal
@@ -259,10 +316,22 @@ function App() {
         };
 
         const fullUrlWithParams = `${fullUrl}?${params.toString()}`; // Construct URL with params for logging
-        console.log(`[ID:${invocationId}] NEXT STEPS - Making POST request to:`, fullUrlWithParams);
-        console.log(`[ID:${invocationId}] NEXT STEPS - Request body:`, requestBody);
-        console.log(`[ID:${invocationId}] NEXT STEPS - clarificationResponses:`, clarificationResponses);
-        console.log(`[ID:${invocationId}] POST body sent to /model_response:`, JSON.stringify(requestBody, null, 2));
+        console.log(
+          `[ID:${invocationId}] NEXT STEPS - Making POST request to:`,
+          fullUrlWithParams
+        );
+        console.log(
+          `[ID:${invocationId}] NEXT STEPS - Request body:`,
+          requestBody
+        );
+        console.log(
+          `[ID:${invocationId}] NEXT STEPS - clarificationResponses:`,
+          clarificationResponses
+        );
+        console.log(
+          `[ID:${invocationId}] POST body sent to /model_response:`,
+          JSON.stringify(requestBody, null, 2)
+        );
 
         const response = await fetch(fullUrl, {
           method: "POST", // Use POST for sending body
@@ -271,25 +340,39 @@ function App() {
           },
           body: JSON.stringify(requestBody),
         });
-        console.log(`[ID:${invocationId}] NEXT STEPS - POST returned response:`, response);
+        console.log(
+          `[ID:${invocationId}] NEXT STEPS - POST returned response:`,
+          response
+        );
 
         if (!response.ok) {
           const errorData = await response
             .json()
             .catch(() => ({ error: `HTTP error: ${response.status}` }));
-          console.log(`[ID:${invocationId}] NEXT STEPS - Error response:`, errorData);
+          console.log(
+            `[ID:${invocationId}] NEXT STEPS - Error response:`,
+            errorData
+          );
           throw new Error(errorData.error || `HTTP error: ${response.status}`);
         }
         const responseData = await response.json();
-        console.log(`[ID:${invocationId}] NEXT STEPS - Raw server response:`, responseData);
-        console.log(`[ID:${invocationId}] NEXT STEPS - Setting apiStatus with data and loading=false`);
+        console.log(
+          `[ID:${invocationId}] NEXT STEPS - Raw server response:`,
+          responseData
+        );
+        console.log(
+          `[ID:${invocationId}] NEXT STEPS - Setting apiStatus with data and loading=false`
+        );
         setApiStatus({ data: responseData, loading: false, error: null });
         setIsProcessingNextSteps(false); // End processing indicator on success
         // Set state based on whether a non-null/undefined answer is available
         setIsFinalAnswerAvailable(responseData?.response?.answer != null);
         setClarificationResponses([]); // Clear clarification responses after successful submission
       } catch (err) {
-        console.log(`[ID:${invocationId}] NEXT STEPS - Caught error:`, err.message);
+        console.log(
+          `[ID:${invocationId}] NEXT STEPS - Caught error:`,
+          err.message
+        );
         setApiStatus({
           data: apiStatus.data,
           loading: false,
@@ -305,7 +388,6 @@ function App() {
     }
   };
 
-  console.log("Rendering App. isLoading:", apiStatus.loading || isProcessingNextSteps, "isFinalAnswerAvailable:", isFinalAnswerAvailable);
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -345,6 +427,85 @@ function App() {
                   } // Pass activity status based on combined state
                 />
               )}
+              {activeView === "Prompts" && (
+                <Box
+                  sx={{
+                    ...homePaper,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 2,
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <TextField
+                      label="Session ID"
+                      value={sessionId} // Use the sessionId state
+                      variant="outlined"
+                      size="small" // Use small size
+                      InputProps={{
+                        readOnly: false, // Make it read-write
+                        sx: {
+                          fontFamily: "monospace", // Override font to monospace
+                        },
+                      }}
+                      onChange={(e) => setSessionId(e.target.value)} // Add onChange handler to update sessionId state
+                      sx={{
+                        width: "350px", // Set width to match the other Session ID field
+                        "& .MuiInputBase-root": {
+                          fontSize: "0.875rem", // Smaller font size
+                          fontFamily: "monospace", // Ensure monospace font for input
+                        },
+                      }}
+                      title="Session Id"
+                    />
+                    <Button
+                      variant="contained" // Use contained variant for consistency
+                      onClick={handleGetPrompts} // Add click handler
+                      size="small" // Use small size
+                    >
+                      Get Prompts
+                    </Button>
+                    {promptVersions.length > 0 && (
+                      <TextField
+                        select
+                        label="Version"
+                        value={selectedPromptVersion}
+                        onChange={handleVersionChange}
+                        variant="outlined"
+                        size="small" // Use small size
+                        sx={{ width: "150px" }} // Adjust width as needed
+                      >
+                        {promptVersions.map((version) => (
+                          <MenuItem key={version} value={version}>
+                            {version}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    )}
+                  </Box>
+                  {/* Display the selected prompt text using ReadOnlyPrompt */}
+                  {selectedPromptText && (
+                    <ReadOnlyPrompt
+                      label={`Prompt (Version: ${selectedPromptVersion})`}
+                      value={selectedPromptText}
+                    />
+                  )}
+                  {/* Display the response message if no prompts are found or on error */}
+                  {!selectedPromptText && promptsResponse && (
+                    <TextField
+                      label="Response"
+                      value={promptsResponse}
+                      variant="outlined"
+                      fullWidth
+                      multiline
+                      rows={2} // Fixed height to 2 rows
+                      InputProps={{
+                        readOnly: true,
+                      }}
+                    />
+                  )}
+                </Box>
+              )}
               {activeView === "Settings" && (
                 <SettingsAndStatus
                   clientHostValue={clientHostValue}
@@ -357,7 +518,7 @@ function App() {
           </Grid>
           {/* Status component is always visible now, or conditionally based on activeView if preferred */}
           {/* For now, let's make it always visible below the main content area if not in settings */}
-          {activeView !== "Settings" && (
+          {activeView !== "Settings" && activeView !== "Prompts" && (
             <Grid>
               <Paper sx={homePaper}>
                 <Status

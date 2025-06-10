@@ -77,7 +77,7 @@ function Prompt({
     placeholder:
       "Enter your question, and then press [submit]. If the model needs more information, it will suggest MCP actions and / or ask you for clarification questions. If it does this press [Do Next Steps] to proceed",
     multiline: true,
-    rows: 10,
+    rows: 20,
     value: promptText,
     variant: "outlined",
     fullWidth: true,

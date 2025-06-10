@@ -1,5 +1,4 @@
 {
-  "response": { "clarifications": [] },
-  "goal": "respond with one made up question of clarification and a call to the add tool with values 5 and 7, when you see the responses consider this goal met",
-  "session": "2E3DE6FD-930D-48F5-9324-D72F2CFEF0A4"
+  "path": "/prompts",
+  "args": { "session_id": "09DEEC9A-AF7E-43BB-8D4B-AB4529D2FE7A" }
 }

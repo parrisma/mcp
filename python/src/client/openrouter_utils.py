@@ -44,7 +44,7 @@ class OpenRouter:
         if system_prompt is not None:
             self._system_prompt: str = system_prompt
         else:
-            self._system_prompt: str = "you are an expert assistant that answers questions directly and concisely, without any additional information or disclaimers. You are very helpful and friendly, but you do not provide any additional information or disclaimers. You answer questions directly and concisely, without any additional information or disclaimers"
+            self._system_prompt: str = "you are an expert assistant that answers questions directly and concisely, without any additional information or disclaimers. You are very helpful and friendly, but you do not provide any additional information or disclaimers. You answer questions directly and concisely"
 
     def get_url(self) -> str:
         """Returns the OpenRouter API URL."""

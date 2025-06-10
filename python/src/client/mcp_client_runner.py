@@ -5,6 +5,7 @@ import logging
 import datetime
 import os
 import uuid
+import enum
 
 from pathlib import Path
 from tkinter import N
@@ -32,6 +33,28 @@ class MCPClientRunner:
 
     class ErrorStartingClientRunner(Exception):
         pass
+
+    class ConfigKeys(str, enum.Enum):
+        OLLAMA_HOST_URL = "ollama_host_url"
+        OLLAMA_MODEL_NAME = "ollama_model_name"
+        OLLAMA_ENABLED = "ollama_enabled"
+        MCP_HOST_URLS = "mcp_host_urls"
+        OPENROUTER_URL = "openrouter_url"
+        OPENROUTER_MODEL = "openrouter_model"
+        OPENROUTER_API_KEY = "openrouter_api_key"
+        TIME = "time"
+
+        def as_str(self) -> str:
+            return str(self.value)
+
+    class PingResponseKeys(str, enum.Enum):
+        PING = "ping"
+        PATH = "path"
+        ARGS = "args"
+        MESSAGE = "message"
+
+        def as_str(self) -> str:
+            return str(self.value)
 
     def __init__(self) -> None:
         """
@@ -79,6 +102,12 @@ class MCPClientRunner:
         self._openrouter: OpenRouter | None = self._setup_openrouter(openrouter_url=self._openrouter_url,
                                                                      openrouter_model=self._openrouter_model,
                                                                      openrouter_api_key=self._openrouter_api_key)
+
+        if not self._ollama_enabled and not self._openrouter:
+            msg = "Neither Ollama nor OpenRouter is enabled. Client will not be able to call LLMs."
+            self._log.error(msg)
+            raise MCPClientRunner.ErrorStartingClientRunner(msg)
+
         self._prompts: Prompts = Prompts()
 
     def _setup_openrouter(self,
@@ -105,7 +134,7 @@ class MCPClientRunner:
         self._web_server.add_route(
             route='/ping', methods=['GET'], handler=self.ping_callback)
         self._web_server.add_route(
-            route='/model_response', methods=['GET', 'POST'], handler=self.get_model_response)
+            route='/model_response', methods=['POST'], handler=self.get_model_response)
 
     def _parse_command_line(self) -> argparse.Namespace:
         """
@@ -384,22 +413,23 @@ class MCPClientRunner:
             MCPClientWebServer.QueryParamKeys.ARGS.value, {})
 
         return {
-            "ping": self._current_time_as_dict(),
-            "path": path,
-            "args": args,
-            "message": "ok"
+            self.PingResponseKeys.PING.value: self._current_time_as_dict(),
+            self.PingResponseKeys.PATH.value: path,
+            self.PingResponseKeys.ARGS.value: args,
+            self.PingResponseKeys.MESSAGE.value: "ok"
         }
 
     def _get_config(self) -> Dict[str, Any]:
+
         return {
-            "ollama_host_url": str(self._ollama_host_url) if self._ollama_host_url else "Not Set",
-            "ollama_model_name": self._ollama_model_name if self._ollama_host_url else "Not Set",
-            "ollama_enabled": self._ollama_enabled,
-            "mcp_host_urls": self._mcp_host_urls,
-            "openrouter_url": str(self._openrouter_url) if self._openrouter_url else "Not Set",
-            "openrouter_model": self._openrouter_model if self._openrouter_model else "Not Set",
-            "openrouter_api_key": self._openrouter_api_key if self._openrouter_api_key else "Not Set",
-            "time": self._current_time_as_dict()
+            self.ConfigKeys.OLLAMA_HOST_URL.value: str(self._ollama_host_url) if self._ollama_host_url else "Not Set",
+            self.ConfigKeys.OLLAMA_MODEL_NAME.value: self._ollama_model_name if self._ollama_host_url else "Not Set",
+            self.ConfigKeys.OLLAMA_ENABLED.value: self._ollama_enabled,
+            self.ConfigKeys.MCP_HOST_URLS.value: self._mcp_host_urls,
+            self.ConfigKeys.OPENROUTER_URL.value: str(self._openrouter_url) if self._openrouter_url else "Not Set",
+            self.ConfigKeys.OPENROUTER_MODEL.value: self._openrouter_model if self._openrouter_model else "Not Set",
+            self.ConfigKeys.OPENROUTER_API_KEY.value: self._openrouter_api_key if self._openrouter_api_key else "Not Set",
+            self.ConfigKeys.TIME.value: self._current_time_as_dict()
         }
 
     def get_config(self,
@@ -416,7 +446,8 @@ class MCPClientRunner:
             mcp_sesson_responses: Dict[str, Any] = self._mcp_responses_cache.get(
                 llm_session, {})
             for mcp_response in mcp_responses:
-                mcp_sesson_responses[mcp_response["source"]] = mcp_response
+                # calls to mcp servers can be duplicated, so we use a new UUID for each response
+                mcp_sesson_responses[str(uuid.uuid4())] = mcp_response
             self._mcp_responses_cache[llm_session] = mcp_sesson_responses
             return list(mcp_sesson_responses.values())
         except Exception as e:
@@ -595,9 +626,6 @@ class MCPClientRunner:
 async def main() -> None:
     runner = MCPClientRunner()
     await runner.run()
-
-if __name__ == "__main__":
-    asyncio.run(main())
 
 if __name__ == "__main__":
     asyncio.run(main())

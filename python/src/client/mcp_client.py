@@ -269,23 +269,35 @@ class MCPClient:
 
             # Iterate through the cached capabilities (which are keyed by base_url)
             # to find the server by its name.
+            found_url: Optional[str] = None
             for base_url, cached_data in self._capabilities_cache.items():
                 if isinstance(cached_data, dict):
                     server_detail = cached_data.get(
                         self.MCPServerCapabilities.SERVER_DETAIL.value)
-                    if isinstance(server_detail, dict) and \
-                            server_detail.get(self.MCPServerDetail.NAME.value) == server_name:
-                        found_url = server_detail.get(
-                            self.MCPServerDetail.SERVER_URL.value)
+                    if isinstance(server_detail, dict):
+                        if server_detail.get(self.MCPServerDetail.NAME.value, None) == server_name:
+                            found_url = server_detail.get(
+                                self.MCPServerDetail.SERVER_URL.value, None)
                         if found_url:
-                            self._log.debug(
-                                f"_get_server_url: Found URL '{found_url}' for server name '{server_name}'.")
-                            return str(found_url)  # Ensure it's a string
-                        else:  # Should not happen if data is consistent
-                            raise MCPClient.FailedToFindMCPServerURL(
-                                f"_get_server_url: Server name '{server_name}' found but server_url is missing in cache for {base_url}.")
-                raise ValueError(
-                    f"_get_server_url: Server name '{server_name}' not found in capabilities cache.")
+                            # Validate found_url is a valid URL
+                            try:
+                                pydantic.AnyUrl(found_url)
+                                self._log.debug(
+                                    f"Found valid URL '{found_url}' for server name '{server_name}'.")
+                            except pydantic.ValidationError:
+                                msg = f"Found URL '{found_url}' for server name '{server_name}', but it is not a valid URL."
+                                self._log.error(msg=msg)
+                                found_url = None
+                                raise ValueError(msg) from None
+                            break
+                else:
+                    raise TypeError(
+                        f"Internal error, Expected cached server data to be a dict, got {type(cached_data)} for base_url {base_url}.")
+            if not found_url:
+                msg = f"_get_server_url: Server name '{server_name}' not found in the cache."
+                self._log.error(msg=msg)
+                raise MCPClient.FailedToFindMCPServerURL(msg)
+            return found_url
         except Exception as e:
             msg = f"_get_server_url: An error occurred while retrieving the server URL for '{server_name}': {e}"
             self._log.error(msg=msg)

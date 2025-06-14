@@ -2,5 +2,13 @@
   {
     "host": "localhost",
     "port": 6277
+  },
+  {
+    "host": "localhost",
+    "port": 6278
+  },
+  {
+    "host": "localhost",
+    "port": 6279
   }
 ]

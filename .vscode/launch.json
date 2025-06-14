@@ -2,19 +2,61 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python Debugger: MCP Simple Server",
+      "name": "Hello World MCP Server",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}",
-      "args": ["--config-dir=./config", "--debug"],
+      "args": [
+        "--config-dir=./config",
+        "--config-file=hello_world_server_config.json",
+        "--server-type=hello_world",
+        "--port=6277",
+        "--debug"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:$PYTHONPATH"
+      }
+    },
+    {
+      "name": "Instrument MCP Server",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--config-dir=./config",
+        "--config-file=instrument_server_config.json",
+        "--server-type=instrument",
+        "--port=6278",
+        "--debug"
+      ],
       "env": {
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
       }
     },
     {
-      "name": "Python Debugger: MCP Tests",
+      "name": "Static Data MCP Server",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--config-dir=./config",
+        "--config-file=static_data_server_config.json",
+        "--server-type=static_data",
+        "--port=6279",
+        "--debug"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+      }
+    },
+    {
+      "name": "MCP Tests",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/python/tests/test_mcp_server.py",
@@ -26,7 +68,7 @@
       }
     },
     {
-      "name": "Python Debugger: MCP Client",
+      "name": "MCP Client",
       "type": "debugpy",
       "request": "launch",
       "module": "python.src.client.mcp_client_runner",
@@ -43,29 +85,29 @@
       }
     },
     {
-      "name": "Python Debugger: MCP Promethius",
+      "name": "MCP Promethius",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/python/src/client/logtest.py",
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PYTHONPATH": "${workspaceFolder}"
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}"
       }
     },
     {
-      "name": "Python Debugger: MCP WEB",
+      "name": "MCP WEB",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/python/src/client/mcp_client_web_server.py",
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PYTHONPATH": "${workspaceFolder}"
+        "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/python/src/server"
       }
     },
     {
-      "name": "Python Debugger: Openrouter Utils Test",
+      "name": "Openrouter Utils Test",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/python/src/client/openrouter_utils.py",
@@ -77,7 +119,7 @@
       }
     },
     {
-      "name": "Python Debugger: MCP Invoke Tests",
+      "name": "MCP Invoke Tests",
       "type": "debugpy",
       "request": "launch",
       "module": "python.src.client.mcp_invoke",
@@ -88,7 +130,7 @@
       }
     },
     {
-      "name": "Python Debugger: Prompts Tests",
+      "name": "Prompts Tests",
       "type": "debugpy",
       "request": "launch",
       "module": "python.src.client.prompts",
@@ -96,6 +138,28 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "PYTHONPATH": "${workspaceFolder}"
+      }
+    },
+    {
+      "name": "Instrument Service Tests",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/server/instrument_service/instrument_service.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:$PYTHONPATH"
+      }
+    },
+    {
+      "name": "Static Data Service Tests",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/server/static_data_service/static_data_service.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
       }
     },
     {

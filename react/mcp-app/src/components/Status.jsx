@@ -140,7 +140,7 @@ function Status({
         <TextField
             label="Final Answer"
             multiline
-            rows={2}
+            rows={10}
             value={finalAnswerContent} // Use the new variable
             variant="outlined"
             fullWidth

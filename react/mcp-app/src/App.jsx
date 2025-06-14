@@ -17,7 +17,6 @@ import ReadOnlyPrompt from "./components/ReadOnlyPrompt.jsx"; // Import ReadOnly
 const homePaper = {
   padding: 2,
   textAlign: "left",
-  height: "100%",
   elevation: 3,
 };
 
@@ -54,6 +53,7 @@ function App() {
     startTime: null,
   });
   const [currentGoalPromptText, setCurrentGoalPromptText] = useState(""); // Store the original goal
+  const [promptText, setPromptText] = useState(""); // State for the main prompt text
   const [sessionId, setSessionId] = useState(uuidv4().toUpperCase()); // Manage sessionId in App.jsx
   const [clarificationResponses, setClarificationResponses] = useState([]); // State to hold clarification responses
   const [elapsedSeconds, setElapsedSeconds] = useState(0); // State for elapsed time
@@ -80,6 +80,25 @@ function App() {
       }
     };
   }, [apiStatus.loading, isProcessingNextSteps, apiStatus.startTime]); // Add isProcessingNextSteps to dependency array
+
+  // Clear relevant states when sessionId changes
+  useEffect(() => {
+    setPromptText("");
+    setApiStatus({
+      data: null,
+      loading: false,
+      error: null,
+      startTime: null,
+    });
+    setClarificationResponses([]);
+    setIsProcessingNextSteps(false);
+    setIsFinalAnswerAvailable(false);
+    // Clear prompt-related states
+    setPromptVersions([]);
+    setSelectedPromptVersion("");
+    setPromptsResponse("");
+    setPromptsData([]);
+  }, [sessionId]); // Dependency array includes sessionId
 
   const [activeView, setActiveView] = useState("Question");
   const darkTheme = createTheme({
@@ -184,6 +203,7 @@ function App() {
       startTime: null,
     });
     setCurrentGoalPromptText(""); // Clear the stored goal on reset
+    setPromptText(""); // Clear the prompt text on reset
     setSessionId(uuidv4().toUpperCase()); // Generate a new session ID on reset
   };
 
@@ -425,6 +445,8 @@ function App() {
                       ? `thinking, please be patient [${elapsedSeconds}s]`
                       : ""
                   } // Pass activity status based on combined state
+                  promptText={promptText} // Pass promptText state down
+                  setPromptText={setPromptText} // Pass setPromptText function down
                 />
               )}
               {activeView === "Prompts" && (
@@ -434,6 +456,7 @@ function App() {
                     display: "flex",
                     flexDirection: "column",
                     gap: 2,
+                    minHeight: '264px', // Set a minimum height for the container
                   }}
                 >
                   <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -485,10 +508,12 @@ function App() {
                   </Box>
                   {/* Display the selected prompt text using ReadOnlyPrompt */}
                   {selectedPromptText && (
-                    <ReadOnlyPrompt
-                      label={`Prompt (Version: ${selectedPromptVersion})`}
-                      value={selectedPromptText}
-                    />
+                    <Box sx={{ flexGrow: 1 }}> {/* Add flexGrow to make it take available space */}
+                      <ReadOnlyPrompt
+                        label={`Prompt (Version: ${selectedPromptVersion})`}
+                        value={selectedPromptText}
+                      />
+                    </Box>
                   )}
                   {/* Display the response message if no prompts are found or on error */}
                   {!selectedPromptText && promptsResponse && (

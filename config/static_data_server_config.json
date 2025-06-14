@@ -1,0 +1,104 @@
+{
+  "name": "Static Data Server",
+  "instructions": "MCP Server - Market Static Data Model Context Protocol Server Implementation",
+  "version": "1.0.0",
+  "tools": {
+    "get_all_currencies": {
+      "name": "get_all_currencies",
+      "description": "Get a list of the the currencies in which the instrument can be traded",
+      "annotations": {
+        "title": "Get all traded currencies as ISO 4217 codes",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_all_industries": {
+      "name": "get_all_industries",
+      "description": "Get a list of all industries sectors in the the companies are involved in doing business",
+      "annotations": {
+        "title": "Get all industry sectors",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_all_broker_codes": {
+      "name": "get_all_broker_codes",
+      "description": "Get a list of all broker codes that are used to classify the instruments",
+      "annotations": {
+        "title": "Get all broker codes",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_all_product_type_codes": {
+      "name": "get_all_product_type_codes",
+      "description": "Get a list of the different product type codes that are used to classify the instruments",
+      "annotations": {
+        "title": "Get all product type codes",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_all_venue_codes": {
+      "name": "get_all_venue_codes",
+      "description": "Get a list of the different venue codes where the instruments can be traded",
+      "annotations": {
+        "title": "Get all venue codes",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_venue_description": {
+      "name": "get_venue_description",
+      "description": "Get a venue description by passing a venue code",
+      "annotations": {
+        "title": "Get a venue description",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_broker_name": {
+      "name": "get_broker_name",
+      "description": "Get a broker name by passing a broker code",
+      "annotations": {
+        "title": "Get a broker name",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_product_type_description": {
+      "name": "get_product_type_description",
+      "description": "Get a product description by passing a product type code",
+      "annotations": {
+        "title": "Get a product description",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  },
+  "resources": {},
+  "prompts": {},
+  "serverInfo": {
+    "name": "Static Data Server",
+    "version": "1.0.0"
+  },
+  "transport": {
+    "type": "sse"
+  }
+}

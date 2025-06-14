@@ -10,7 +10,6 @@ from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 from network_utils import NetworkUtils
 from i_mcp_server import IMCPServer
-from hello_world.hello_world_server import HelloWorldServer
 
 
 class MCPServer:
@@ -65,11 +64,13 @@ class MCPServer:
                  host: str,
                  port: int,
                  config_dir: Path,
-                 config_file: Path) -> None:
+                 config_file: Path,
+                 server_instance: IMCPServer) -> None:
         self._host: str = host
         self._port: int = port
         self._config_dir: Path = config_dir
         self._config_file_path: Path
+        self._server: IMCPServer = server_instance
 
         self.logger.info("Creating MCPServer Instance")
 
@@ -102,9 +103,6 @@ class MCPServer:
             msg: str = f"Error loading metadata from config file: [{self._config_file_path}]"
             self.logger.error(msg, exc_info=True)
             raise ValueError(msg) from e
-
-        self._server: IMCPServer = HelloWorldServer(
-            logger=self.logger, json_config=self._meta)
 
         self.logger.info(
             f"MCP Server to be created with name'[{self._server.server_name}]'")

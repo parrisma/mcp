@@ -11,10 +11,10 @@ function Prompt({
   sessionId,
   isLoading,
   activityStatus, // Add new prop for activity status
-  isFinalAnswerDisplayed, // Add new prop
   isFinalAnswerContentDisplayed, // Add new prop
+  promptText, // Add promptText prop
+  setPromptText, // Add setPromptText prop
 }) {
-  const [promptText, setPromptText] = useState("");
   const [activityText, setActivityText] = useState(""); // State for Activity TextField
 
   // Update activityText when activityStatus prop changes
@@ -31,7 +31,8 @@ function Prompt({
   };
 
   const handleSubmit = async () => {
-    if (isLoading) { // Prevent double submission
+    if (isLoading) {
+      // Prevent double submission
       return;
     }
     if (!baseApiUrl) {
@@ -56,7 +57,7 @@ function Prompt({
     // App.jsx will manage the loading state
     onApiResponse(
       { data: null, loading: true, error: null },
-      promptText,
+      promptText, // Use the prop
       sessionId
     );
 
@@ -64,7 +65,7 @@ function Prompt({
   };
 
   const handleReset = () => {
-    setPromptText(""); // Clear promptText locally on reset
+    setPromptText(""); // Clear promptText using the prop
     // App.jsx will manage the loading state reset via onResetAll
     if (onResetAll) {
       onResetAll(); // This will clear apiStatus in App.jsx, making isNextStepsMode false and loading false
@@ -77,8 +78,8 @@ function Prompt({
     placeholder:
       "Enter your question, and then press [submit]. If the model needs more information, it will suggest MCP actions and / or ask you for clarification questions. If it does this press [Do Next Steps] to proceed",
     multiline: true,
-    rows: 20,
-    value: promptText,
+    rows: 11,
+    value: promptText, // Use the prop
     variant: "outlined",
     fullWidth: true,
   };
@@ -105,7 +106,11 @@ function Prompt({
           onClick={handleSubmit}
           disabled={isLoading || isFinalAnswerContentDisplayed} // Disable when loading or when final answer content is displayed
         >
-          {isFinalAnswerContentDisplayed ? "Done" : (isLoading ? "Submitting..." : "Submit")}
+          {isFinalAnswerContentDisplayed
+            ? "Done"
+            : isLoading
+            ? "Submitting..."
+            : "Submit"}
         </Button>
         <Button
           variant="contained" // Use contained variant
@@ -167,6 +172,8 @@ Prompt.propTypes = {
   activityStatus: PropTypes.string, // Add prop type for activityStatus
   isFinalAnswerDisplayed: PropTypes.bool, // Add prop type
   isFinalAnswerContentDisplayed: PropTypes.bool, // Add new prop type
+  promptText: PropTypes.string.isRequired, // Add prop type for promptText
+  setPromptText: PropTypes.func.isRequired, // Add prop type for setPromptText
 };
 
 Prompt.defaultProps = {
@@ -175,6 +182,8 @@ Prompt.defaultProps = {
   isLoading: false, // Default prop for isLoading
   activityStatus: "", // Default prop for activityStatus
   isFinalAnswerContentDisplayed: false, // Add new default prop
+  promptText: "", // Default prop for promptText
+  setPromptText: () => {}, // Default prop for setPromptText
 };
 
 export default Prompt;

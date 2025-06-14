@@ -1,0 +1,182 @@
+[
+    {
+        "client_id": "e1b7c8a2-1f2a-4e7b-9c3d-1a2b3c4d5e6f",
+        "client_name": "Ardent Capital Partners",
+        "country_of_residence": "US",
+        "trading_account_id": "A1B2C3D4E"
+    },
+    {
+        "client_id": "f2c8d9b3-2e3b-5f8c-0d4e-2b3c4d5e6f7a",
+        "client_name": "Stonebridge Securities",
+        "country_of_residence": "GB",
+        "trading_account_id": "F5G6H7J8K"
+    },
+    {
+        "client_id": "a3d9e0c4-3f4c-6a9d-1e5f-3c4d5e6f7a8b",
+        "client_name": "Vanguard Stratagem Ltd.",
+        "country_of_residence": "SG",
+        "trading_account_id": "L9M0N1P2Q"
+    },
+    {
+        "client_id": "b4e0f1d5-4a5d-7b0e-2f6a-4d5e6f7a8b9c",
+        "client_name": "Echelon Equities Group",
+        "country_of_residence": "DE",
+        "trading_account_id": "R3S4T5U6V"
+    },
+    {
+        "client_id": "c5f1a2e6-5b6e-8c1f-3a7b-5e6f7a8b9c0d",
+        "client_name": "Northgate Trading Co.",
+        "country_of_residence": "US",
+        "trading_account_id": "W7X8Y9Z0A"
+    },
+    {
+        "client_id": "d6a2b3f7-6c7f-9d2a-4b8c-6f7a8b9c0d1e",
+        "client_name": "Aquila Asset Markets",
+        "country_of_residence": "AE",
+        "trading_account_id": "B2C3D4E5F"
+    },
+    {
+        "client_id": "e7b3c4a8-7d8a-0e3b-5c9d-7a8b9c0d1e2f",
+        "client_name": "Tidewell Financial Holdings",
+        "country_of_residence": "JP",
+        "trading_account_id": "G6H7J8K9L"
+    },
+    {
+        "client_id": "f8c4d5b9-8e9b-1f4c-6d0a-8b9c0d1e2f3a",
+        "client_name": "Monarch Point Investments",
+        "country_of_residence": "US",
+        "trading_account_id": "M0N1P2Q3R"
+    },
+    {
+        "client_id": "a9d5e6c0-9f0c-2a5d-7e1b-9c0d1e2f3a4b",
+        "client_name": "ForgeLine Capital Management",
+        "country_of_residence": "FR",
+        "trading_account_id": "S4T5U6V7W"
+    },
+    {
+        "client_id": "b0e6f7d1-0a1d-3b6e-8f2c-0d1e2f3a4b5c",
+        "client_name": "Broadhaven Trading Corp.",
+        "country_of_residence": "US",
+        "trading_account_id": "X8Y9Z0A1B"
+    },
+    {
+        "client_id": "c1f7a8e2-1b2e-4c7f-9a3d-1e2f3a4b5c6d",
+        "client_name": "Cypress & Keene Advisory",
+        "country_of_residence": "ZA",
+        "trading_account_id": "C3D4E5F6G"
+    },
+    {
+        "client_id": "d2a8b9f3-2c3f-5d8a-0b4e-2f3a4b5c6d7e",
+        "client_name": "Elmspire Equity Partners",
+        "country_of_residence": "US",
+        "trading_account_id": "H7J8K9L0M"
+    },
+    {
+        "client_id": "e3b9c0a4-3d4a-6e9b-1c5f-3a4b5c6d7e8f",
+        "client_name": "Blackmoor Exchange Group",
+        "country_of_residence": "IN",
+        "trading_account_id": "N1P2Q3R4S"
+    },
+    {
+        "client_id": "f4c0d1b5-4e5b-7f0c-2d6a-4b5c6d7e8f9a",
+        "client_name": "Eminent Delta Financial",
+        "country_of_residence": "US",
+        "trading_account_id": "T5U6V7W8X"
+    },
+    {
+        "client_id": "a5d1e2c6-5f6c-8a1d-3e7b-5c6d7e8f9a0b",
+        "client_name": "SableRock Institutional Markets",
+        "country_of_residence": "CH",
+        "trading_account_id": "Y9Z0A1B2C"
+    },
+    {
+        "client_id": "b6e2f3d7-6a7d-9b2e-4f8c-6d7e8f9a0b1c",
+        "client_name": "Ridgecrest Equities",
+        "country_of_residence": "US",
+        "trading_account_id": "D4E5F6G7H"
+    },
+    {
+        "client_id": "c7f3a4e8-7b8e-0c3f-5a9d-7e8f9a0b1c2d",
+        "client_name": "Argentia Institutional Traders",
+        "country_of_residence": "AE",
+        "trading_account_id": "J8K9L0M1N"
+    },
+    {
+        "client_id": "d8a4b5f9-8c9f-1d4a-6b0e-8f9a0b1c2d3e",
+        "client_name": "Kepler Grove Capital",
+        "country_of_residence": "US",
+        "trading_account_id": "P2Q3R4S5T"
+    },
+    {
+        "client_id": "e9b5c6a0-9d0a-2e5b-7c1f-9a0b1c2d3e4f",
+        "client_name": "Mistral Securities & Investments",
+        "country_of_residence": "DE",
+        "trading_account_id": "U6V7W8X9Y"
+    },
+    {
+        "client_id": "f0c6d7b1-0e1b-3f6c-8d2a-0b1c2d3e4f5a",
+        "client_name": "Carrick Hill Global",
+        "country_of_residence": "US",
+        "trading_account_id": "Z0A1B2C3D"
+    },
+    {
+        "client_id": "a1d7e8c2-1f2c-4a7d-9b3e-1c2d3e4f5a6b",
+        "client_name": "Noblehart & Co. Traders",
+        "country_of_residence": "SG",
+        "trading_account_id": "E5F6G7H8J"
+    },
+    {
+        "client_id": "b2e8f9d3-2a3d-5b8e-0c4f-2d3e4f5a6b7c",
+        "client_name": "SilverGate Exchange Group",
+        "country_of_residence": "US",
+        "trading_account_id": "K9L0M1N2P"
+    },
+    {
+        "client_id": "c3f9a0e4-3b4e-6c9f-1d5a-3e4f5a6b7c8d",
+        "client_name": "Pinnacle Bastion Financial",
+        "country_of_residence": "GB",
+        "trading_account_id": "Q3R4S5T6U"
+    },
+    {
+        "client_id": "d4a0b1f5-4c5f-7d0a-2e6b-4f5a6b7c8d9e",
+        "client_name": "Lionridge Asset Exchange",
+        "country_of_residence": "US",
+        "trading_account_id": "V7W8X9Y0Z"
+    },
+    {
+        "client_id": "e5b1c2a6-5d6a-8e1f-3b7c-5a6b7c8d9e0f",
+        "client_name": "OpalEdge Capital Markets",
+        "country_of_residence": "JP",
+        "trading_account_id": "A1B2C3D4E"
+    },
+    {
+        "client_id": "f6c2d3b7-6e7b-9f2c-4a8d-6b7c8d9e0f1a",
+        "client_name": "StratusCore Investments",
+        "country_of_residence": "US",
+        "trading_account_id": "F5G6H7J8K"
+    },
+    {
+        "client_id": "a7d3e4c8-7f8c-0a3d-5b9e-7c8d9e0f1a2b",
+        "client_name": "Oakfell Institutional Equities",
+        "country_of_residence": "IN",
+        "trading_account_id": "L9M0N1P2Q"
+    },
+    {
+        "client_id": "b8e4f5d9-8a9d-1b4e-6c0f-8d9e0f1a2b3c",
+        "client_name": "MarlinBridge Capital",
+        "country_of_residence": "US",
+        "trading_account_id": "R3S4T5U6V"
+    },
+    {
+        "client_id": "c9f5a6e0-9b0e-2c5f-7d1a-9e0f1a2b3c4d",
+        "client_name": "Auracrest Financial Solutions",
+        "country_of_residence": "FR",
+        "trading_account_id": "W7X8Y9Z0A"
+    },
+    {
+        "client_id": "d0a6b7f1-0c1f-3d6a-8e2b-0f1a2b3c4d5e",
+        "client_name": "Tenholm Equity Strategies",
+        "country_of_residence": "US",
+        "trading_account_id": "B2C3D4E5F"
+    }
+]

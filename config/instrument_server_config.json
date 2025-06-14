@@ -1,0 +1,38 @@
+{
+  "name": "Instrument",
+  "instructions": "MCP Server - Instrument Model Context Protocol Server Implementation",
+  "version": "1.0.0",
+  "tools": {
+    "get_all_instrument_field_names": {
+      "name": "get_all_instrument_field_names",
+      "description": "Get a list of the fields thare are held by the instrument service for a each instrument",
+      "annotations": {
+        "title": "Get all instrument field names",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_instruments": {
+      "name": "get_instruments",
+      "description": "Get a list of matching instruments by passing a field name and a regex pattern, all instruments with the field that matches the pattern are returned",
+      "annotations": {
+        "title": "Get all instruments that have a field that matches the given regex pattern",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  },
+  "resources": {},
+  "prompts": {},
+  "serverInfo": {
+    "name": "Instrument Server",
+    "version": "1.0.0"
+  },
+  "transport": {
+    "type": "sse"
+  }
+}

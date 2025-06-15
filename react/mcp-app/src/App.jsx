@@ -60,6 +60,9 @@ function App() {
   const [elapsedSeconds, setElapsedSeconds] = useState(0); // State for elapsed time
   const [isProcessingNextSteps, setIsProcessingNextSteps] = useState(false); // New state for "Do Next Steps" processing
   const [isFinalAnswerAvailable, setIsFinalAnswerAvailable] = useState(false); // State for whether a final answer is available
+  const [username, setUsername] = useState(''); // For LoginSection
+  const [role, setRole] = useState(''); // For LoginSection
+  const [loginMessage, setLoginMessage] = useState('Please enter your credentials and click Login.'); // For LoginSection
 
   useEffect(() => {
     let intervalId;
@@ -239,6 +242,7 @@ function App() {
           status: apiStatus.data?.status, // Include previous status
           goal: submittedGoal, // Use the submitted goal
           session: sessionId, // Use the current session ID
+          user_role: role, // Add user_role
         };
         console.log(
           "SUBMIT - Making POST request to:",
@@ -333,6 +337,7 @@ function App() {
           status: apiStatus.data?.status, // Include previous status
           goal: currentGoalPromptText, // Use the stored goal
           session: sessionId,
+          user_role: role, // Add user_role
           // The top-level clarifications are now moved inside the response object
         };
 
@@ -409,6 +414,20 @@ function App() {
     }
   };
 
+  const handleLogin = (currentUsername, currentRole) => {
+    if (currentUsername && currentRole) {
+      setLoginMessage(`${currentUsername} you are now connected as ${currentRole} role`);
+      // Potentially switch view or perform other actions upon successful "login"
+      // For now, just updates the message.
+      // setActiveView("Question"); // Example: Switch to Question view after login
+    } else if (!currentUsername && currentRole) {
+      setLoginMessage("User Name is required.");
+    } else if (currentUsername && !currentRole) {
+      setLoginMessage("Role is required.");
+    } else {
+      setLoginMessage("User Name and Role are required.");
+    }
+  };
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -422,7 +441,14 @@ function App() {
           </Grid>
           {activeView === "Login" ? (
             <Grid item xs={12}> {/* Ensure LoginSection takes full width */}
-              <LoginSection />
+              <LoginSection
+                username={username}
+                setUsername={setUsername}
+                role={role}
+                setRole={setRole}
+                handleLogin={handleLogin}
+                loginMessage={loginMessage}
+              />
             </Grid>
           ) : (
             <>

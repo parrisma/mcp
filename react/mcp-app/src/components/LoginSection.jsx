@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import TextField from '@mui/material/TextField';
@@ -9,24 +9,24 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 
 const loginSectionPaperStyle = {
-  padding: 3, // Increased padding for better spacing
+  padding: 3,
   border: '1px solid rgba(255, 255, 255, 0.23)',
   width: '100%',
-  minHeight: '160px', // Approximate height for 10 lines
+  minHeight: '160px',
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'center', // Center the horizontal Box
+  justifyContent: 'center',
   backgroundColor: 'transparent',
 };
 
 const formControlStyle = {
-  minWidth: 180, // Ensure dropdown has a decent width
-  marginRight: 1, // Add some margin to the right of the dropdown
+  minWidth: 180,
+  marginRight: 1,
 };
 
 const textFieldStyle = {
-    marginRight: 1, // Add some margin to the right of the text field
-}
+    marginRight: 1,
+};
 
 const roles = [
   "Sales Trader",
@@ -37,23 +37,28 @@ const roles = [
   "Compliance"
 ];
 
-function LoginSection() {
-  const [username, setUsername] = useState('');
-  const [role, setRole] = useState('');
-  const [message, setMessage] = useState('Please enter your credentials and click Login.'); // Initial message
+// Props: role, setRole, username, setUsername, handleLogin (from App.jsx), loginMessage (from App.jsx)
+function LoginSection({
+  role,
+  setRole,
+  username,
+  setUsername,
+  handleLogin, // This function will be called to perform actual login logic in App.jsx
+  loginMessage // This prop will carry the message from App.jsx
+}) {
+  // Local message state is removed, will use loginMessage prop from App.jsx
+  // const [message, setMessage] = useState('Please enter your credentials and click Login.');
 
-  const handleLogin = () => {
-    // Placeholder for login logic
-    console.log("Login attempt with:", { username, role });
-    if (username && role) {
-      setMessage(`${username} you are now connected as ${role} role`);
-    } else if (!username && role) {
-      setMessage("User Name is required.");
-    } else if (username && !role) {
-      setMessage("Role is required.");
-    }
-    else {
-      setMessage("User Name and Role are required.");
+  // useEffect to update local display if loginMessage prop changes
+  // This is not strictly necessary if we directly display loginMessage,
+  // but useful if we wanted to combine it with other local messages.
+  // For now, we'll directly display loginMessage.
+
+  const onLoginButtonClick = () => {
+    // Call the handleLogin function passed from App.jsx
+    // App.jsx will be responsible for setting the global loginMessage
+    if (handleLogin) {
+      handleLogin(username, role);
     }
   };
 
@@ -62,21 +67,21 @@ function LoginSection() {
       <Box
         sx={{
           display: 'flex',
-          flexDirection: 'column', // Parent box for vertical arrangement
-          alignItems: 'center', // Center items horizontally
-          gap: 2, // Spacing between the form row and the message field
-          width: '100%', // Take full width to allow message field to span
-          paddingX: 2, // Add some horizontal padding if message field is too wide
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 2,
+          width: '100%',
+          paddingX: 2,
         }}
       >
         <Box
           component="form"
           sx={{
             display: 'flex',
-            flexDirection: 'row', // Arrange form items horizontally
+            flexDirection: 'row',
             alignItems: 'center',
             gap: 2,
-            width: 'fit-content', // Keep form itself centered
+            width: 'fit-content',
           }}
           noValidate
           autoComplete="off"
@@ -110,7 +115,7 @@ function LoginSection() {
           </FormControl>
           <Button
             variant="contained"
-            onClick={handleLogin}
+            onClick={onLoginButtonClick} // Call the new handler
             size="medium"
           >
             Login
@@ -119,15 +124,12 @@ function LoginSection() {
         <TextField
           label="Message"
           variant="outlined"
-          value={message} // Bind to message state
+          value={loginMessage} // Display the message from App.jsx props
           size="small"
-          fullWidth // Make it take the full width of its parent
+          fullWidth
           InputProps={{
             readOnly: true,
           }}
-          // Optional: if you want a fixed number of rows for the message
-          // multiline
-          // rows={2}
         />
       </Box>
     </Paper>

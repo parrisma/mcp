@@ -520,8 +520,11 @@ class MCPClientRunner:
                 self._log.error(msg)
                 raise ValueError(msg)
 
-            user_role: str = args.get(
-                "user_role", Prompts.UserRole.SALES_TRADER.value)
+            user_role: str | None = args.get("user_role", None)
+            if not user_role:
+                user_role = Prompts.UserRole.SALES_TRADER.value
+                self._log.info(
+                    f"No user role provided, defaulting to '{user_role}'.")
 
             # Get the clarification and mcp_server_calls from the args
             response_structure: Dict[str, Any] = args.get("response", {})

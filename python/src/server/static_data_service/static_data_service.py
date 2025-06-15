@@ -84,7 +84,7 @@ class StaticDataService(IMCPServer):
     def get_all_currencies(self) -> Dict[str, Any]:
         return {self.StaticField.CURRENCY.value: self._currencies.copy()}
 
-    def get_all_venue_codes(self) -> Dict[str, List[str]]:
+    def get_all_venue_codes(self) -> Dict[str, Any]:
         venue_codes = [code for code, _ in self._venues]
         return {self.StaticField.VENUE.value: venue_codes}
 

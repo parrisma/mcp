@@ -1,0 +1,170 @@
+{
+  "name": "Trade",
+  "instructions": "MCP Server - Trade Model Context Protocol Server Implementation",
+  "version": "1.0.0",
+  "tools": {
+    "get_all_algo_types": {
+      "name": "get_all_algo_types",
+      "description": "Get a list of all supported algorithmic trading strategy types.",
+      "annotations": {
+        "title": "Get all algo types",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_algo_description": {
+      "name": "get_algo_description",
+      "description": "Get the description for a specific algorithmic trading strategy type.",
+      "annotations": {
+        "title": "Get algo description",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_all_brokers": {
+      "name": "get_all_brokers",
+      "description": "Get a list of all supported brokers.",
+      "annotations": {
+        "title": "Get all brokers",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_broker_description": {
+      "name": "get_broker_description",
+      "description": "Get the description for a specific broker.",
+      "annotations": {
+        "title": "Get broker description",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_all_traders": {
+      "name": "get_all_traders",
+      "description": "Get a list of all registered traders.",
+      "annotations": {
+        "title": "Get all traders",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_trader_description": {
+      "name": "get_trader_description",
+      "description": "Get the description for a specific trader.",
+      "annotations": {
+        "title": "Get trader description",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_all_desks": {
+      "name": "get_all_desks",
+      "description": "Get a list of all trading desks.",
+      "annotations": {
+        "title": "Get all desks",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_desk_description": {
+      "name": "get_desk_description",
+      "description": "Get the description for a specific trading desk.",
+      "annotations": {
+        "title": "Get desk description",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_all_trade_field_names": {
+      "name": "get_all_trade_field_names",
+      "description": "Get a list of all available trade field names.",
+      "annotations": {
+        "title": "Get all trade field names",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_all_sides": {
+      "name": "get_all_sides",
+      "description": "Get a list of all supported trade sides (e.g., Buy, Sell).",
+      "annotations": {
+        "title": "Get all sides",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_all_order_types": {
+      "name": "get_all_order_types",
+      "description": "Get a list of all supported order types.",
+      "annotations": {
+        "title": "Get all order types",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_all_client_ids": {
+      "name": "get_all_client_ids",
+      "description": "Get a list of all client IDs.",
+      "annotations": {
+        "title": "Get all client IDs",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_all_trading_account_ids": {
+      "name": "get_all_trading_account_ids",
+      "description": "Get a list of all trading account IDs.",
+      "annotations": {
+        "title": "Get all trading account IDs",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_trades": {
+      "name": "get_trades",
+      "description": "Get a list of matching trades by passing a field name (can be nested using dots) and a case sensitive regex pattern. All trades with the field that matches the pattern are returned.",
+      "annotations": {
+        "title": "Get trades by field and regex",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  },
+  "resources": {},
+  "prompts": {},
+  "serverInfo": {
+    "name": "Trade Server",
+    "version": "1.0.0"
+  },
+  "transport": {
+    "type": "sse"
+  }
+}

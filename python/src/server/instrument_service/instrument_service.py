@@ -1,4 +1,5 @@
 from typing import Dict, Any, Callable, List, Tuple, Annotated
+from httpx import get
 from pydantic import Field
 import logging
 import re
@@ -9,7 +10,7 @@ import random
 from i_mcp_server import IMCPServer
 from enum import Enum
 from static_data_service import StaticDataService
-
+from .tickers import get_instr_tickers
 
 class InstrumentService(IMCPServer):
 
@@ -29,7 +30,7 @@ class InstrumentService(IMCPServer):
 
     class ConfigField(Enum):
         SERVER_NAME = "server_name"
-        DB_PATH = "db_path"
+        DB_PATH = IMCPServer.ConfigFields.DATA_PATH.value
         DB_NAME = "db_name"
 
     _prefixes = [
@@ -43,6 +44,11 @@ class InstrumentService(IMCPServer):
         "Networks", "Dynamics", "Technologies", "Global", "Analytics", "Capital", "Innovations",
         "Logistics", "Consulting", "Security", "Markets", "Energy", "Investments", "Biotech", "Aerospace", "Pharma"
     ]
+
+    _tickers = get_instr_tickers()
+    @staticmethod
+    def get_tickers() -> List[Tuple[str, str]]:
+        return InstrumentService._tickers
 
     def __init__(self,
                  logger: logging.Logger,
@@ -88,8 +94,6 @@ class InstrumentService(IMCPServer):
             raise self.ErrorLoadingInstrumentDatabase(
                 "Instrument database is empty or could not be loaded.")
 
-        self._log.info(f"Current working directory: {os.getcwd()}")
-
     @property
     def server_name(self) -> str:
         return self._server_name
@@ -122,6 +126,9 @@ class InstrumentService(IMCPServer):
 
     def _generate_random_instruments(self,
                                      full_db_path_and_filename: str) -> None:
+        self._log.info(
+            f"Generating random instruments and saving to {full_db_path_and_filename}")
+
         instruments: List[Dict[str, Any]] = []
         for _ in range(100):
             instruments.append({
@@ -163,22 +170,47 @@ class InstrumentService(IMCPServer):
             raise self.ErrorLoadingInstrumentDatabase(
                 f"Error loading instrument database: {e}") from e
 
-    def get_all_instrument_field_names(self) -> List[str]:
-        return [field.value for field in self.InstrumentField.__members__.values()]
+    def get_all_instrument_field_names(self) -> Dict[str, Any]:
+        try:
+            return {"instrument_fields": [field.value for field in self.InstrumentField.__members__.values()]}
+        except Exception as e:
+            msg = f"Error retrieving instrument field names: {e}"
+            self._log.error(msg)
+            return {"error": msg}
 
     def get_instruments(self,
                         field_name: Annotated[str, Field(description="The instrument field name to search for")],
-                        regular_expression: Annotated[str, Field(description="Pattern to match field name against")]) -> List[Dict[str, Any]]:
+                        regular_expression: Annotated[str, Field(description="Pattern to match field name against")]) -> Dict[str, Any]:
         try:
-            regex = re.compile(regular_expression)
-            return [entry for entry in self._instument_db if field_name in entry and regex.search(entry[field_name])]
+            # If the regular expression is a single '*', treat it as '.*'
+            if regular_expression == "*":
+                regex = re.compile(".*")
+            else:
+                regex = re.compile(regular_expression)
+            return {"instruments": [entry for entry in self._instument_db if field_name in entry and regex.search(entry[field_name])]}
         except Exception as e:
             msg = f"Error searching for instruments with key field [{field_name}] and matching expression [{regular_expression}]: {e}"
             self._log.error(msg)
-            return [{"error": msg}]
+            return {"error": msg}
 
 
 if __name__ == "__main__":
+
+    if (True):
+        with open('/mcp/python/src/server/instrument_service/instrument.json') as f:
+            data = json.load(f)
+
+            tickers = []
+        for instrument in data:
+            if "Reuters_Code" in instrument:
+                tickers.append(("Reuters_Code", instrument["Reuters_Code"]))
+            if "SEDOL" in instrument:
+                tickers.append(("SEDOL", instrument["SEDOL"]))
+            if "ISIN" in instrument:
+                tickers.append(("ISIN", instrument["ISIN"]))
+
+    print(tickers)
+
     # Example usage
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger("InstrumentServiceExample")

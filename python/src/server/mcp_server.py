@@ -66,6 +66,7 @@ class MCPServer:
                  config_dir: Path,
                  config_file: Path,
                  server_instance: IMCPServer) -> None:
+
         self._host: str = host
         self._port: int = port
         self._config_dir: Path = config_dir

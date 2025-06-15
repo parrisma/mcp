@@ -108,9 +108,22 @@ RUN conda env export -n mcp > /home/mcp-dev/mcp_environment.yml && \
 
 # --- React App Setup: Install Dependencies Only ---
 WORKDIR /home/mcp-dev/react/mcp-app
+
 COPY --chown=mcp-dev:mcp-dev react/mcp-app/package.json ./package.json
-COPY --chown=mcp-dev:mcp-dev react/mcp-app/package-lock.json ./package-lock.json
-RUN bash -c "source $NVM_DIR/nvm.sh && npm ci"
+# DONT copy ./package-lock.json as we want to force a fresh install
+
+RUN curl -I https://registry.npmjs.org
+
+ENV NVM_DIR=/home/mcp-dev/.nvm
+ENV NODE_VERSION=20.17.0
+
+RUN bash -c "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash && \
+    source $NVM_DIR/nvm.sh && \
+    nvm install $NODE_VERSION && \
+    nvm alias default $NODE_VERSION && \
+    nvm use $NODE_VERSION && \
+    npm install -g npm@latest"
+
 # --- End React App Setup ---
 
 # Set the working directory to the mcp-dev home directory

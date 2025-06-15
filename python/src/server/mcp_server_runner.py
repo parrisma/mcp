@@ -18,6 +18,7 @@ from mcp_server import MCPServer
 from mcp_server_factory import MCPServerFactory
 import json
 from network_utils import NetworkUtils
+from i_mcp_server import IMCPServer
 
 
 class MCPServerRunner:
@@ -54,6 +55,8 @@ class MCPServerRunner:
                             help="Enable debug mode")
         parser.add_argument("--server-type", required=True,
                             help="Type of MCP server to run (e.g., 'hello_world', 'instrument_service')")
+        parser.add_argument("--server-data-path", type=Path, default="./",
+                            help="Optional path to server data directory")
         return parser.parse_args()
 
     def run(self) -> None:
@@ -91,10 +94,20 @@ class MCPServerRunner:
                     f"Error decoding JSON from configuration file: {config_path}")
                 sys.exit(1)
 
+            # Add data path to the server configuration if provided
+            if args.server_data_path and not args.server_data_path.is_dir():
+                raise ValueError(
+                    f"server_data_path '{args.server_data_path}' is not a valid directory")
+            else:
+                server_config[IMCPServer.ConfigFields.DATA_PATH.value] = str(
+                    args.server_data_path)
+
             # Use the factory to create the server instance
             factory = MCPServerFactory()
             server_instance = factory.create_server(
-                args.server_type, self.log, server_config)
+                args.server_type,
+                self.log,
+                server_config)
 
             # Create the MCPServer instance with the created server_instance
             server: MCPServer = MCPServer(host=args.host,

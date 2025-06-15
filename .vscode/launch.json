@@ -20,7 +20,7 @@
       }
     },
     {
-      "name": "Instrument MCP Server",
+      "name": "Instrument Data MCP Server",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
@@ -30,7 +30,46 @@
         "--config-dir=./config",
         "--config-file=instrument_server_config.json",
         "--server-type=instrument",
+        "--server-data-path=./python/src/server/instrument_service",
         "--port=6278",
+        "--debug"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+      }
+    },
+    {
+      "name": "Client Data MCP Server",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--config-dir=./config",
+        "--config-file=client_server_config.json",
+        "--server-data-path=./python/src/server/client_service",
+        "--server-type=client",
+        "--port=6280",
+        "--debug"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+      }
+    },
+    {
+      "name": "Trade Data MCP Server",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--config-dir=./config",
+        "--config-file=trade_server_config.json",
+        "--server-data-path=./python/src/server/trade_service",
+        "--server-type=trade",
+        "--port=6281",
         "--debug"
       ],
       "env": {
@@ -68,7 +107,7 @@
       }
     },
     {
-      "name": "MCP Client",
+      "name": "MCP Service Runner",
       "type": "debugpy",
       "request": "launch",
       "module": "python.src.client.mcp_client_runner",
@@ -156,6 +195,28 @@
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/python/src/server/static_data_service/static_data_service.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+      }
+    },
+    {
+      "name": "Client Service Tests",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/server/client_service/client_service.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+      }
+    },
+    {
+      "name": "Trade Service Tests",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/server/trade_service/trade_service.py",
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}",
       "env": {

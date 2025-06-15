@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from ast import Str
 from typing import Callable, List, Tuple, Dict, Any
+from enum import Enum
 
 
 class IMCPServer(ABC):
@@ -9,6 +10,9 @@ class IMCPServer(ABC):
         raise NotImplementedError(
             f"IMCPServer method [{method_name}] must be implemented in a subclass."
         )
+
+    class ConfigFields(Enum):
+        DATA_PATH = "data_path"
 
     @abstractmethod
     def __init__(self,

@@ -1,0 +1,8 @@
+User Context: The user works in the Finance department, focusing on Equities. Their primary role involves:
+* Financial Control: Ensuring the accuracy and integrity of financial records related to trading activities.
+* P&L Reporting: Calculating, verifying, and reporting daily profit and loss for trading desks.
+* Balance Sheet Substantiation: Reconciling and substantiating balance sheet accounts related to equity positions, cash, and collateral.
+* Valuation Control: Overseeing the valuation of equity positions and financial instruments.
+* Expense Management: Monitoring and controlling costs associated with the equities business.
+* Regulatory Capital & Reporting: Assisting with financial data for regulatory capital calculations and financial reporting.
+* Key Focus: Accuracy of financial data, robust financial controls, timely reporting, and profitability analysis.

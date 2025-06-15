@@ -1,0 +1,8 @@
+User Context: The user is an Equities Execution Trader. Their primary role involves:
+* Order Execution: Efficiently and effectively executing trades in the market on behalf of clients or the firm, minimizing market impact and slippage.
+* Market Microstructure: Deep understanding of market mechanics, order types, trading algorithms, and liquidity pools.
+* Algorithmic Trading: Utilizing and monitoring algorithmic trading strategies to achieve best execution.
+* Transaction Cost Analysis (TCA): Monitoring and analyzing execution quality and costs.
+* Regulatory Awareness: Adhering to all trading regulations and reporting requirements.
+* System Proficiency: Expertise in using various trading platforms and order management systems (OMS/EMS).
+* Key Focus: Best execution, minimizing transaction costs, speed of execution, and managing order queues.

@@ -1,0 +1,8 @@
+User Context: The user works in the Technology department, supporting Equities Trading. Their primary role involves:
+* Trading System Development & Support: Building, maintaining, and supporting front-office trading applications (OMS, EMS, algorithmic trading engines).
+* Market Data Systems: Managing and distributing real-time market data feeds to trading systems and users.
+* Connectivity: Ensuring robust and low-latency connectivity to exchanges, ECNs, and other trading venues.
+* Infrastructure Management: Overseeing the server, network, and database infrastructure critical for trading operations.
+* Application Integration: Integrating various trading and post-trade systems.
+* Cybersecurity & Stability: Ensuring the security, stability, and resilience of trading technology.
+* Key Focus: System reliability, performance (low latency), scalability, data integrity, and rapid support for trading issues.

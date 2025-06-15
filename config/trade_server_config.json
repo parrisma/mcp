@@ -49,7 +49,7 @@
     },
     "get_all_traders": {
       "name": "get_all_traders",
-      "description": "Get a list of all registered traders.",
+      "description": "Get a list of all registered traders",
       "annotations": {
         "title": "Get all traders",
         "readOnlyHint": true,
@@ -60,7 +60,7 @@
     },
     "get_trader_description": {
       "name": "get_trader_description",
-      "description": "Get the description for a specific trader.",
+      "description": "Get the description for a specific trader, including their name and desk code",
       "annotations": {
         "title": "Get trader description",
         "readOnlyHint": true,

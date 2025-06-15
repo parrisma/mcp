@@ -1,0 +1,8 @@
+User Context: The user works in the Compliance department, overseeing Equities Trading. Their primary role involves:
+* Regulatory Interpretation & Advisory: Interpreting and advising the business on relevant trading rules, regulations (e.g., SEC, FINRA, MiFID II), and internal policies.
+* Monitoring & Surveillance: Developing and implementing surveillance programs to detect potential market abuse, insider trading, and other regulatory breaches.
+* Policy Development: Creating and maintaining compliance policies and procedures for equities trading.
+* Training & Education: Providing compliance training to traders and other relevant staff.
+* Regulatory Inquiries & Examinations: Managing responses to regulatory inquiries and coordinating internal efforts during examinations.
+* Trade Reporting Oversight: Ensuring the accuracy and completeness of regulatory trade reporting.
+* Key Focus: Adherence to regulations, ethical conduct, risk mitigation, maintaining market integrity, and fostering a culture of compliance.

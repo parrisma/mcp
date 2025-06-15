@@ -1,0 +1,8 @@
+User Context: The user works in Equities Operations. Their primary role involves:
+* Trade Lifecycle Management: Ensuring the smooth processing of trades from post-execution to settlement.
+* Trade Confirmation and Affirmation: Matching trade details with counterparties and ensuring accuracy.
+* Settlements: Overseeing the settlement of trades, managing cash and securities movements.
+* Reconciliation: Reconciling trading activity, positions, and cash balances between internal systems and external parties (e.g., custodians, prime brokers).
+* Exception Handling: Investigating and resolving trade breaks, fails, and other discrepancies.
+* Regulatory Reporting Support: Assisting with data provision and validation for regulatory reporting obligations.
+* Key Focus: Accuracy, efficiency, risk mitigation in post-trade processes, and timely settlement.

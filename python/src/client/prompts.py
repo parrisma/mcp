@@ -1,5 +1,6 @@
 import os
 import logging
+from tkinter import N
 import uuid
 import json
 from enum import Enum
@@ -9,6 +10,7 @@ from datetime import datetime
 from flask import session
 from langchain.prompts import PromptTemplate
 import mcp
+import random
 
 
 class Prompts:
@@ -19,7 +21,8 @@ class Prompts:
                      variable_names: List[str]) -> PromptTemplate: ...
 
     class LoadTemplateFragments(Protocol):
-        def __call__(self) -> Dict[str, Any]: ...
+        def __call__(self,
+                     user_role: Optional[str]) -> Dict[str, Any]: ...
 
     class PromptSettings(Enum):
         TEMPLATE_FOLDER = "prompt_templates"
@@ -33,6 +36,26 @@ class Prompts:
 
         def __str__(self) -> str:
             return self.value
+
+    class UserRole(Enum):
+        SALES_TRADER = "Sales Trader"
+        EXECUTION_TRADER = "Execution Trader"
+        OPERATIONS = "Operations"
+        FINANCE = "Finance"
+        TECHNOLOGY = "Technology"
+        COMPLIANCE = "Compliance"
+
+        def __str__(self) -> str:
+            return self.value
+
+    role_to_fragment: Dict[str, str] = {
+        UserRole.SALES_TRADER.value: "prompt_sales_trader_role_definition.txt",
+        UserRole.EXECUTION_TRADER.value: "prompt_execution_trader_role_definition.txt",
+        UserRole.OPERATIONS.value: "prompt_operations_role_definition.txt",
+        UserRole.FINANCE.value: "prompt_finance_role_definition.txt",
+        UserRole.TECHNOLOGY.value: "prompt_technology_role_definition.txt",
+        UserRole.COMPLIANCE.value: "prompt_compliance_role_definition.txt",
+    }
 
     def __init__(self,
                  template_root_folder: Optional[Path] = None,
@@ -112,15 +135,25 @@ class Prompts:
             raise ValueError(
                 f"An error occurred while loading default variables: {e}") from e
 
-    def _load_default_fragments(self) -> Dict[str, Any]:
+    def _load_default_fragments(self,
+                                user_role: Optional[str]) -> Dict[str, Any]:
         all_fragments: Dict[str, Any] = {}
+        if user_role is None:
+            user_role_key = self.UserRole.SALES_TRADER.value
+        else:
+            user_role_key = user_role
+        role_fragment_file: Optional[str] = self.role_to_fragment.get(
+            user_role_key, None)
+        if not role_fragment_file:
+            raise ValueError(
+                f"Role '{user_role}' is not defined in role_to_fragment mapping, so we cannot form a prompt.")
         try:
             for fragment_name, fragment_file in [("mcp_server_definition",
                                                   self.PromptSettings.SERVER_DEFINITION.value),
                                                  ("ai_saftey_statement",
                                                   self.PromptSettings.AI_SAFTEY_STATEMENT.value),
                                                  ("user_role_definition",
-                                                  self.PromptSettings.USER_ROLE_DEFINITION.value),
+                                                  role_fragment_file),
                                                  ("org_statement",
                                                   self.PromptSettings.ORG_STATEMENT.value)]:
 
@@ -164,12 +197,17 @@ class Prompts:
 
     def get_prompt(self,
                    goal: str,
+                   user_role: str,
                    session_id: str,
                    prompt_name: Optional[str] = None,
                    variables: Optional[Dict[str, Any]] = None,
                    loadTemplateFragments: Optional[LoadTemplateFragments] = None,
                    makePromptTemplate: Optional[MakePromptTemplate] = None) -> str:
         try:
+            if user_role not in [role.value for role in self.UserRole]:
+                raise ValueError(
+                    f"Role '{user_role}' is not defined in User Role")
+
             if not variables:
                 variables = {}
 
@@ -181,7 +219,8 @@ class Prompts:
 
             if loadTemplateFragments is None:
                 loadTemplateFragments = self._load_default_fragments
-            fragment_variables: Dict[str, Any] = loadTemplateFragments()
+            fragment_variables: Dict[str, Any] = loadTemplateFragments(
+                user_role=user_role)
             variables.update(fragment_variables)
 
             variable_names = list(variables.keys())
@@ -236,6 +275,7 @@ class Prompts:
     def build_prompt(self,
                      user_goal: str,
                      session_id: uuid.UUID,
+                     user_role: str,
                      mcp_server_descriptions: Dict[str, Any],
                      mcp_responses: List[Dict[str, Any]],
                      clarifications: List[Dict[str, Any]]
@@ -243,6 +283,7 @@ class Prompts:
         try:
             prompt: str = self.get_prompt(
                 goal=user_goal,
+                user_role=user_role,
                 session_id=str(session_id),
                 variables={
                     "mcp_server_descriptions": json.dumps(mcp_server_descriptions),
@@ -267,14 +308,18 @@ def tests() -> None:
         prompts = Prompts(template_root_folder=None,
                           default_prompt_file_name=None)
         session_id: uuid.UUID = uuid.uuid4()
+        roles_list = [role.value for role in Prompts.UserRole]
+        print(f"Available roles: {roles_list}")
         for i in range(3):
-            test_prompt: str | None = prompts.build_prompt(user_goal=f"Test goal {i}",
-                                                           session_id=session_id,
-                                                           mcp_server_descriptions={
-                                                               f"server{i}": "description1"},
-                                                           mcp_responses=[
-                                                               {f"response{i}": "data1"}],
-                                                           clarifications=[{f"clarification{i}": "info1"}])
+            user_role = random.choice(roles_list)
+            test_prompt: str | None = prompts.build_prompt(
+                user_goal=f"Test goal {i}",
+                session_id=session_id,
+                user_role=user_role,
+                mcp_server_descriptions={f"server{i}": "description1"},
+                mcp_responses=[{f"response{i}": "data1"}],
+                clarifications=[{f"clarification{i}": "info1"}]
+            )
             if test_prompt is not None:
                 print(f"Test prompt: {test_prompt}")
             else:

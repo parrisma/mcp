@@ -520,6 +520,9 @@ class MCPClientRunner:
                 self._log.error(msg)
                 raise ValueError(msg)
 
+            user_role: str = args.get(
+                "user_role", Prompts.UserRole.SALES_TRADER.value)
+
             # Get the clarification and mcp_server_calls from the args
             response_structure: Dict[str, Any] = args.get("response", {})
 
@@ -542,6 +545,7 @@ class MCPClientRunner:
 
             full_prompt: Optional[str] = self._prompts.build_prompt(user_goal=goal,
                                                                     session_id=llm_session,
+                                                                    user_role=user_role,
                                                                     mcp_server_descriptions=capabilities,
                                                                     mcp_responses=merged_mcp_responses,
                                                                     clarifications=merged_clarifications)

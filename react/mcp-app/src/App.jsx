@@ -13,6 +13,7 @@ import Prompt from "./components/Prompt.jsx";
 import SettingsAndStatus from "./components/SettingsAndStatus.jsx";
 import MenuItem from "@mui/material/MenuItem"; // Import MenuItem
 import ReadOnlyPrompt from "./components/ReadOnlyPrompt.jsx"; // Import ReadOnlyPrompt
+import LoginSection from "./components/LoginSection.jsx"; // Import LoginSection
 
 const homePaper = {
   padding: 2,
@@ -100,7 +101,7 @@ function App() {
     setPromptsData([]);
   }, [sessionId]); // Dependency array includes sessionId
 
-  const [activeView, setActiveView] = useState("Question");
+  const [activeView, setActiveView] = useState("Login"); // Default to Login view
   const darkTheme = createTheme({
     palette: {
       mode: "dark",
@@ -419,145 +420,152 @@ function App() {
               <HomeMenu onViewChange={handleViewChange} />
             </Paper>
           </Grid>
-          <Grid xs={12}>
-            <Paper
-              sx={{
-                ...homePaper,
-                display: "flex",
-                flexDirection: "column",
-                flexGrow: 1,
-              }}
-            >
-              {activeView === "Question" && (
-                <Prompt
-                  baseApiUrl={baseApiUrl}
-                  onApiResponse={handlePromptSubmitResponse} // Use the new handler
-                  isNextStepsMode={isNextStepsAvailable}
-                  onResetAll={handleResetAll}
-                  sessionId={sessionId} // Pass sessionId to Prompt
-                  setSessionId={setSessionId} // Pass setSessionId to Prompt
-                  isLoading={apiStatus.loading || isProcessingNextSteps} // Pass combined loading state to Prompt
-                  isFinalAnswerAvailable={isFinalAnswerAvailable} // Pass the new prop
-                  activityStatus={
-                    isFinalAnswerAvailable
-                      ? "Done"
-                      : apiStatus.loading || isProcessingNextSteps
-                      ? `thinking, please be patient [${elapsedSeconds}s]`
-                      : ""
-                  } // Pass activity status based on combined state
-                  promptText={promptText} // Pass promptText state down
-                  setPromptText={setPromptText} // Pass setPromptText function down
-                />
-              )}
-              {activeView === "Prompts" && (
-                <Box
+          {activeView === "Login" ? (
+            <Grid item xs={12}> {/* Ensure LoginSection takes full width */}
+              <LoginSection />
+            </Grid>
+          ) : (
+            <>
+              <Grid item xs={12}> {/* Changed from Grid xs={12} to Grid item xs={12} for clarity */}
+                <Paper
                   sx={{
                     ...homePaper,
                     display: "flex",
                     flexDirection: "column",
-                    gap: 2,
-                    minHeight: '264px', // Set a minimum height for the container
+                    flexGrow: 1,
                   }}
                 >
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <TextField
-                      label="Session ID"
-                      value={sessionId} // Use the sessionId state
-                      variant="outlined"
-                      size="small" // Use small size
-                      InputProps={{
-                        readOnly: false, // Make it read-write
-                        sx: {
-                          fontFamily: "monospace", // Override font to monospace
-                        },
-                      }}
-                      onChange={(e) => setSessionId(e.target.value)} // Add onChange handler to update sessionId state
-                      sx={{
-                        width: "350px", // Set width to match the other Session ID field
-                        "& .MuiInputBase-root": {
-                          fontSize: "0.875rem", // Smaller font size
-                          fontFamily: "monospace", // Ensure monospace font for input
-                        },
-                      }}
-                      title="Session Id"
+                  {activeView === "Question" && (
+                    <Prompt
+                      baseApiUrl={baseApiUrl}
+                      onApiResponse={handlePromptSubmitResponse} // Use the new handler
+                      isNextStepsMode={isNextStepsAvailable}
+                      onResetAll={handleResetAll}
+                      sessionId={sessionId} // Pass sessionId to Prompt
+                      setSessionId={setSessionId} // Pass setSessionId to Prompt
+                      isLoading={apiStatus.loading || isProcessingNextSteps} // Pass combined loading state to Prompt
+                      isFinalAnswerAvailable={isFinalAnswerAvailable} // Pass the new prop
+                      activityStatus={
+                        isFinalAnswerAvailable
+                          ? "Done"
+                          : apiStatus.loading || isProcessingNextSteps
+                          ? `thinking, please be patient [${elapsedSeconds}s]`
+                          : ""
+                      } // Pass activity status based on combined state
+                      promptText={promptText} // Pass promptText state down
+                      setPromptText={setPromptText} // Pass setPromptText function down
                     />
-                    <Button
-                      variant="contained" // Use contained variant for consistency
-                      onClick={handleGetPrompts} // Add click handler
-                      size="small" // Use small size
+                  )}
+                  {activeView === "Prompts" && (
+                    <Box
+                      sx={{
+                        ...homePaper,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 2,
+                        minHeight: '264px', // Set a minimum height for the container
+                      }}
                     >
-                      Get Prompts
-                    </Button>
-                    {promptVersions.length > 0 && (
-                      <TextField
-                        select
-                        label="Version"
-                        value={selectedPromptVersion}
-                        onChange={handleVersionChange}
-                        variant="outlined"
-                        size="small" // Use small size
-                        sx={{ width: "150px" }} // Adjust width as needed
-                      >
-                        {promptVersions.map((version) => (
-                          <MenuItem key={version} value={version}>
-                            {version}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                    )}
-                  </Box>
-                  {/* Display the selected prompt text using ReadOnlyPrompt */}
-                  {selectedPromptText && (
-                    <Box sx={{ flexGrow: 1 }}> {/* Add flexGrow to make it take available space */}
-                      <ReadOnlyPrompt
-                        label={`Prompt (Version: ${selectedPromptVersion})`}
-                        value={selectedPromptText}
-                      />
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <TextField
+                          label="Session ID"
+                          value={sessionId} // Use the sessionId state
+                          variant="outlined"
+                          size="small" // Use small size
+                          InputProps={{
+                            readOnly: false, // Make it read-write
+                            sx: {
+                              fontFamily: "monospace", // Override font to monospace
+                            },
+                          }}
+                          onChange={(e) => setSessionId(e.target.value)} // Add onChange handler to update sessionId state
+                          sx={{
+                            width: "350px", // Set width to match the other Session ID field
+                            "& .MuiInputBase-root": {
+                              fontSize: "0.875rem", // Smaller font size
+                              fontFamily: "monospace", // Ensure monospace font for input
+                            },
+                          }}
+                          title="Session Id"
+                        />
+                        <Button
+                          variant="contained" // Use contained variant for consistency
+                          onClick={handleGetPrompts} // Add click handler
+                          size="small" // Use small size
+                        >
+                          Get Prompts
+                        </Button>
+                        {promptVersions.length > 0 && (
+                          <TextField
+                            select
+                            label="Version"
+                            value={selectedPromptVersion}
+                            onChange={handleVersionChange}
+                            variant="outlined"
+                            size="small" // Use small size
+                            sx={{ width: "150px" }} // Adjust width as needed
+                          >
+                            {promptVersions.map((version) => (
+                              <MenuItem key={version} value={version}>
+                                {version}
+                              </MenuItem>
+                            ))}
+                          </TextField>
+                        )}
+                      </Box>
+                      {/* Display the selected prompt text using ReadOnlyPrompt */}
+                      {selectedPromptText && (
+                        <Box sx={{ flexGrow: 1 }}> {/* Add flexGrow to make it take available space */}
+                          <ReadOnlyPrompt
+                            label={`Prompt (Version: ${selectedPromptVersion})`}
+                            value={selectedPromptText}
+                          />
+                        </Box>
+                      )}
+                      {/* Display the response message if no prompts are found or on error */}
+                      {!selectedPromptText && promptsResponse && (
+                        <TextField
+                          label="Response"
+                          value={promptsResponse}
+                          variant="outlined"
+                          fullWidth
+                          multiline
+                          rows={2} // Fixed height to 2 rows
+                          InputProps={{
+                            readOnly: true,
+                          }}
+                        />
+                      )}
                     </Box>
                   )}
-                  {/* Display the response message if no prompts are found or on error */}
-                  {!selectedPromptText && promptsResponse && (
-                    <TextField
-                      label="Response"
-                      value={promptsResponse}
-                      variant="outlined"
-                      fullWidth
-                      multiline
-                      rows={2} // Fixed height to 2 rows
-                      InputProps={{
-                        readOnly: true,
-                      }}
+                  {activeView === "Settings" && (
+                    <SettingsAndStatus
+                      clientHostValue={clientHostValue}
+                      setClientHostValue={setClientHostValue}
+                      clientPortValue={clientPortValue}
+                      setClientPortValue={setClientPortValue}
                     />
                   )}
-                </Box>
+                </Paper>
+              </Grid>
+              {/* Status component is conditionally rendered only if not in Login, Settings, or Prompts view */}
+              {activeView !== "Login" && activeView !== "Settings" && activeView !== "Prompts" && (
+                <Grid item> {/* Changed from Grid to Grid item for clarity */}
+                  <Paper sx={homePaper}>
+                    <Status
+                      apiStatus={apiStatus}
+                      baseApiUrl={baseApiUrl}
+                      onApiResponse={handleNextStepsApiResponse} // Use the specific handler for "Do Next Steps"
+                      lastResponseData={apiStatus.data}
+                      currentGoalPromptText={currentGoalPromptText} // Pass the original goal
+                      sessionId={sessionId} // Pass sessionId to Status
+                      onClarificationResponsesChange={handleClarificationResponses} // Pass the handler to Status
+                      onResetAll={handleResetAll} // Pass the reset handler to Status
+                    />
+                  </Paper>
+                </Grid>
               )}
-              {activeView === "Settings" && (
-                <SettingsAndStatus
-                  clientHostValue={clientHostValue}
-                  setClientHostValue={setClientHostValue}
-                  clientPortValue={clientPortValue}
-                  setClientPortValue={setClientPortValue}
-                />
-              )}
-            </Paper>
-          </Grid>
-          {/* Status component is always visible now, or conditionally based on activeView if preferred */}
-          {/* For now, let's make it always visible below the main content area if not in settings */}
-          {activeView !== "Settings" && activeView !== "Prompts" && (
-            <Grid>
-              <Paper sx={homePaper}>
-                <Status
-                  apiStatus={apiStatus}
-                  baseApiUrl={baseApiUrl}
-                  onApiResponse={handleNextStepsApiResponse} // Use the specific handler for "Do Next Steps"
-                  lastResponseData={apiStatus.data}
-                  currentGoalPromptText={currentGoalPromptText} // Pass the original goal
-                  sessionId={sessionId} // Pass sessionId to Status
-                  onClarificationResponsesChange={handleClarificationResponses} // Pass the handler to Status
-                  onResetAll={handleResetAll} // Pass the reset handler to Status
-                />
-              </Paper>
-            </Grid>
+            </>
           )}
         </Grid>
       </Box>

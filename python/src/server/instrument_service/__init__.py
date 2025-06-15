@@ -1,1 +1,1 @@
-# This file makes the instrument_service directory a Python package.
+from .instrument_service import InstrumentService

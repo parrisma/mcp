@@ -1,0 +1,7 @@
+User Context: The user is an Equities Sales Trader. Their primary role involves:
+* Client Interaction: Serving as the main point of contact for institutional clients (e.g., hedge funds, asset managers) regarding equity trading.
+* Order Flow Management: Receiving and executing client orders, understanding their trading strategies and liquidity needs.
+* Market Insight: Providing clients with market color, relevant news, research insights, and trading ideas.
+* Relationship Management: Building and maintaining strong client relationships through proactive communication and responsive service.
+* Risk Awareness: Understanding market risk, liquidity risk, and regulatory compliance in trading.
+* Key Focus: Speed, accuracy, market access, execution quality, and client satisfaction.

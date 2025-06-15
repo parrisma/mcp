@@ -25,6 +25,10 @@ class Prompts:
         TEMPLATE_FOLDER = "prompt_templates"
         DEFAULT = "prompt_template_default.txt"
         SERVER_DEFINITION = "prompt_template_server_defintion.txt"
+        AI_SAFTEY_STATEMENT = "prompt_safety_statement.txt"
+        # Default, should be overridden via login details.
+        USER_ROLE_DEFINITION = "prompt_sales_trader_role_definition.txt"
+        ORG_STATEMENT = "prompt_org_statement.txt"
         DEFAULT_PROMPT = "default"
 
         def __str__(self) -> str:
@@ -109,18 +113,29 @@ class Prompts:
                 f"An error occurred while loading default variables: {e}") from e
 
     def _load_default_fragments(self) -> Dict[str, Any]:
+        all_fragments: Dict[str, Any] = {}
         try:
-            mcp_server_definition_file: Path = Path(
-                self._template_root_folder / self.PromptSettings.SERVER_DEFINITION.value)
-            if not mcp_server_definition_file.is_file():
-                raise ValueError(
-                    f"Server definition file '{str(mcp_server_definition_file)}' does not exist.")
-            mcp_server_definition = self._load_prompt_fragment(
-                mcp_server_definition_file)
-            if not mcp_server_definition:   # Check if the file is empty
-                raise ValueError(
-                    f"Server definition file '{str(mcp_server_definition_file)}' is empty.")
-            return {"mcp_server_definition": mcp_server_definition}
+            for fragment_name, fragment_file in [("mcp_server_definition",
+                                                  self.PromptSettings.SERVER_DEFINITION.value),
+                                                 ("ai_saftey_statement",
+                                                  self.PromptSettings.AI_SAFTEY_STATEMENT.value),
+                                                 ("user_role_definition",
+                                                  self.PromptSettings.USER_ROLE_DEFINITION.value),
+                                                 ("org_statement",
+                                                  self.PromptSettings.ORG_STATEMENT.value)]:
+
+                fragment_full_file_and_path: Path = Path(
+                    self._template_root_folder / fragment_file)
+                if not fragment_full_file_and_path.is_file():
+                    raise ValueError(
+                        f"Prompt frgament file '{str(fragment_full_file_and_path)}' does not exist.")
+                fragment = self._load_prompt_fragment(
+                    fragment_full_file_and_path)
+                if not fragment:   # Check if the file is empty
+                    raise ValueError(
+                        f"Prompt fragment '{str(fragment_full_file_and_path)}' is empty.")
+                all_fragments[fragment_name] = fragment
+            return all_fragments
         except Exception as e:  # pylint: disable=broad-except
             raise ValueError(
                 f"An error occurred while loading default fragments: {e}") from e

@@ -13,6 +13,7 @@ class IMCPServer(ABC):
 
     class ConfigFields(Enum):
         DATA_PATH = "data_path"
+        AUX_DB_PATH = "aux_db_path"
 
     @abstractmethod
     def __init__(self,

@@ -1,37 +1,22 @@
-from enum import Enum
-
-class TradeFields(Enum):
-  TRADE_ID = "trade_id"
-  ORDER_ID = "order_id"
-  INSTRUMENT_TICKER = "instrument.ticker"
-  INSTRUMENT_ISIN = "instrument.isin"
-  SIDE = "side"
-  ORDER_TYPE = "order_type"
-  QUANTITY_ORDERED = "quantity.ordered"
-  QUANTITY_EXECUTED = "quantity.executed"
-  PRICE_LIMIT = "price.limit"
-  PRICE_EXECUTED = "price.executed"
-  TIMESTAMPS_ORDER_PLACED = "timestamps.order_placed"
-  TIMESTAMPS_EXECUTED = "timestamps.executed"
-  EXECUTION_VENUE = "execution_venue"
-  ORDER_STATUS = "order_status"
-  COUNTERPARTY_CLIENT_ID = "counterparty.client_id"
-  COUNTERPARTY_ACCOUNT_NUMBER = "counterparty.account_number"
-  COUNTERPARTY_BROKER = "counterparty.broker"
-  COUNTERPARTY_TRADER_ID = "counterparty.trader_id"
-  SETTLEMENT_DATE = "settlement.settlement_date"
-  SETTLEMENT_INSTRUCTIONS = "settlement.instructions"
-  REGULATORY_MIFID_II_ALGO_TRADE = "regulatory.mifid_ii.algo_trade"
-  REGULATORY_MIFID_II_SHORT_SELL = "regulatory.mifid_ii.short_sell"
-  REGULATORY_MIFID_II_EXECUTION_DECISION_MAKER = "regulatory.mifid_ii.execution_decision_maker"
-  REGULATORY_MIFID_II_INVESTMENT_DECISION_MAKER = "regulatory.mifid_ii.investment_decision_maker"
-  REGULATORY_REPORTING_FLAGS = "regulatory.reporting_flags"
-  AUDIT_VERSION = "audit.version"
-  AUDIT_CHANGE_LOG = "audit.change_log"
-  FEES_COMMISSION = "fees.commission"
-  FEES_EXCHANGE_FEE = "fees.exchange_fee"
-  FEES_TOTAL = "fees.total"
-  FEES_CURRENCY = "fees.currency"
-  ANALYTICS_ALGO_TYPE = "analytics.algo_type"
-  ANALYTICS_VWAP = "analytics.vwap"
-  ANALYTICS_VOLUME_PARTICIPATION = "analytics.volume_participation"
+[
+  {
+    "headline": "Meta Pharma Stability Maintained Despite Dividend Adjustment",
+    "article": "Meta Pharma in the Entertainment market saw stable trading on the London Stock Exchange exchange after the Dividend Adjustment. The stock's price held firm at £0.155. Industry analyst Director Fatima Williams noted, \"The market had already discounted this event.\" Key market indicators for Meta Pharma: Entertainment Meta Pharma London Stock Exchange.",
+    "publish_time": "2025-Mar-25 07:11:03"
+  },
+  {
+    "headline": "Meta Pharma Faces Pressure After Short Seller Attack Report",
+    "article": "The Short Seller Attack event has created some cautious sentiment around Meta Pharma, with its Entertainment operations experiencing a 11% impact. The Toronto Stock Exchange market reflects modest concerns. An employee remarked, \"It's business as usual, but with heightened awareness.\" Key market indicators for Meta Pharma: Entertainment Toronto Stock Exchange Meta Pharma.",
+    "publish_time": "2025-Apr-25 02:35:33"
+  },
+  {
+    "headline": "Investor Confidence Surges for Meta Pharma Amidst Breakthrough Innovation",
+    "article": "Optimism around Meta Pharma surged today in the Frankfurt Stock Exchange market, driven by a positive Breakthrough Innovation announcement. The Entertainment company's shares saw a healthy increase of £7.1 billion. Director Sienna Lee remarked, \"This positive trend validates our strategic investments.\" Key market indicators for Meta Pharma: Meta Pharma Entertainment Frankfurt Stock Exchange.",
+    "publish_time": "2025-Jun-02 20:36:48"
+  },
+  {
+    "headline": "Analysts Upgrade Meta Pharma Following Robust Major Acquisition Report",
+    "article": "Positive Major Acquisition developments have led to a £18.75 jump for Meta Pharma in the Entertainment sector on the Toronto Stock Exchange exchange. Industry expert VP Mia Scott stated, \"Meta Pharma is demonstrating true leadership in the market.\" Key market indicators for Meta Pharma: Entertainment Toronto Stock Exchange Meta Pharma.",
+    "publish_time": "2025-Mar-21 06:36:06"
+  }
+]

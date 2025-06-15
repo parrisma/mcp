@@ -12,6 +12,7 @@ from enum import Enum
 from static_data_service import StaticDataService
 from .tickers import get_instr_tickers
 
+
 class InstrumentService(IMCPServer):
 
     class ErrorLoadingInstrumentDatabase(RuntimeError):
@@ -46,8 +47,9 @@ class InstrumentService(IMCPServer):
     ]
 
     _tickers = get_instr_tickers()
+
     @staticmethod
-    def get_tickers() -> List[Tuple[str, str]]:
+    def get_tickers() -> List[Tuple[str, str, str]]:
         return InstrumentService._tickers
 
     def __init__(self,

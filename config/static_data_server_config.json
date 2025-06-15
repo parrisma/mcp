@@ -90,6 +90,17 @@
         "idempotentHint": true,
         "openWorldHint": false
       }
+    },
+    "get_fx_rate": {
+      "name": "get_fx_rate",
+      "description": "Get a cross rate between two currencies by passing the ISO 4217 codes of the two currencies",
+      "annotations": {
+        "title": "Get a cross rate between two currencies",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
     }
   },
   "resources": {},

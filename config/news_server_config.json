@@ -1,0 +1,38 @@
+{
+  "name": "News",
+  "instructions": "MCP Server - News Model Context Protocol Server Implementation",
+  "version": "1.0.0",
+  "tools": {
+    "get_all_news_field_names": {
+      "name": "get_all_news_field_names",
+      "description": "Get a list of the fields thare are held by the news service for a each news item",
+      "annotations": {
+        "title": "Get all news field names",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_news": {
+      "name": "get_news",
+      "description": "Get a list of matching news articles by passing a stock name and a case sensitive regex pattern, all news for that stock will be returned",
+      "annotations": {
+        "title": "Get all news items that matches the given stock name regex pattern",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  },
+  "resources": {},
+  "prompts": {},
+  "serverInfo": {
+    "name": "News Server",
+    "version": "1.0.0"
+  },
+  "transport": {
+    "type": "sse"
+  }
+}

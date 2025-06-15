@@ -5,6 +5,7 @@ from typing import Dict, Any, Callable, List, Tuple, Annotated
 from enum import Enum
 from pydantic import Field
 from i_mcp_server import IMCPServer
+from .fx import FxConverter
 
 
 class StaticDataService(IMCPServer):
@@ -80,6 +81,7 @@ class StaticDataService(IMCPServer):
         self._base_name = json_config.get(
             StaticDataService.ConfigField.DB_NAME.value, "StaticDataService")
         self._server_name: str = f"{self._base_name}{str(uuid.uuid4()).upper()}"
+        self._fx_converter: FxConverter = FxConverter()
 
     def get_all_currencies(self) -> Dict[str, Any]:
         return {self.StaticField.CURRENCY.value: self._currencies.copy()}
@@ -118,6 +120,25 @@ class StaticDataService(IMCPServer):
                 return {self.StaticField.PRODUCT_TYPE_DESCRIPTION.value: desc}
         return {self.StaticField.ERROR.value: f"No such product [{code}]"}
 
+    def get_fx_rate(self,
+                    from_currency: Annotated[str, Field(description="The currency code to convert from (e.g., 'USD')")],
+                    to_currency: Annotated[str, Field(description="The currency code to convert to (e.g., 'EUR')")]) -> Dict[str, Any]:
+        try:
+            rate = self._fx_converter.get_rate(from_currency, to_currency)
+            if rate is not None:
+                return {"rate": {"from_currency": from_currency,
+                                 "to_currency": to_currency,
+                                 "value": rate}}
+            else:
+                return {self.StaticField.ERROR.value: f"Conversion from {from_currency} to {to_currency} not possible, check for supported currencies."}
+        except Exception as e:
+            return {self.StaticField.ERROR.value: f"Error getting FX rate - from {from_currency} to {to_currency}: {str(e)}"}
+
+    def _raise_not_implemented(self, method_name: str) -> None:
+        raise NotImplementedError(
+            f"StaticDataService method [{method_name}] must be implemented in a subclass."
+        )
+
     @property
     def server_name(self) -> str:
         return self._server_name
@@ -131,7 +152,8 @@ class StaticDataService(IMCPServer):
                 ("get_all_venue_codes", self.get_all_venue_codes),
                 ("get_venue_description", self.get_venue_description),
                 ("get_broker_name", self.get_broker_name),
-                ("get_product_type_description", self.get_product_type_description)
+                ("get_product_type_description", self.get_product_type_description),
+                ("get_fx_rate", self.get_fx_rate)
                 ]
 
     @property

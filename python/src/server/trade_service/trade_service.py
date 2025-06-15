@@ -226,7 +226,7 @@ class TradeService(IMCPServer):
 
     def generate_random_trade(self):
 
-        ticker, isin = random.choice(self._tickers)
+        ticker, isin, _ = random.choice(self._tickers)
         side = random.choice(self._sides)
         order_type = random.choice(self._order_types)
         quantity = random.randint(100, 9000000)

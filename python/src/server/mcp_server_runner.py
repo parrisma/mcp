@@ -57,6 +57,8 @@ class MCPServerRunner:
                             help="Type of MCP server to run (e.g., 'hello_world', 'instrument_service')")
         parser.add_argument("--server-data-path", type=Path, default="./",
                             help="Optional path to server data directory")
+        parser.add_argument("--aux-db-path", type=Path, default=None,
+                            help="Optional path to auxiliary database, usually tunneled to internal systems(default: None)")
         return parser.parse_args()
 
     def run(self) -> None:
@@ -101,6 +103,13 @@ class MCPServerRunner:
             else:
                 server_config[IMCPServer.ConfigFields.DATA_PATH.value] = str(
                     args.server_data_path)
+                
+            if args.aux_db_path and not args.aux_db_path.is_dir():
+                raise ValueError(
+                    f"aux_db_path '{args.aux_db_path}' is not a valid directory")
+            else:
+                server_config[IMCPServer.ConfigFields.AUX_DB_PATH.value] = str(
+                    args.aux_db_path)
 
             # Use the factory to create the server instance
             factory = MCPServerFactory()

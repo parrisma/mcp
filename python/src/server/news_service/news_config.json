@@ -1,0 +1,631 @@
+{
+  "sectors": [
+    "Telecommunications",
+    "Aerospace",
+    "Energy",
+    "Renewable Energy",
+    "Technology",
+    "Entertainment",
+    "Mining",
+    "Biotechnology",
+    "Pharmaceuticals",
+    "Financial Services",
+    "Semiconductors",
+    "Agriculture",
+    "Automotive",
+    "Retail"
+  ],
+  "first_names": [
+    "Liam",
+    "Olivia",
+    "Noah",
+    "Emma",
+    "Sophia",
+    "Lucas",
+    "Mia",
+    "Ethan",
+    "Ava",
+    "Mateo",
+    "Isabella",
+    "Elijah",
+    "Charlotte",
+    "Aiden",
+    "Amelia",
+    "Mohammed",
+    "Chloe",
+    "Santiago",
+    "Emily",
+    "Gabriel",
+    "Sofia",
+    "David",
+    "Hannah",
+    "Yuki",
+    "Layla",
+    "Oscar",
+    "Zara",
+    "Leo",
+    "Fatima",
+    "Arjun",
+    "Lina",
+    "Dylan",
+    "Giulia",
+    "Lucas",
+    "Camila",
+    "Ivan",
+    "Sara",
+    "Maksim",
+    "Anna",
+    "Jasper",
+    "Nina",
+    "Hugo",
+    "Lea",
+    "Rafael",
+    "Aisha",
+    "Samuel",
+    "Ines",
+    "Omar",
+    "Maya",
+    "Alex",
+    "Sienna"
+  ],
+  "family_names": [
+    "Smith",
+    "Johnson",
+    "Williams",
+    "Brown",
+    "Jones",
+    "Garcia",
+    "Miller",
+    "Davis",
+    "Rodriguez",
+    "Martinez",
+    "Hernandez",
+    "Lopez",
+    "Gonzalez",
+    "Wilson",
+    "Anderson",
+    "Thomas",
+    "Taylor",
+    "Moore",
+    "Jackson",
+    "Martin",
+    "Lee",
+    "Perez",
+    "Thompson",
+    "White",
+    "Harris",
+    "Sanchez",
+    "Clark",
+    "Ramirez",
+    "Lewis",
+    "Robinson",
+    "Walker",
+    "Young",
+    "Allen",
+    "King",
+    "Wright",
+    "Scott",
+    "Torres",
+    "Nguyen",
+    "Hill",
+    "Flores",
+    "Green",
+    "Adams",
+    "Nelson",
+    "Baker",
+    "Hall",
+    "Rivera",
+    "Campbell",
+    "Mitchell",
+    "Carter",
+    "Roberts"
+  ],
+  "title": [
+    "Dr.",
+    "Prof.",
+    "Mr.",
+    "Ms.",
+    "Mrs.",
+    "Mx.",
+    "Sir",
+    "Dame",
+    "Hon.",
+    "Pres.",
+    "VP",
+    "CEO",
+    "CFO",
+    "COO",
+    "CTO",
+    "Director",
+    "PhD",
+    "MD"
+  ],
+  "sentiment_data": {
+    "Extremely Negative": {
+      "headlines": [
+        "{stock_name} Plummets Amidst Devastating {event_type} Revelation",
+        "Crisis Intensifies for {stock_name}: Shares Plunge Following Adverse {event_type} Developments",
+        "{stock_name} Confronts Major Downturn in Wake of {event_type}",
+        "Investor Flight Accelerates as {stock_name} Grapples with Severe {event_type} Impact",
+        "Market Volatility Surges: {stock_name} Sustains Significant Setback from {event_type}",
+        "{stock_name} Stock Value Erodes Sharply After Damaging {event_type} Disclosure",
+        "Critical Alert for {stock_name}: Shares Nosedive Amidst {event_type} Concerns",
+        "{stock_name} Outlook Deteriorates as {event_type} Impact Magnifies",
+        "Intense Selling Pressure on {stock_name} Following Severe {event_type} Fallout",
+        "Challenging Trajectory: {stock_name} Heavily Impacted by Major {event_type} Event",
+        "{stock_name} Under Acute Financial Strain Following {event_type} Crisis",
+        "{stock_name} Shares Plummet as Severe {event_type} Impact Continues"
+      ],
+      "article_snippets": [
+        "Significant concerns have emerged regarding {stock_name}'s outlook within the {sector} sector subsequent to a severe {event_type}. The {market_id} market registered a sharp negative reaction, with share values experiencing a precipitous decline of {financial_figure_negative}. {name} stated, \"This development represents a more substantial setback than initially anticipated. A comprehensive reassessment of our strategy is underway.\" Industry analyst {name} commented, \"The {sector} market positioning of {stock_name} is now under considerable duress.\"",
+        "The recent {event_type} has cast considerable uncertainty over {stock_name}, a notable entity in the {sector} industry. Market analysts covering {market_id} are actively revising their financial forecasts, citing material risks, including an anticipated {financial_figure_negative} contraction in revenue. {name} issued a cautionary note, advising to \"exercise extreme caution regarding {stock_name}; further adverse developments may be forthcoming.\" An internal source, speaking on condition of anonymity, indicated that \"employee morale has been significantly impacted by these events.\"",
+        "A significant {event_type} has reverberated through {stock_name}, materially affecting its standing in the {sector} market. The {market_id} trading session was characterized by substantial losses for the company, resulting in an erosion of {financial_figure_negative} in market capitalization. {name} acknowledged, \"We are profoundly concerned by these developments and are allocating all available resources to formulate a comprehensive response.\"",
+        "Investor sentiment towards {stock_name} has deteriorated sharply following the latest {event_type}. The {sector} firm's equity on the {market_id} exchange encountered intense selling pressure, declining to a {financial_figure_negative} low. Industry expert {name} observed, \"This event raises pertinent questions regarding the overall stability of the {sector} segment.\"",
+        "Disclosures of a debilitating {event_type} have precipitated widespread selling of {stock_name} shares, a key participant in the {sector} domain. The {market_id} trading environment reflected pervasive apprehension, with trading volumes escalating to {financial_figure_extreme_negative_volume}. {name} advised, \"The current market action is indicative of a security experiencing rapid devaluation.\"",
+        "{stock_name}'s competitive standing in the {sector} sector is now under significant threat following the impactful {event_type}. The {market_id} exchange recorded a share price decrease of {financial_figure_negative} amidst the ensuing market turbulence. {name} commented, \"The company is currently navigating an exceptionally challenging operational environment.\"",
+        "The repercussions of the {event_type} continue to adversely affect {stock_name} within the {sector} industry, as its {market_id} listed stock declined to {financial_figure_negative}. Industry analyst {name} noted, \"The company's competitive advantages have been notably diminished by this event.\"",
+        "A shocking {event_type} has severely hampered {stock_name}'s operations within the {sector} market. The {market_id} market recorded a loss of {financial_figure_negative} for the company's valuation. An employee, who wished to remain unnamed, stated, \"We're all worried about what comes next.\"",
+        "The most recent {event_type} has precipitated a significant crisis for {stock_name} in the {sector} sector. On the {market_id} exchange, the stock reached a {financial_figure_negative} historical low. {name} issued a warning, stating, \"Current indicators suggest a strong sell recommendation for investors holding this security.\"",
+        "Adverse {event_type} announcements have left {stock_name} in the {sector} industry facing substantial headwinds, with shares on the {market_id} market experiencing a {financial_figure_negative} decline. {name} stated, \"The path forward presents considerable operational and financial challenges.\""
+      ]
+    },
+    "Negative": {
+      "headlines": [
+        "{stock_name} Stock Registers Decline Amidst {event_type} Concerns",
+        "Emerging Challenges: {stock_name} Affected by {event_type} Impact",
+        "{stock_name} Shares Experience Dip as {event_type} Introduces Headwinds",
+        "Heightened Uncertainty for {stock_name} Attributed to {event_type}",
+        "Market Sentiment Cautious: {stock_name} Navigates Fallout from {event_type}",
+        "{stock_name} Confronts Increased Scrutiny Following {event_type} Report",
+        "Modest Setback for {stock_name} as {event_type} Impacts Performance Metrics",
+        "{stock_name} Addresses Operational Challenges Subsequent to {event_type} Developments",
+        "Shares of {stock_name} Trend Lower Amidst Escalating {event_type} Apprehensions",
+        "{stock_name} Performance Trajectory Moderates Post-{event_type}",
+        "Investor Caution Evident: {stock_name} Stock Under Review Due to {event_type}",
+        "{stock_name} Records Modest Retracement on {event_type} Disclosures"
+      ],
+      "article_snippets": [
+        "{stock_name} experienced a decline in its stock value today on the {market_id} market, as investor apprehension intensified following recent {event_type} developments. The {sector}-focused company is currently navigating a challenging operating environment, marked by a {financial_figure_negative_modest} decrease in its share price. {name} commented, \"We acknowledge the prevailing headwinds but maintain our commitment to the existing strategic framework.\"",
+        "Persistent {event_type} issues are presenting considerable headwinds for {stock_name}, a prominent firm in the {sector} space. Trading activity on the {market_id} exchange indicated a cautious investor sentiment, contributing to a {financial_figure_negative_modest} downward revision in revenue forecasts. Industry expert {name} observed, \"These circumstances will rigorously test {stock_name}'s operational adaptability in the forthcoming quarter.\"",
+        "The ramifications of the most recent {event_type} are beginning to manifest in {stock_name}'s performance within the {sector} sector. The {market_id} market registered a discernible dip in its share price by {financial_figure_negative_modest}. {name} stated, \"While this may be a transient dip, close monitoring of the situation is warranted.\"",
+        "A period of market jitters, spurred by {event_type} concerns, led to a downturn for {stock_name}. The {sector} company's outlook on the {market_id} exchange remains under close scrutiny, with stock moving {financial_figure_negative_modest} lower. An employee commented, \"We're focusing on our tasks, but the market news is unsettling.\"",
+        "{stock_name}, a participant in the {sector} domain, encountered a share price dip as the market assimilated an unforeseen {event_type}. Trading volume on the {market_id} exchange showed a modest but perceptible shift, with the stock valued at {financial_figure_negative_share_price}. {name} affirmed, \"We are implementing proactive measures to address these emergent challenges.\"",
+        "Apprehensions regarding the {event_type} have contributed to a {financial_figure_negative_modest} pullback for {stock_name}'s shares in the {sector} sector on the {market_id} market. Industry analyst {name} suggested, \"The long-term outlook remains broadly stable, though a period of short-term volatility is anticipated.\"",
+        "Shares of {stock_name} in the {sector} industry recorded a {financial_figure_negative_modest} decline on the {market_id} exchange subsequent to the latest {event_type}. {name} expressed a view that \"a 'wait and see' approach is prudent under the current market conditions.\"",
+        "The {event_type} event has created some cautious sentiment around {stock_name}, with its {sector} operations experiencing a {financial_figure_negative_modest} impact. The {market_id} market reflects modest concerns. An employee remarked, \"It's business as usual, but with heightened awareness.\"",
+        "{stock_name}'s stock valuation on the {market_id} decreased by {financial_figure_negative_modest} today as the {sector} market reacted to information concerning a developing {event_type}. {name} reassured investors, stating, \"The company is adequately prepared to manage market fluctuations.\"",
+        "Information pertaining to the {event_type} has led {stock_name}, a player in the {sector} industry, to experience a {financial_figure_negative_modest} share price dip on the {market_id} exchange. Industry expert {name} anticipates a phase of consolidation for the stock in the near term."
+      ]
+    },
+    "Neutral": {
+      "headlines": [
+        "{stock_name} Maintains Stability Following {event_type} Announcement",
+        "Limited Price Fluctuation for {stock_name} Subsequent to {event_type}",
+        "{stock_name} Stock Exhibits Minimal Change Amidst {event_type} Disclosures",
+        "Market Reaction Muted to {stock_name}'s Recent {event_type}",
+        "{stock_name} Valuation Stability Persists Despite {event_type}",
+        "Subdued Trading for {stock_name} Following Anticipated {event_type}",
+        "{stock_name} Navigates {event_type} with No Material Price Volatility",
+        "{stock_name} Stock Price Remains Stable as {event_type} Concludes",
+        "Consistent Performance Metrics for {stock_name} Following {event_type} Report",
+        "Market Adopts Observational Stance on {stock_name} Post-{event_type}",
+        "{stock_name} Retains Current Market Position After Recent {event_type}",
+        "{stock_name} Demonstrates Resilience Following {event_type} Developments"
+      ],
+      "article_snippets": [
+        "{stock_name}, operating in the {sector} sector, demonstrated market resilience today, exhibiting minimal price fluctuation on the {market_id} market despite the recent {event_type}. Sell-side analysts generally maintain a 'hold' rating, with the stock concluding the session at {financial_figure_neutral_share_price}. {name} commented, \"The company remains on course to achieve its long-term strategic objectives.\"",
+        "The {market_id} market assimilated {stock_name}'s {event_type} report with a predominantly neutral reaction. The {sector} company's shares traded within a narrow range throughout the session, on trading volume of {financial_figure_neutral_volume}. Industry expert {name} suggested, \"This market behavior indicates that the information disclosed was largely anticipated and previously factored into valuations.\"",
+        "Consistent with expectations, {stock_name}'s {event_type} exerted a negligible impact on its stock performance within the {sector} industry. The {market_id} exchange recorded stable trading activity, with the price contained within a {financial_figure_neutral_range} band. {name} stated, \"The market reaction was unremarkable, indicating a swift assimilation of the information.\"",
+        "A generally calm day for {stock_name} in the {sector} market, as the {market_id} exchange showed a muted response to the {event_type}. The company's fundamentals remain unchanged, with current revenue holding at {financial_figure_neutral_revenue}. An employee commented, \"We're focused on execution, and the market seems to agree with our stability.\"",
+        "Market participants on the {market_id} exchange reacted with a balanced perspective to {stock_name}'s {event_type}. The {sector} firm's equity valuation registered no material shifts, aligning with prevailing expectations, and its share price held at {financial_figure_neutral_share_price}. {name} affirmed, \"Our strategic direction remains consistent, and the market's response is in line with our projections.\"",
+        "{stock_name}, within the {sector} market, experienced stable trading conditions on the {market_id} exchange following the {event_type}. The stock's price maintained its level at {financial_figure_neutral_share_price}. Industry analyst {name} noted, \"This price action suggests the market had largely anticipated and discounted this particular event.\"",
+        "The disclosure of the {event_type} had a limited impact on {stock_name}'s stock trading on the {market_id} market, with the {sector} company's shares remaining largely range-bound. Trading volume was recorded at {financial_figure_neutral_volume}. {name} expressed the view that \"the stock appears to be in a consolidation phase.\"",
+        "For {stock_name} in the {sector} industry, the {event_type} brought no major surprises. The {market_id} exchange saw its stock stabilize around {financial_figure_neutral_share_price}. An employee stated, \"We continue to build value regardless of short-term market reactions.\"",
+        "The {market_id} market exhibited a measured response to {stock_name}'s {event_type}, with the {sector} firm's stock trading in proximity to its previous closing level. Its market share was maintained at {financial_figure_neutral_market_share}. {name} indicated, \"The company's long-term strategic vision remains unaltered.\"",
+        "No material price volatility was observed for {stock_name} in the {sector} sector on the {market_id} exchange subsequent to the {event_type}. The stock's valuation remained stable at {financial_figure_neutral_valuation}. Industry expert {name} opined that current valuation levels appropriately reflect the company's fundamental value."
+      ]
+    },
+    "Positive": {
+      "headlines": [
+        "{stock_name} Shares Advance on Constructive {event_type} Outlook",
+        "Positive Catalyst for {stock_name}: Shares Gain Following Favorable {event_type}",
+        "Outlook Improves: {stock_name} Builds Momentum on Positive {event_type} Developments",
+        "Investor Sentiment Strengthens for {stock_name} in Light of {event_type}",
+        "Favorable Market Reaction: {stock_name} Capitalizes on {event_type}",
+        "{stock_name} Demonstrates Robust Growth Trajectory Post-{event_type}",
+        "Encouraging Indicators for {stock_name} as {event_type} Propels Share Price Higher",
+        "{stock_name} Stock Trends Upward Following Positive {event_type} Catalyst",
+        "Analyst Upgrades for {stock_name} Follow Strong {event_type} Report",
+        "{stock_name} Positioned for Expansion After Significant {event_type} Achievement",
+        "Positive Market Reception: {stock_name} Acknowledges Favorable {event_type} Impact",
+        "Solid Performance Metrics: {stock_name} Bolstered by Advantageous {event_type}"
+      ],
+      "article_snippets": [
+        "A wave of optimism surrounded {stock_name} in today's {market_id} market session, primarily driven by a constructive {event_type} announcement. Shares of the {sector}-focused company registered a notable increase of {financial_figure_positive}. {name} remarked, \"This favorable trend serves to validate our ongoing strategic investments and initiatives.\"",
+        "{stock_name}, a significant participant in the {sector} industry, experienced a considerable uplift in its valuation on the {market_id} exchange subsequent to positive {event_type} disclosures. The company's forward-looking prospects appear robust, with revenue forecast to expand by {financial_figure_positive_revenue}. Industry expert {name} stated, \"{stock_name} is progressively establishing itself as a leading entity within its operational field.\"",
+        "The {market_id} market reacted favorably to the latest {event_type} announcement from {stock_name}, resulting in a discernible appreciation in its stock value by {financial_figure_positive}. The {sector} firm is currently on a promising growth trajectory. {name} advised, \"This security now warrants close attention for potential capital appreciation.\"",
+        "Strong investor confidence propelled {stock_name} forward after an encouraging {event_type}. The {sector} company's performance on the {market_id} exchange reflects growing market belief, with shares now trading at {financial_figure_positive_share_price}. An employee noted, \"We've worked hard for this, and it's great to see the positive recognition.\"",
+        "{stock_name}, operating within the {sector} domain, witnessed an increase in its stock price on the {market_id} market, buoyed by positive {event_type} outcomes. The company's future outlook is considered strong, with an anticipated expansion in market share by {financial_figure_positive_market_share}. {name} commented, \"We are encouraged by the current momentum and the strategic direction of the company.\"",
+        "Shares of {stock_name} in the {sector} sector appreciated by {financial_figure_positive} on the {market_id} market, supported by recent favorable {event_type} news. Industry analyst {name} highlighted, \"This price action is indicative of robust underlying corporate fundamentals.\"",
+        "A positive {event_type} has served as a significant catalyst for {stock_name}, propelling its {sector} stock upwards by {financial_figure_positive} on the {market_id} exchange. {name} predicted, \"A continuation of this upward price trajectory is anticipated.\"",
+        "{stock_name} in the {sector} industry showed strong performance on the {market_id} market following the {event_type}, with its valuation increasing to {financial_figure_positive_valuation}. An employee shared, \"Our team's dedication is clearly paying off.\"",
+        "The {market_id} market demonstrated an enthusiastic response to {stock_name}'s {event_type}, with the {sector} firm's stock appreciating by {financial_figure_positive}. {name} stated, \"We remain steadfast in our commitment to enhancing shareholder value.\"",
+        "Constructive {event_type} developments have culminated in a {financial_figure_positive} appreciation for {stock_name}'s shares in the {sector} sector on the {market_id} exchange. Industry expert {name} asserted, \"{stock_name} is currently demonstrating clear market leadership characteristics.\""
+      ]
+    },
+    "Extremely Positive": {
+      "headlines": [
+        "{stock_name} Achieves New Record Highs Following Groundbreaking {event_type}",
+        "Significant Market Enthusiasm: {stock_name} Share Price Surges After Landmark {event_type}",
+        "Exceptional Gains Recorded for {stock_name} Subsequent to Transformative {event_type}",
+        "Strong Investor Demand for {stock_name} as Outstanding {event_type} Fuels Rally",
+        "Market Responds with Vigor: {stock_name} Stock Experiences Sharp Ascent on Remarkable {event_type}",
+        "{stock_name} Marks Historic Performance Milestone After Exceptional {event_type}",
+        "Transformative Development: {stock_name} Prominently Featured in Market News After Monumental {event_type}",
+        "Substantial Price Surge: {stock_name} Reaches New Record Valuations on Compelling {event_type}",
+        "Extraordinary Price Action: {stock_name} Stock Surges on Potent {event_type} Catalyst",
+        "Strong Upward Momentum: {stock_name} Registers Monumental Gains Following Significant {event_type}",
+        "Heightened Market Interest: {stock_name} Benefits from Stellar {event_type} Impact",
+        "{stock_name} Establishes New Benchmarks Following Market-Moving {event_type}"
+      ],
+      "article_snippets": [
+        "A landmark {event_type} has propelled {stock_name} to exceptional valuation levels within the {market_id} market. The {sector} major's stock underwent a significant upward revaluation of {financial_figure_extremely_positive}, attracting considerable investor interest. {name} proclaimed, \"This achievement underscores our team's strategic vision and unwavering execution. This marks a new phase of growth for our enterprise.\" Industry analyst {name} commented, \"{stock_name} has effectively redefined performance benchmarks within the {sector} industry.\"",
+        "{stock_name}, a recognized innovator in the {sector} industry, experienced a rapid appreciation in its share price on the {market_id} exchange following a truly groundbreaking {event_type}. This development is anticipated to significantly alter its market positioning, with earnings growth projected at {financial_figure_extremely_positive_earnings}. {name} declared, \"{stock_name} has emerged as a definitive market leader, representing a compelling investment opportunity.\"",
+        "The {market_id} market is characterized by significant investor enthusiasm as {stock_name}'s transformative {event_type} announcement catalyzed a historic rally, propelling shares to an impressive {financial_figure_extremely_positive_share_price}. The {sector} firm has now become a prime focus for institutional and retail investment. {name} stated, \"Our unwavering commitment to innovation has generated exceptional outcomes.\"",
+        "Investor enthusiasm for {stock_name} reached fever pitch following a spectacular {event_type}. The {sector} company's stock on the {market_id} exchange demonstrated explosive growth, reflecting immense potential and an increase in market share by {financial_figure_extremely_positive_market_share}. An employee joyfully shared, \"The energy here is electrifying! Everyone is so proud of what we've achieved.\"",
+        "Disclosures of a paradigm-shifting {event_type} have caused {stock_name}'s stock to appreciate significantly in the {market_id} market. The {sector} leader is now strongly positioned for substantial future expansion and market leadership, with its valuation ascending to {financial_figure_extremely_positive_valuation}. {name} announced, \"This represents a pivotal juncture for our company and the broader {sector} ecosystem.\"",
+        "The {event_type} has initiated a substantial rally for {stock_name} within the {sector} sector, with its {market_id} listed stock surging by {financial_figure_extremely_positive}. Industry expert {name} remarked, \"This strategic development firmly positions {stock_name} as a dominant market force.\"",
+        "A significant {event_type} has resulted in exceptional gains for {stock_name}, elevating its {sector} valuation on the {market_id} exchange to {financial_figure_extremely_positive_valuation}. {name} commented, \"This represents a truly remarkable performance outcome.\"",
+        "{stock_name} in the {sector} industry is experiencing a phenomenal run on the {market_id} market, driven by the remarkable {event_type}. Its stock price has hit {financial_figure_extremely_positive_share_price}. An employee expressed, \"It's inspiring to be part of something this impactful.\"",
+        "The {market_id} market has reacted with marked approbation to {stock_name}'s monumental {event_type}, leading to a substantial {financial_figure_extremely_positive} appreciation in its stock. {name} stated, \"This milestone marks an initial phase in our ongoing growth trajectory.\"",
+        "Highly impactful {event_type} news has propelled {stock_name} to new record valuations in the {sector} sector on the {market_id} exchange, with its market capitalization now reaching {financial_figure_extremely_positive_valuation}. Industry expert {name} concluded, \"{stock_name} has unequivocally established itself as a formidable market participant.\""
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "Earnings Miss",
+      "sentiment": "Extremely Negative",
+      "description": "Company reports lower-than-expected earnings, leading to investor sell-off."
+    },
+    {
+      "type": "Regulatory Crackdown",
+      "sentiment": "Extremely Negative",
+      "description": "Government imposes fines or restrictions, impacting business operations."
+    },
+    {
+      "type": "Leadership Scandal",
+      "sentiment": "Extremely Negative",
+      "description": "Executives involved in misconduct, harming corporate reputation."
+    },
+    {
+      "type": "Major Lawsuit",
+      "sentiment": "Extremely Negative",
+      "description": "Legal action threatens financial stability and future operations."
+    },
+    {
+      "type": "Product Recall",
+      "sentiment": "Extremely Negative",
+      "description": "Safety issues force withdrawal of key products, leading to consumer distrust."
+    },
+    {
+      "type": "Bankruptcy Filing",
+      "sentiment": "Extremely Negative",
+      "description": "Company declares insolvency or restructures debt, wiping out shareholder value."
+    },
+    {
+      "type": "Geopolitical Conflict",
+      "sentiment": "Negative",
+      "description": "Trade disputes or war disrupt global supply chains and revenue."
+    },
+    {
+      "type": "Supply Chain Disruption",
+      "sentiment": "Negative",
+      "description": "Shortages or logistical failures impact production and deliveries."
+    },
+    {
+      "type": "Interest Rate Hike",
+      "sentiment": "Negative",
+      "description": "Increased borrowing costs reduce corporate growth opportunities."
+    },
+    {
+      "type": "Short Seller Attack",
+      "sentiment": "Negative",
+      "description": "High-profile investors bet against the stock, increasing volatility."
+    },
+    {
+      "type": "Earnings Meet Expectations",
+      "sentiment": "Neutral",
+      "description": "Company reports earnings in line with forecasts, causing little market reaction."
+    },
+    {
+      "type": "Sector-Wide Trends",
+      "sentiment": "Neutral",
+      "description": "Industry shifts affect multiple companies, but overall impact remains balanced."
+    },
+    {
+      "type": "Stock Split",
+      "sentiment": "Neutral",
+      "description": "Company adjusts share structure without changing fundamental valuation."
+    },
+    {
+      "type": "Executive Reshuffle",
+      "sentiment": "Neutral",
+      "description": "Leadership changes occur without major controversy or strategic shifts."
+    },
+    {
+      "type": "Dividend Adjustment",
+      "sentiment": "Neutral",
+      "description": "Company makes minor changes to its dividend payout policy."
+    },
+    {
+      "type": "Earnings Beat",
+      "sentiment": "Positive",
+      "description": "Company exceeds profit expectations, boosting investor confidence."
+    },
+    {
+      "type": "Major Acquisition",
+      "sentiment": "Positive",
+      "description": "Strategic buyout strengthens market position and future growth prospects."
+    },
+    {
+      "type": "Breakthrough Innovation",
+      "sentiment": "Positive",
+      "description": "New technology or product launch excites investors and markets."
+    },
+    {
+      "type": "Strong Economic Data",
+      "sentiment": "Positive",
+      "description": "Favorable macroeconomic indicators improve business outlook."
+    },
+    {
+      "type": "Analyst Upgrade",
+      "sentiment": "Extremely Positive",
+      "description": "Influential firms raise stock ratings, driving institutional investments."
+    }
+  ],
+  "financial_figures": {
+    "negative": [
+      "£1.5 billion",
+      "£250 million",
+      "25%",
+      "£0.75 per share",
+      "30%",
+      "£1.7 billion",
+      "£270 million",
+      "27%",
+      "£0.78 per share",
+      "32%",
+      "£1.6 billion",
+      "£260 million",
+      "26%",
+      "£0.76 per share",
+      "31%"
+    ],
+    "negative_modest": [
+      "5%",
+      "£0.20 per share",
+      "10%",
+      "£50 million",
+      "7%",
+      "6%",
+      "£0.22 per share",
+      "11%",
+      "£55 million",
+      "8%",
+      "5.5%",
+      "£0.21 per share",
+      "10.5%",
+      "£52 million",
+      "7.5%"
+    ],
+    "extremely_negative_volume": [
+      "record 50 million shares traded",
+      "unprecedented 70 million shares exchanged",
+      "a staggering 100 million shares changing hands",
+      "record 60 million shares traded",
+      "unprecedented 80 million shares exchanged",
+      "a staggering 110 million shares changing hands",
+      "record 55 million shares traded",
+      "unprecedented 75 million shares exchanged",
+      "a staggering 105 million shares changing hands"
+    ],
+    "neutral_share_price": [
+      "£12.50",
+      "£80.00",
+      "£2.10",
+      "£55.75",
+      "£13.00",
+      "£81.50",
+      "£2.15",
+      "£56.00",
+      "£12.75",
+      "£80.50",
+      "£2.12",
+      "£55.80"
+    ],
+    "neutral_volume": [
+      "2.5 million shares",
+      "1.8 million shares",
+      "3.1 million shares",
+      "2.6 million shares",
+      "1.9 million shares",
+      "3.2 million shares",
+      "2.55 million shares",
+      "1.85 million shares",
+      "3.15 million shares"
+    ],
+    "neutral_range": [
+      "£0.10",
+      "£0.05",
+      "£0.15",
+      "£0.11",
+      "£0.06",
+      "£0.16",
+      "£0.105",
+      "£0.055",
+      "£0.155"
+    ],
+    "neutral_revenue": [
+      "£500 million",
+      "£1.2 billion",
+      "£300 million",
+      "£520 million",
+      "£1.25 billion",
+      "£310 million",
+      "£510 million",
+      "£1.22 billion",
+      "£305 million"
+    ],
+    "neutral_market_share": [
+      "15%",
+      "8%",
+      "22%",
+      "15.5%",
+      "8.2%",
+      "22.5%",
+      "15.2%",
+      "8.1%",
+      "22.2%"
+    ],
+    "neutral_valuation": [
+      "£10 billion",
+      "£5 billion",
+      "£18 billion",
+      "£10.5 billion",
+      "£5.2 billion",
+      "£18.5 billion",
+      "£10.2 billion",
+      "£5.1 billion",
+      "£18.2 billion"
+    ],
+    "positive": [
+      "£2.3 billion",
+      "£350 million",
+      "18%",
+      "£0.90 per share",
+      "20%",
+      "£2.5 billion",
+      "£380 million",
+      "21%",
+      "£0.95 per share",
+      "23%",
+      "£2.4 billion",
+      "£360 million",
+      "19%",
+      "£0.92 per share",
+      "21%"
+    ],
+    "positive_revenue": [
+      "15%",
+      "20%",
+      "12%",
+      "16%",
+      "21%",
+      "13%",
+      "15.5%",
+      "20.5%",
+      "12.5%"
+    ],
+    "positive_share_price": [
+      "£18.75",
+      "£95.20",
+      "£3.40",
+      "£68.50",
+      "£19.00",
+      "£96.50",
+      "£3.50",
+      "£69.00",
+      "£18.85",
+      "£95.80",
+      "£3.45",
+      "£68.75"
+    ],
+    "positive_market_share": [
+      "3%",
+      "5%",
+      "2%",
+      "3.5%",
+      "5.2%",
+      "2.5%",
+      "3.2%",
+      "5.1%",
+      "2.2%"
+    ],
+    "positive_valuation": [
+      "£12 billion",
+      "£7 billion",
+      "£20 billion",
+      "£12.5 billion",
+      "£7.3 billion",
+      "£20.5 billion",
+      "£12.2 billion",
+      "£7.1 billion",
+      "£20.2 billion"
+    ],
+    "extremely_positive": [
+      "50%",
+      "£4.8 billion",
+      "£2.10 per share",
+      "80%",
+      "£750 million",
+      "55%",
+      "£5.0 billion",
+      "£2.20 per share",
+      "85%",
+      "£800 million",
+      "52%",
+      "£4.9 billion",
+      "£2.15 per share",
+      "82%",
+      "£770 million"
+    ],
+    "extremely_positive_earnings": [
+      "25%",
+      "30%",
+      "22%",
+      "28%",
+      "33%",
+      "25%",
+      "26%",
+      "31%",
+      "23%"
+    ],
+    "extremely_positive_share_price": [
+      "£35.00",
+      "£120.00",
+      "£7.50",
+      "£110.00",
+      "£36.50",
+      "£125.00",
+      "£8.00",
+      "£115.00",
+      "£35.80",
+      "£122.00",
+      "£7.70",
+      "£112.50"
+    ],
+    "extremely_positive_market_share": [
+      "8%",
+      "10%",
+      "6%",
+      "9%",
+      "11%",
+      "7%",
+      "8.5%",
+      "10.5%",
+      "6.5%"
+    ],
+    "extremely_positive_valuation": [
+      "£25 billion",
+      "£15 billion",
+      "£30 billion",
+      "£26 billion",
+      "£16 billion",
+      "£32 billion",
+      "£25.5 billion",
+      "£15.5 billion",
+      "£31 billion"
+    ]
+  }
+}

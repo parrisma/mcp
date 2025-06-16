@@ -14,7 +14,8 @@ import SettingsAndStatus from "./components/SettingsAndStatus.jsx";
 import MenuItem from "@mui/material/MenuItem"; // Import MenuItem
 import ReadOnlyPrompt from "./components/ReadOnlyPrompt.jsx"; // Import ReadOnlyPrompt
 import LoginSection from "./components/LoginSection.jsx"; // Import LoginSection
-
+import ColoredPromptDisplay from "./components/ColoredPromptDisplay.jsx"; // Import ColoredPromptDisplay
+ 
 const homePaper = {
   padding: 2,
   textAlign: "left",
@@ -558,12 +559,12 @@ function App() {
                           </TextField>
                         )}
                       </Box>
-                      {/* Display the selected prompt text using ReadOnlyPrompt */}
+                      {/* Display the selected prompt text using ColoredPromptDisplay */}
                       {selectedPromptText && (
                         <Box sx={{ flexGrow: 1 }}> {/* Add flexGrow to make it take available space */}
-                          <ReadOnlyPrompt
+                          <ColoredPromptDisplay
                             label={`Prompt (Version: ${selectedPromptVersion})`}
-                            value={selectedPromptText}
+                            promptText={selectedPromptText}
                           />
                         </Box>
                       )}

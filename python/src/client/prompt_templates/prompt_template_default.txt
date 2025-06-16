@@ -14,15 +14,16 @@ STRICT GOAL RESPONSE RULES:
 <<GOAL SECTION - END>>
 <<MCP AVAILABLE CAPABILITIES SECTION - START>>
 MCP Calls → Execute MCP action using available servers and their capabilities
+```json
 {mcp_server_descriptions}
+```
 <<MCP AVAILABLE CAPABILITIES SECTION - END>>
 <<RESPONSE SECTION - START>>
 ```json
-{mcp_server_responses}
-```
-- CLARIFICATION RESPONSES In answer to your previous questions, use these to help answer the goal
-```json
-{clarification_responses}
+[
+ {mcp_server_responses},
+ {clarification_responses}
+]
 ```
 <<RESPONSE SECTION - END>>
 <<AI SAFTY SECTION - START>>

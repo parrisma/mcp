@@ -34,6 +34,7 @@ MCP Calls → Execute MCP action using available servers and their capabilities
 <<ORGANISATION SECTION - END>>
 <<USER ROLE SECTION - START>>
 {user_role_definition}
+User has this staff_id {staff_id} it can be used where individuals need to be identified e.g. Trader Id
 <<USER ROLE SECTION - END>>
 <<STRICT RESPONSE RULES SECTION - START>>
 - A. ONLY ONE response type (never mixed):
@@ -65,7 +66,10 @@ MCP Calls → Execute MCP action using available servers and their capabilities
 - I. RESOURCE TEMPLATES
 - I.1 mcp_capability_uri must be STRICTLY the URI as defined in the MCP Server defintion
 - I.2 Never add paramaters to the URI as this is done by the server that gets the JSON and you will break it if you add paramaters to the URI
+- J. ASSUMPTIONS
 - J.1 All assumptions must be stated as part of answer confidence and thinking resoning and next_steps
+- K REGULAR EXPRESSION SEARCH
+- K.1 When MCP servers accept regular expressions and a match is not found, consider trying again with case insensitve, or more wild cards at start and end. However limit attempts to two and then ask user for clarification
 <<STRICT RESPONSE RULES SECTION - START>>
 <<RESPONSE STRUCTURE SECTION - START>>
 ```json

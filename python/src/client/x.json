@@ -1,22 +1,9 @@
 [
-  {
-    "headline": "Meta Pharma Stability Maintained Despite Dividend Adjustment",
-    "article": "Meta Pharma in the Entertainment market saw stable trading on the London Stock Exchange exchange after the Dividend Adjustment. The stock's price held firm at £0.155. Industry analyst Director Fatima Williams noted, \"The market had already discounted this event.\" Key market indicators for Meta Pharma: Entertainment Meta Pharma London Stock Exchange.",
-    "publish_time": "2025-Mar-25 07:11:03"
-  },
-  {
-    "headline": "Meta Pharma Faces Pressure After Short Seller Attack Report",
-    "article": "The Short Seller Attack event has created some cautious sentiment around Meta Pharma, with its Entertainment operations experiencing a 11% impact. The Toronto Stock Exchange market reflects modest concerns. An employee remarked, \"It's business as usual, but with heightened awareness.\" Key market indicators for Meta Pharma: Entertainment Toronto Stock Exchange Meta Pharma.",
-    "publish_time": "2025-Apr-25 02:35:33"
-  },
-  {
-    "headline": "Investor Confidence Surges for Meta Pharma Amidst Breakthrough Innovation",
-    "article": "Optimism around Meta Pharma surged today in the Frankfurt Stock Exchange market, driven by a positive Breakthrough Innovation announcement. The Entertainment company's shares saw a healthy increase of £7.1 billion. Director Sienna Lee remarked, \"This positive trend validates our strategic investments.\" Key market indicators for Meta Pharma: Meta Pharma Entertainment Frankfurt Stock Exchange.",
-    "publish_time": "2025-Jun-02 20:36:48"
-  },
-  {
-    "headline": "Analysts Upgrade Meta Pharma Following Robust Major Acquisition Report",
-    "article": "Positive Major Acquisition developments have led to a £18.75 jump for Meta Pharma in the Entertainment sector on the Toronto Stock Exchange exchange. Industry expert VP Mia Scott stated, \"Meta Pharma is demonstrating true leadership in the market.\" Key market indicators for Meta Pharma: Entertainment Toronto Stock Exchange Meta Pharma.",
-    "publish_time": "2025-Mar-21 06:36:06"
-  }
+  [
+    {
+      "source": "Capability [add] called on server [Hello World] with parameters: [a=1, b=2]",
+      "results": ["3"]
+    }
+  ],
+  []
 ]

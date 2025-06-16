@@ -526,6 +526,12 @@ class MCPClientRunner:
                 self._log.info(
                     f"No user role provided, defaulting to '{user_role}'.")
 
+            staff_id: str | None = args.get("staff_id", None)
+            if not staff_id:
+                staff_id = "NONE GIVEN"
+                self._log.info(
+                    f"No staff id provided, defaulting to 'NONE', prompt will not be able to repsond based on staff id, but will still work.")
+
             # Get the clarification and mcp_server_calls from the args
             response_structure: Dict[str, Any] = args.get("response", {})
 
@@ -549,6 +555,7 @@ class MCPClientRunner:
             full_prompt: Optional[str] = self._prompts.build_prompt(user_goal=goal,
                                                                     session_id=llm_session,
                                                                     user_role=user_role,
+                                                                    staff_id=staff_id,
                                                                     mcp_server_descriptions=capabilities,
                                                                     mcp_responses=merged_mcp_responses,
                                                                     clarifications=merged_clarifications)

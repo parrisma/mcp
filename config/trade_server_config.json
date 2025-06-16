@@ -137,9 +137,9 @@
     },
     "get_all_trading_account_ids": {
       "name": "get_all_trading_account_ids",
-      "description": "Get a list of all trading account IDs.",
+      "description": "Get a list of all trading account IDs, also known as staff id or trader id.",
       "annotations": {
-        "title": "Get all trading account IDs",
+        "title": "Get all trading account IDs, also known as staff id or trader id.",
         "readOnlyHint": true,
         "destructiveHint": false,
         "idempotentHint": true,

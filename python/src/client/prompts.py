@@ -12,6 +12,8 @@ from langchain.prompts import PromptTemplate
 import mcp
 import random
 
+from numpy import var
+
 
 class Prompts:
 
@@ -198,6 +200,7 @@ class Prompts:
     def get_prompt(self,
                    goal: str,
                    user_role: str,
+                   staff_id: str,
                    session_id: str,
                    prompt_name: Optional[str] = None,
                    variables: Optional[Dict[str, Any]] = None,
@@ -213,6 +216,7 @@ class Prompts:
 
             variables["goal"] = goal
             variables["session_id"] = session_id
+            variables["staff_id"] = staff_id
 
             if makePromptTemplate is None:
                 makePromptTemplate = self._make_default_prompt_template  # type: ignore
@@ -276,6 +280,7 @@ class Prompts:
                      user_goal: str,
                      session_id: uuid.UUID,
                      user_role: str,
+                     staff_id: str,
                      mcp_server_descriptions: Dict[str, Any],
                      mcp_responses: List[Dict[str, Any]],
                      clarifications: List[Dict[str, Any]]
@@ -284,6 +289,7 @@ class Prompts:
             prompt: str = self.get_prompt(
                 goal=user_goal,
                 user_role=user_role,
+                staff_id=staff_id,
                 session_id=str(session_id),
                 variables={
                     "mcp_server_descriptions": json.dumps(mcp_server_descriptions),
@@ -315,6 +321,7 @@ def tests() -> None:
             test_prompt: str | None = prompts.build_prompt(
                 user_goal=f"Test goal {i}",
                 session_id=session_id,
+                staff_id=f"staff_{i}", # Dummy
                 user_role=user_role,
                 mcp_server_descriptions={f"server{i}": "description1"},
                 mcp_responses=[{f"response{i}": "data1"}],

@@ -61,9 +61,11 @@ function App() {
   const [isProcessingNextSteps, setIsProcessingNextSteps] = useState(false); // New state for "Do Next Steps" processing
   const [isFinalAnswerAvailable, setIsFinalAnswerAvailable] = useState(false); // State for whether a final answer is available
   const [username, setUsername] = useState(''); // For LoginSection
+  const [staffId, setStaffId] = useState(''); // For LoginSection Staff ID
   const [role, setRole] = useState(''); // For LoginSection
   const [loginMessage, setLoginMessage] = useState('Please enter your credentials and click Login.'); // For LoginSection
-
+  const [isGettingPrompts, setIsGettingPrompts] = useState(false); // State for Get Prompts button
+ 
   useEffect(() => {
     let intervalId;
     // Use apiStatus.loading OR isProcessingNextSteps to determine if timer should run
@@ -150,6 +152,7 @@ function App() {
   const [promptsData, setPromptsData] = useState([]); // New state to store the full prompts data
 
   const handleGetPrompts = async () => {
+    setIsGettingPrompts(true); // Set loading state
     const fullUrl = `${baseApiUrl}/prompts?session_id=${sessionId}`;
     console.log("Making GET request to:", fullUrl);
     try {
@@ -179,6 +182,8 @@ function App() {
       setPromptVersions([]);
       setSelectedPromptVersion("");
       setPromptsResponse(`Error fetching prompts: ${error.message}`); // Set error message
+    } finally {
+      setIsGettingPrompts(false); // Reset loading state
     }
   };
 
@@ -243,6 +248,7 @@ function App() {
           goal: submittedGoal, // Use the submitted goal
           session: sessionId, // Use the current session ID
           user_role: role, // Add user_role
+          staff_id: staffId, // Add staff_id
         };
         console.log(
           "SUBMIT - Making POST request to:",
@@ -338,6 +344,7 @@ function App() {
           goal: currentGoalPromptText, // Use the stored goal
           session: sessionId,
           user_role: role, // Add user_role
+          staff_id: staffId, // Add staff_id
           // The top-level clarifications are now moved inside the response object
         };
 
@@ -414,18 +421,27 @@ function App() {
     }
   };
 
-  const handleLogin = (currentUsername, currentRole) => {
-    if (currentUsername && currentRole) {
-      setLoginMessage(`${currentUsername} you are now connected as ${currentRole} role`);
+  const handleLogin = (currentUsername, currentStaffId, currentRole) => {
+    if (currentUsername && currentStaffId && currentRole) {
+      setLoginMessage(`${currentUsername} you are now connected as ${currentRole} role with staff id ${currentStaffId}`);
       // Potentially switch view or perform other actions upon successful "login"
       // For now, just updates the message.
       // setActiveView("Question"); // Example: Switch to Question view after login
-    } else if (!currentUsername && currentRole) {
+    } else if (!currentUsername) {
       setLoginMessage("User Name is required.");
-    } else if (currentUsername && !currentRole) {
+    } else if (!currentStaffId) {
+      setLoginMessage("Staff Id is required.");
+    } else if (!currentRole) {
       setLoginMessage("Role is required.");
-    } else {
-      setLoginMessage("User Name and Role are required.");
+    }
+     else {
+      // This case might be redundant if individual checks are comprehensive
+      // but can catch multiple missing fields.
+      let missingFields = [];
+      if (!currentUsername) missingFields.push("User Name");
+      if (!currentStaffId) missingFields.push("Staff Id");
+      if (!currentRole) missingFields.push("Role");
+      setLoginMessage(`${missingFields.join(", ")} are required.`);
     }
   };
 
@@ -444,6 +460,8 @@ function App() {
               <LoginSection
                 username={username}
                 setUsername={setUsername}
+                staffId={staffId}
+                setStaffId={setStaffId}
                 role={role}
                 setRole={setRole}
                 handleLogin={handleLogin}
@@ -518,8 +536,9 @@ function App() {
                           variant="contained" // Use contained variant for consistency
                           onClick={handleGetPrompts} // Add click handler
                           size="small" // Use small size
+                          disabled={isGettingPrompts} // Disable button when loading
                         >
-                          Get Prompts
+                          {isGettingPrompts ? "Loading..." : "Get Prompts"}
                         </Button>
                         {promptVersions.length > 0 && (
                           <TextField

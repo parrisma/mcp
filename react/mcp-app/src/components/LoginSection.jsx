@@ -37,28 +37,24 @@ const roles = [
   "Compliance"
 ];
 
-// Props: role, setRole, username, setUsername, handleLogin (from App.jsx), loginMessage (from App.jsx)
+// Props: role, setRole, username, setUsername, staffId, setStaffId, handleLogin (from App.jsx), loginMessage (from App.jsx)
 function LoginSection({
   role,
   setRole,
   username,
   setUsername,
+  staffId,
+  setStaffId,
   handleLogin, // This function will be called to perform actual login logic in App.jsx
   loginMessage // This prop will carry the message from App.jsx
 }) {
-  // Local message state is removed, will use loginMessage prop from App.jsx
-  // const [message, setMessage] = useState('Please enter your credentials and click Login.');
-
-  // useEffect to update local display if loginMessage prop changes
-  // This is not strictly necessary if we directly display loginMessage,
-  // but useful if we wanted to combine it with other local messages.
-  // For now, we'll directly display loginMessage.
 
   const onLoginButtonClick = () => {
     // Call the handleLogin function passed from App.jsx
     // App.jsx will be responsible for setting the global loginMessage
+    // and performing validation.
     if (handleLogin) {
-      handleLogin(username, role);
+      handleLogin(username, staffId, role);
     }
   };
 
@@ -93,6 +89,14 @@ function LoginSection({
             onChange={(e) => setUsername(e.target.value)}
             size="small"
             sx={textFieldStyle}
+          />
+          <TextField
+            label="Staff Id"
+            variant="outlined"
+            value={staffId}
+            onChange={(e) => setStaffId(e.target.value)}
+            size="small"
+            sx={textFieldStyle} // Reuse style or create a new one if different margin needed
           />
           <FormControl variant="outlined" size="small" sx={formControlStyle}>
             <InputLabel id="role-select-label">Role</InputLabel>

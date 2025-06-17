@@ -155,30 +155,26 @@ function App() {
   const handleGetPrompts = async () => {
     setIsGettingPrompts(true); // Set loading state
     const fullUrl = `${baseApiUrl}/prompts?session_id=${sessionId}`;
-    console.log("Making GET request to:", fullUrl);
     try {
       const response = await fetch(fullUrl);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      console.log("Prompts received:", data);
       if (data?.response?.prompts && data.response.prompts.length > 0) {
         setPromptsData(data.response.prompts); // Store the full prompts data
         const versions = data.response.prompts.map((p) => p.version);
         setPromptVersions(versions);
-        console.log("Prompt versions set:", versions); // Added logging
         setSelectedPromptVersion(versions[0]); // Select the first version by default
         setPromptsResponse(""); // Clear previous response message on success
       } else {
-        console.log("No matching prompts found for this session ID."); // Updated logging
         setPromptsData([]); // Clear prompts data
         setPromptVersions([]);
         setSelectedPromptVersion("");
         setPromptsResponse("No matching prompts"); // Set message for empty list
       }
     } catch (error) {
-      console.error("Error fetching prompts:", error);
+      // console.error("Error fetching prompts:", error); // Intentionally leaving error log for now
       setPromptsData([]); // Clear prompts data
       setPromptVersions([]);
       setSelectedPromptVersion("");
@@ -251,13 +247,6 @@ function App() {
           user_role: role, // Add user_role
           staff_id: staffId, // Add staff_id
         };
-        console.log(
-          "SUBMIT - Making POST request to:",
-          fullUrl,
-          "with body:",
-          requestBody
-        ); // Updated console log
-
         const response = await fetch(fullUrl, {
           method: "POST",
           headers: {
@@ -274,7 +263,6 @@ function App() {
         }
 
         const responseText = await response.text();
-        console.log("SUBMIT - Raw server response:", responseText); // Log the raw response
         const responseData = JSON.parse(responseText); // Parse the text as JSON
         // Pass the received data back to App.jsx
         setApiStatus({ data: responseData, loading: false, error: null });
@@ -311,112 +299,69 @@ function App() {
   // as it won't set the currentGoalPromptText and should not change the sessionId
   const handleNextStepsApiResponse = async (statusUpdate) => {
     // Add a unique identifier for each invocation of this function
-    const invocationId = Date.now() + "-" + Math.floor(Math.random() * 1000);
-
-    console.log(
-      `[ID:${invocationId}] handleNextStepsApiResponse called with statusUpdate:`,
-      statusUpdate
-    );
+    // const invocationId = Date.now() + "-" + Math.floor(Math.random() * 1000); // For debugging specific invocations
 
     if (statusUpdate.loading && !apiStatus.loading) {
-      console.log(
-        `[ID:${invocationId}] Starting processing - setting isProcessingNextSteps=true`
-      );
       setIsProcessingNextSteps(true); // Start processing indicator
       setApiStatus((prevStatus) => ({
         ...prevStatus,
         ...statusUpdate,
-        data: prevStatus.data,
+        data: prevStatus.data, // Preserve existing data when starting "Next Steps"
         startTime: Date.now(),
       }));
 
       try {
         const fullUrl = `${baseApiUrl}/model_response`;
-        const params = new URLSearchParams();
-        params.append("goal", currentGoalPromptText);
-        params.append("session", sessionId);
+        // const params = new URLSearchParams(); // Not strictly needed if not appending to URL
+        // params.append("goal", currentGoalPromptText);
+        // params.append("session", sessionId);
 
         const requestBody = {
           response: {
-            ...apiStatus.data?.response, // Spread the existing response object properties
-            clarifications: clarificationResponses, // Replace the clarifications array within response
+            ...(apiStatus.data?.response || {}), // Spread existing or empty object
+            clarifications: clarificationResponses,
           },
-          status: apiStatus.data?.status, // Include previous status
-          goal: currentGoalPromptText, // Use the stored goal
+          status: apiStatus.data?.status,
+          goal: currentGoalPromptText,
           session: sessionId,
-          user_role: role, // Add user_role
-          staff_id: staffId, // Add staff_id
-          // The top-level clarifications are now moved inside the response object
+          user_role: role,
+          staff_id: staffId,
         };
 
-        const fullUrlWithParams = `${fullUrl}?${params.toString()}`; // Construct URL with params for logging
-        console.log(
-          `[ID:${invocationId}] NEXT STEPS - Making POST request to:`,
-          fullUrlWithParams
-        );
-        console.log(
-          `[ID:${invocationId}] NEXT STEPS - Request body:`,
-          requestBody
-        );
-        console.log(
-          `[ID:${invocationId}] NEXT STEPS - clarificationResponses:`,
-          clarificationResponses
-        );
-        console.log(
-          `[ID:${invocationId}] POST body sent to /model_response:`,
-          JSON.stringify(requestBody, null, 2)
-        );
+        // const fullUrlWithParams = `${fullUrl}?${params.toString()}`;
 
         const response = await fetch(fullUrl, {
-          method: "POST", // Use POST for sending body
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(requestBody),
         });
-        console.log(
-          `[ID:${invocationId}] NEXT STEPS - POST returned response:`,
-          response
-        );
 
         if (!response.ok) {
           const errorData = await response
             .json()
             .catch(() => ({ error: `HTTP error: ${response.status}` }));
-          console.log(
-            `[ID:${invocationId}] NEXT STEPS - Error response:`,
-            errorData
-          );
           throw new Error(errorData.error || `HTTP error: ${response.status}`);
         }
         const responseData = await response.json();
-        console.log(
-          `[ID:${invocationId}] NEXT STEPS - Raw server response:`,
-          responseData
-        );
-        console.log(
-          `[ID:${invocationId}] NEXT STEPS - Setting apiStatus with data and loading=false`
-        );
-        setApiStatus({ data: responseData, loading: false, error: null });
-        setIsProcessingNextSteps(false); // End processing indicator on success
-        // Set state based on whether a non-null/undefined answer is available
+        setApiStatus({ data: responseData, loading: false, error: null, startTime: null }); // Clear startTime on success
+        setIsProcessingNextSteps(false);
         setIsFinalAnswerAvailable(responseData?.response?.answer != null);
-        setClarificationResponses([]); // Clear clarification responses after successful submission
+        setClarificationResponses([]);
       } catch (err) {
-        console.log(
-          `[ID:${invocationId}] NEXT STEPS - Caught error:`,
-          err.message
-        );
+        // console.error(`[ID:${invocationId}] NEXT STEPS - Caught error:`, err.message); // Intentionally leaving error log for now
         setApiStatus({
-          data: apiStatus.data,
+          data: apiStatus.data, // Preserve existing data on error
           loading: false,
           error: err.message,
+          startTime: null, // Clear startTime on error
         });
-        setIsProcessingNextSteps(false); // End processing indicator on error
-        setIsFinalAnswerAvailable(false); // Reset state on error
+        setIsProcessingNextSteps(false);
+        setIsFinalAnswerAvailable(false);
       }
-    } else if (!statusUpdate.loading && apiStatus.loading) {
-      setApiStatus({ ...statusUpdate, startTime: null });
+    } else if (!statusUpdate.loading && apiStatus.loading) { // Covers case where loading finishes
+      setApiStatus({ ...statusUpdate, startTime: null }); // Clear startTime
     } else {
       setApiStatus((prevStatus) => ({ ...prevStatus, ...statusUpdate }));
     }

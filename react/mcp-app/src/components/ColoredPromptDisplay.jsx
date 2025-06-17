@@ -118,47 +118,21 @@ function ColoredPromptDisplay({ label, promptText, colors: colorsProp }) { // Re
 
       let preparedStringForTopLevelParse; // Declare here for access in catch
       try {
-        const countOccurrences = (mainStr, subStr) => {
-          if (!mainStr || !subStr || typeof mainStr !== 'string' || typeof subStr !== 'string') {
-            return 0;
-          }
-          return mainStr.split(subStr).length - 1;
-        };
-
-        // Log count of \\" before unescaping
-        console.log(
-          "Count of '\"' before unescapeStringForInitialParse:",
-          countOccurrences(singleLineRawJsonContent, '\\"')
-        );
-
         // Step 1: Perform minimal unescaping for the top-level JSON structure
         preparedStringForTopLevelParse = unescapeStringForInitialParse(singleLineRawJsonContent); // Assign here
         
-        // Log count of \\" after unescaping
-        console.log(
-          "Count of '\"' after unescapeStringForInitialParse:",
-          countOccurrences(preparedStringForTopLevelParse, '\\"')
-        );
-        
         // Step 2: Parse this prepared string to get the top-level JS object/array
-        console.log("Attempting JSON.parse on (preparedStringForTopLevelParse):", preparedStringForTopLevelParse);
         const topLevelJavaScriptObject = JSON.parse(preparedStringForTopLevelParse);
-        console.log("After top-level JSON.parse (topLevelJavaScriptObject):", topLevelJavaScriptObject);
         
         // Step 3: Recursively parse any string values within this structure that are themselves JSON
         const deeplyParsedObject = deepParseJsonStrings(topLevelJavaScriptObject);
-        console.log("After deepParseJsonStrings (deeplyParsedObject):", deeplyParsedObject);
         
         // Step 4: Stringify the final, deeply parsed object for pretty display
         formattedJsonBlock = "```json\n" + JSON.stringify(deeplyParsedObject, null, 2) + "\n```";
 
       } catch (error) { // eslint-disable-line no-unused-vars
-        console.error(`Error during JSON processing for key ${baseKey}-json-${jsonLastIndex}:`, error);
-        console.error("Original rawJsonContent that led to error:", rawJsonContent);
-        console.error("singleLineRawJsonContent that led to error:", singleLineRawJsonContent);
+        // Fallback to displaying the prepared string (after initial unescape) if parsing failed
         if (preparedStringForTopLevelParse !== undefined) {
-          console.error("preparedStringForTopLevelParse that led to error:", preparedStringForTopLevelParse);
-          // Fallback to displaying the prepared string (after initial unescape) if parsing failed
           formattedJsonBlock = "```json\n" + preparedStringForTopLevelParse + "\n```";
         } else {
           // If preparedStringForTopLevelParse is somehow undefined (e.g., error in unescapeStringForInitialParse itself),

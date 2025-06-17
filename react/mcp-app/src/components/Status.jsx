@@ -3,6 +3,8 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button"; // Import Button
 import PropTypes from "prop-types";
 import Box from "@mui/material/Box"; // For layout
+import Typography from "@mui/material/Typography"; // Import Typography
+import MuiMarkdown from 'mui-markdown'; // Import MuiMarkdown
 import Questions from "./Questions"; // Import Questions component
 
 /**
@@ -133,33 +135,71 @@ function Status({
         }
       </Box>
       {/* The rest of the fields below the grid */}
-      {/* Final Answer TextField */}
+      {/* Final Answer TextField or Markdown Display */}
       <Box mb={2}>
-        {" "}
-        {/* Added margin bottom */}
-        <TextField
-            label="Final Answer"
-            multiline
-            rows={10}
-            value={finalAnswerContent} // Use the new variable
-            variant="outlined"
-            fullWidth
-            readOnly={true}
-            // Apply green border if it's the final answer
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: data?.response?.answer ? "green" : undefined,
+        {(typeof finalAnswerContent === 'string' && finalAnswerContent.startsWith("markdown\n")) ? (
+          <Box>
+            <Typography
+              variant="caption"
+              component="div" // Using div for the label container
+              sx={{
+                fontSize: '0.75rem',
+                color: 'text.secondary', // Use theme color for standard label grey
+                mb: 0.5, // Spacing between label and markdown box
+                pl: '14px', // Align with TextField label
+                pt: '6px' // Align with TextField label
+              }}
+            >
+              Final Answer
+            </Typography>
+            <Box
+              sx={{
+                p: "16.5px 14px",
+                border: "1px solid",
+                borderColor: data?.response?.answer ? "green" : "rgba(0, 0, 0, 0.23)",
+                borderRadius: 1,
+                height: `calc(1.4375em * 10 + ${16.5 * 2}px)`, // Approx 10 rows, fixed height
+                overflowY: 'auto',
+                overflowX: 'auto', // Add horizontal scrolling
+                backgroundColor: 'rgba(0, 0, 0, 0.04)', // Mimic readOnly TextField background
+                '&:hover': {
+                  borderColor: data?.response?.answer ? "green" : "rgba(0, 0, 0, 0.87)",
                 },
-                "&:hover fieldset": {
-                  borderColor: data?.response?.answer ? "green" : undefined,
+              }}
+            >
+              <MuiMarkdown>{finalAnswerContent.substring("markdown\n".length)}</MuiMarkdown>
+            </Box>
+          </Box>
+        ) : (
+          <TextField
+              label="Final Answer"
+              multiline
+              rows={10}
+              value={finalAnswerContent}
+              variant="outlined"
+              fullWidth
+              InputProps={{ // Standard way to set readOnly for MUI v5+
+                readOnly: true,
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: data?.response?.answer ? "green" : undefined,
+                  },
+                  "&:hover fieldset": {
+                    borderColor: data?.response?.answer ? "green" : undefined,
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: data?.response?.answer ? "green" : undefined,
+                  },
+                  // If you want to ensure the background color for readOnly state:
+                  // "&.Mui-disabled, .MuiInputBase-inputAdornedStart.Mui-disabled": {
+                  //   backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                  // },
                 },
-                "&.Mui-focused fieldset": {
-                  borderColor: data?.response?.answer ? "green" : undefined,
-                },
-              },
-            }}
-          />
+              }}
+            />
+        )}
         </Box>
       <Box mb={2}>
         {" "}

@@ -36,7 +36,6 @@ function Prompt({
       return;
     }
     if (!baseApiUrl) {
-      console.error("Base API URL is not provided to Prompt component.");
       onApiResponse({
         data: null,
         loading: false,

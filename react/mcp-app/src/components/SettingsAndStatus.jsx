@@ -110,7 +110,6 @@ function SettingsAndStatus({
     } catch (err) {
       setConfigError(err.message);
       // Optionally, display this error to the user
-      console.error("Failed to fetch config:", err.message);
     } finally {
       setConfigLoading(false);
     }
@@ -139,7 +138,6 @@ function SettingsAndStatus({
       setMcpServersList(serversArray);
     } catch (err) {
       setMcpServersError(err.message);
-      console.error("Failed to fetch MCP servers:", err.message);
     } finally {
       setMcpServersLoading(false);
     }

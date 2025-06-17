@@ -122,7 +122,7 @@ class Prompts:
                 f"Server definition file not found.") from fne
         except Exception as e:  # pylint: disable=broad-except
             raise ValueError(
-                f"An error occurred while loading the server definition: {e}") from e
+                f"An error occurred while loading the server definition: {str(e)}") from e
 
     def _load_variables(self, **kwargs) -> Dict[str, Any]:
         variables: Dict[str, str] = {}
@@ -135,7 +135,7 @@ class Prompts:
             return variables
         except Exception as e:  # pylint: disable=broad-except
             raise ValueError(
-                f"An error occurred while loading default variables: {e}") from e
+                f"An error occurred while loading default variables: {str(e)}") from e
 
     def _load_default_fragments(self,
                                 user_role: Optional[str]) -> Dict[str, Any]:
@@ -173,7 +173,7 @@ class Prompts:
             return all_fragments
         except Exception as e:  # pylint: disable=broad-except
             raise ValueError(
-                f"An error occurred while loading default fragments: {e}") from e
+                f"An error occurred while loading default fragments: {str(e)}") from e
 
     def _load_prompt_template(self,
                               prompt_name: Optional[str]) -> str:
@@ -195,7 +195,7 @@ class Prompts:
                 f"Prompt template file not found.") from fne
         except Exception as e:  # pylint: disable=broad-except
             raise ValueError(
-                f"An error occurred while loading the prompt template: {e}") from e
+                f"An error occurred while loading the prompt template: {str(e)}") from e
 
     def get_prompt(self,
                    goal: str,
@@ -235,7 +235,7 @@ class Prompts:
             return prompt.format(**variables or {},)
 
         except Exception as e:
-            raise ValueError(f"Error formatting prompt: {e}"
+            raise ValueError(f"Error formatting prompt: {str(e)}"
                              )
 
     def extract_version(self,
@@ -253,7 +253,7 @@ class Prompts:
             session_files.sort(key=self.extract_version)
             return {str(f): f.read_text(encoding="utf-8") for f in session_files if f.is_file()}
         except Exception as e:
-            self._log.error(f"Failed to log prompt: {e}")
+            self._log.error(f"Failed to log prompt: {str(e)}")
             return {}
 
     def _log_prompt(self,
@@ -274,7 +274,7 @@ class Prompts:
                 f.write(prompt + "\n")
                 f.write("=" * 80 + "\n\n")
         except Exception as e:
-            self._log.error(f"Failed to log prompt: {e}")
+            self._log.error(f"Failed to log prompt: {str(e)}")
 
     def build_prompt(self,
                      user_goal: str,
@@ -292,9 +292,9 @@ class Prompts:
                 staff_id=staff_id,
                 session_id=str(session_id),
                 variables={
-                    "mcp_server_descriptions": json.dumps(mcp_server_descriptions),
-                    "mcp_server_responses": json.dumps(mcp_responses, ensure_ascii=False, indent=2),
-                    "clarification_responses": json.dumps(clarifications, ensure_ascii=False, indent=2)
+                    "mcp_server_descriptions": json.dumps(mcp_server_descriptions, ensure_ascii=False),
+                    "mcp_server_responses": json.dumps(mcp_responses, ensure_ascii=False),
+                    "clarification_responses": json.dumps(clarifications, ensure_ascii=False)
                 }
             )
 
@@ -304,7 +304,7 @@ class Prompts:
             return prompt
 
         except Exception as e:
-            msg: str = f"Error in forming fully qualified propmt: {e}"
+            msg: str = f"Error in forming fully qualified propmt: {str(e)}"
             self._log.error(msg)
             return None
 
@@ -321,7 +321,7 @@ def tests() -> None:
             test_prompt: str | None = prompts.build_prompt(
                 user_goal=f"Test goal {i}",
                 session_id=session_id,
-                staff_id=f"staff_{i}", # Dummy
+                staff_id=f"staff_{i}",  # Dummy
                 user_role=user_role,
                 mcp_server_descriptions={f"server{i}": "description1"},
                 mcp_responses=[{f"response{i}": "data1"}],
@@ -337,7 +337,7 @@ def tests() -> None:
 
         print("Prompts instance created successfully.")
     except Exception as e:
-        print(f"Failed to create Prompts instance: {e}")
+        print(f"Failed to create Prompts instance: {str(e)}")
 
 
 if __name__ == "__main__":

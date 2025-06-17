@@ -138,7 +138,7 @@ class TestMCPServer(unittest.IsolatedAsyncioTestCase):
                     f"Image {container_image} was not built successfully.")
 
         except Exception as e:
-            print(f"Error {e} building container: {container_image}")
+            print(f"Error {str(e)} building container: {container_image}")
             raise
         return (container_name, container_image,)
 
@@ -191,7 +191,7 @@ class TestMCPServer(unittest.IsolatedAsyncioTestCase):
                 print(f"Image [{cls._image}] is NOT running.")
 
         except Exception as e:
-            print(f"Error {e} running container: {cls._image}")
+            print(f"Error {str(e)} running container: {cls._image}")
             raise
 
         return running_image_id
@@ -208,7 +208,7 @@ class TestMCPServer(unittest.IsolatedAsyncioTestCase):
             print(f"Container {cls._name} stopped and removed.")
         except Exception as e:
             print(
-                f"Error {e} stopping & removing container & associated image: {cls._name}")
+                f"Error {str(e)} stopping & removing container & associated image: {cls._name}")
             raise
         return
 

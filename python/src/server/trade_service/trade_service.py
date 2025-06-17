@@ -329,7 +329,7 @@ class TradeService(IMCPServer):
                 return data
         except Exception as e:
             raise self.ErrorLoadingTradeDatabase(
-                f"Error loading trade database: {e}") from e
+                f"Error loading trade database: {str(e)}") from e
 
     @property
     def server_name(self) -> str:
@@ -375,7 +375,7 @@ class TradeService(IMCPServer):
         for c, desc in self._algo_strategies:
             if c == code:
                 return {"algo_description": desc}
-        return {"error": f"No such [{code}] algo type"}
+        return json.loads(json.dumps({"error": f"No such [{code}] algo type"}))
 
     def get_all_brokers(self) -> Dict[str, Any]:
         brokers = [code for code, _ in self._brokers]
@@ -386,7 +386,7 @@ class TradeService(IMCPServer):
         for c, desc in self._brokers:
             if c == code:
                 return {"broker_description": desc}
-        return {"error": f"No such [{code}] broker"}
+        return json.loads(json.dumps({"error": f"No such [{code}] broker"}))
 
     def get_all_traders(self) -> Dict[str, Any]:
         traders = [code for code, _, _ in self._traders]
@@ -397,7 +397,7 @@ class TradeService(IMCPServer):
         for c, name, desk in self._traders:
             if c == code:
                 return {"trader_description": f"{name} ({desk})"}
-        return {"error": f"No such [{code}] trader"}
+        return json.loads(json.dumps({"error": f"No such [{code}] trader"}))
 
     def get_all_desks(self) -> Dict[str, Any]:
         desks = [code for code, _ in self._desks]
@@ -408,15 +408,15 @@ class TradeService(IMCPServer):
         for c, desc in self._desks:
             if c == code:
                 return {"desk_description": desc}
-        return {"error": f"No such [{code}] desk"}
+        return json.loads(json.dumps({"error": f"No such [{code}] desk"}))
 
     def get_all_trade_field_names(self) -> Dict[str, Any]:
         try:
             return {"trade_fields": [field.value for field in self.TradeFields.__members__.values()]}
         except Exception as e:
-            msg = f"Error retrieving trade field names: {e}"
+            msg = f"Error retrieving trade field names: {str(e)}"
             self._log.error(msg)
-            return {"error": msg}
+            return json.loads(json.dumps({"error": msg}))
 
     def get_all_sides(self) -> Dict[str, Any]:
         return {"sides": list(self._sides)}
@@ -465,9 +465,9 @@ class TradeService(IMCPServer):
                 ]
             }
         except Exception as e:
-            msg = f"Error searching for trades with key field [{field_name}] and matching expression [{regular_expression}]: {e}"
+            msg = f"Error searching for trades with key field [{field_name}] and matching expression [{regular_expression}]: {str(e)}"
             self._log.error(msg)
-            return {"error": msg}
+            return json.loads(json.dumps({"error": msg}))
 
 
 if __name__ == "__main__":
@@ -502,4 +502,4 @@ if __name__ == "__main__":
         print(service.get_trades("", "Bob Smith"))
 
     except TradeService.ErrorLoadingTradeDatabase as e:
-        logger.error(f"Failed to load trades database: {e}")
+        logger.error(f"Failed to load trades database: {str(e)}")

@@ -159,7 +159,7 @@ class NewsArticleGenerator:
                     )
                 except KeyError as e:
                     print(
-                        f"Warning: Missing key in headline template for sentiment {chosen_sentiment}: {e}")
+                        f"Warning: Missing key in headline template for sentiment {chosen_sentiment}: {str(e)}")
                     headline = headline_template  # Use template as fallback
 
             # Ensure headline is punchy and short (simple truncation for now, can be improved)
@@ -202,7 +202,7 @@ class NewsArticleGenerator:
 
                 except KeyError as e:
                     print(
-                        f"Warning: Missing key in article snippet template for sentiment {chosen_sentiment}: {e}")
+                        f"Warning: Missing key in article snippet template for sentiment {chosen_sentiment}: {str(e)}")
                     combined_article_text = article_template  # Use template as fallback
 
             # 6. Generate publish time
@@ -221,7 +221,7 @@ class NewsArticleGenerator:
             }
         except Exception as e:
             error_timestamp = datetime.now().strftime("%Y-%b-%d %H:%M:%S")
-            print(f"Error during article generation for {stock_name} at {error_timestamp}: {e}")
+            print(f"Error during article generation for {stock_name} at {error_timestamp}: {str(e)}")
             return {
                 "headline": f"Error Generating Article for {stock_name}",
                 "article": f"An unexpected error occurred during article generation: {str(e)}",
@@ -240,13 +240,13 @@ if __name__ == "__main__":
                 data_resources_json = json.loads(data_resources_str)
             except json.JSONDecodeError as e:
                 raise ValueError(
-                    f"Invalid JSON format in data_resources_json: {e}")
+                    f"Invalid JSON format in data_resources_json: {str(e)}")
 
         generator = NewsArticleGenerator(data_resources_json)
 
         article1 = generator.generate_article(
             "QuantumLeap Dynamics", "Technology", "NYSE")
-        print(json.dumps(article1, indent=2))
+        print(json.dumps(article1))
 
     except (ValueError, RuntimeError, FileNotFoundError) as e:
-        print(f"Error: {e}")
+        print(f"Error: {str(e)}")

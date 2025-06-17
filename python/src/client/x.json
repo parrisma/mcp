@@ -1,8 +1,18 @@
 [
   [
     {
-      "source": "Capability [add] called on server [Hello World] with parameters: [a=1, b=2]",
-      "results": ["3"]
+      "results": [
+        {
+          "source": "Capability [get_trades] called on server [Trade] with parameters: [field_name='trading_account_id', regular_expression='TRD_HK_002']"
+        },
+        {
+          "result": [
+            {
+              "error": "Error searching for trades with key field [trading_account_id] and matching expression [TRD_HK_002]: Field name trading_account_id is not a defined trade field."
+            }
+          ]
+        }
+      ]
     }
   ],
   []

@@ -55,8 +55,50 @@ function ColoredPromptDisplay({ label, promptText, colors: colorsProp }) { // Re
   const formatJsonInText = (text, color, baseKey) => {
     const jsonDisplayParts = [];
     let jsonLastIndex = 0;
+
+    const unescapeStringForInitialParse = (str) => {
+      if (typeof str !== 'string') return str;
+      try {
+        let processed = str;
+        processed = processed.replace(/\\\\/g, '\\');
+        processed = processed.replace(/\\"/g, '"');
+        processed = processed.replace(/\\n/g, '');
+        processed = processed.replace(/\\t/g, '');
+        return processed;
+      } catch (err) { // eslint-disable-line no-unused-vars
+        // console.warn("Error during initial string unescaping:", err);
+        return str;
+      }
+    };
+
+    const deepParseJsonStrings = (value) => {
+      if (typeof value === 'string') {
+        try {
+          // Attempt to parse the string value directly.
+          // Assumes initial global unescape has already prepared it if it was part of the top-level block.
+          const parsed = JSON.parse(value);
+          // If parsing succeeds, recursively process this newly parsed object/array.
+          return deepParseJsonStrings(parsed);
+        } catch (e) { // eslint-disable-line no-unused-vars
+          // Not a JSON string, or malformed. Return string as is.
+          return value;
+        }
+      } else if (Array.isArray(value)) {
+        return value.map(item => deepParseJsonStrings(item));
+      } else if (typeof value === 'object' && value !== null) {
+        const newObj = {};
+        for (const key in value) {
+          if (Object.prototype.hasOwnProperty.call(value, key)) {
+            newObj[key] = deepParseJsonStrings(value[key]);
+          }
+        }
+        return newObj;
+      }
+      return value; // For numbers, booleans, null
+    };
+
     let jsonMatch;
-    jsonBlockRegex.lastIndex = 0; // Reset regex for current text
+    jsonBlockRegex.lastIndex = 0;
 
     while ((jsonMatch = jsonBlockRegex.exec(text)) !== null) {
       // Text before JSON block
@@ -69,16 +111,62 @@ function ColoredPromptDisplay({ label, promptText, colors: colorsProp }) { // Re
       }
 
       // The JSON block itself
-      const jsonContent = jsonMatch[1];
-      let formattedJsonBlock = jsonMatch[0]; // Default to original block text
+      const rawJsonContent = jsonMatch[1]; // Content between ```json ... ```
+      // Ensure rawJsonContent is a single line by removing newlines before further processing
+      const singleLineRawJsonContent = typeof rawJsonContent === 'string' ? rawJsonContent.replace(/\r?\n|\r/g, '') : rawJsonContent;
+      let formattedJsonBlock = jsonMatch[0]; // Default to the original full block text
+
+      let preparedStringForTopLevelParse; // Declare here for access in catch
       try {
-        const parsed = JSON.parse(jsonContent);
-        formattedJsonBlock = "```json\n" + JSON.stringify(parsed, null, 2) + "\n```";
+        const countOccurrences = (mainStr, subStr) => {
+          if (!mainStr || !subStr || typeof mainStr !== 'string' || typeof subStr !== 'string') {
+            return 0;
+          }
+          return mainStr.split(subStr).length - 1;
+        };
+
+        // Log count of \\" before unescaping
+        console.log(
+          "Count of '\"' before unescapeStringForInitialParse:",
+          countOccurrences(singleLineRawJsonContent, '\\"')
+        );
+
+        // Step 1: Perform minimal unescaping for the top-level JSON structure
+        preparedStringForTopLevelParse = unescapeStringForInitialParse(singleLineRawJsonContent); // Assign here
+        
+        // Log count of \\" after unescaping
+        console.log(
+          "Count of '\"' after unescapeStringForInitialParse:",
+          countOccurrences(preparedStringForTopLevelParse, '\\"')
+        );
+        
+        // Step 2: Parse this prepared string to get the top-level JS object/array
+        console.log("Attempting JSON.parse on (preparedStringForTopLevelParse):", preparedStringForTopLevelParse);
+        const topLevelJavaScriptObject = JSON.parse(preparedStringForTopLevelParse);
+        console.log("After top-level JSON.parse (topLevelJavaScriptObject):", topLevelJavaScriptObject);
+        
+        // Step 3: Recursively parse any string values within this structure that are themselves JSON
+        const deeplyParsedObject = deepParseJsonStrings(topLevelJavaScriptObject);
+        console.log("After deepParseJsonStrings (deeplyParsedObject):", deeplyParsedObject);
+        
+        // Step 4: Stringify the final, deeply parsed object for pretty display
+        formattedJsonBlock = "```json\n" + JSON.stringify(deeplyParsedObject, null, 2) + "\n```";
+
       } catch (error) { // eslint-disable-line no-unused-vars
-        // Parsing failed, leave as original
-        // Optionally log the actual error for debugging: console.warn("Failed to parse JSON block for key:", `${baseKey}-json-${jsonLastIndex}`, error);
-        console.warn("Failed to parse JSON block, leaving as is for key:", `${baseKey}-json-${jsonLastIndex}`);
+        console.error(`Error during JSON processing for key ${baseKey}-json-${jsonLastIndex}:`, error);
+        console.error("Original rawJsonContent that led to error:", rawJsonContent);
+        console.error("singleLineRawJsonContent that led to error:", singleLineRawJsonContent);
+        if (preparedStringForTopLevelParse !== undefined) {
+          console.error("preparedStringForTopLevelParse that led to error:", preparedStringForTopLevelParse);
+          // Fallback to displaying the prepared string (after initial unescape) if parsing failed
+          formattedJsonBlock = "```json\n" + preparedStringForTopLevelParse + "\n```";
+        } else {
+          // If preparedStringForTopLevelParse is somehow undefined (e.g., error in unescapeStringForInitialParse itself),
+          // then fall back to the original match. This is a deeper fallback.
+          formattedJsonBlock = jsonMatch[0];
+        }
       }
+      
       jsonDisplayParts.push(
         <Typography component="span" key={`${baseKey}-json-${jsonLastIndex}`} sx={{ color, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '0.875rem' }}>
           {formattedJsonBlock}
@@ -86,7 +174,6 @@ function ColoredPromptDisplay({ label, promptText, colors: colorsProp }) { // Re
       );
       jsonLastIndex = jsonBlockRegex.lastIndex;
     }
-
     // Remaining text after last JSON block
     if (jsonLastIndex < text.length) {
       jsonDisplayParts.push(

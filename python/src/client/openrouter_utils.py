@@ -88,7 +88,7 @@ class OpenRouter:
                 "details": msg
             }
         # Normalize the JSON string to ensure it's a valid JSON object
-        return json.loads(json.dumps(response, ensure_ascii=False, indent=2))
+        return json.loads(json.dumps(response, ensure_ascii=False))
 
     def _missing_response(self,
                           error_message: str) -> Dict[str, Any]:
@@ -139,7 +139,7 @@ class OpenRouter:
 
         try:
             self._log.debug(
-                f"Sending request to OpenRouter: URL='{self._url}', Model='{self._model_name}', Payload='{json.dumps(payload, indent=2)}'")
+                f"Sending request to OpenRouter: URL='{self._url}', Model='{self._model_name}', Payload='{json.dumps(payload)}'")
             response: requests.Response = requests.post(self._url, 
                                                         headers=headers,
                                                         json=payload, 
@@ -148,7 +148,7 @@ class OpenRouter:
 
             response_data = response.json()
             self._log.debug(
-                f"Received response from OpenRouter: {json.dumps(response_data, indent=2)}")
+                f"Received response from OpenRouter: {json.dumps(response_data)}")
 
             if response_data.get("choices") and len(response_data["choices"]) > 0:
                 # Typically, the main content is in the first choice's message
@@ -188,7 +188,7 @@ class OpenRouter:
             self._log.error(msg)
             return False, self._missing_response(msg)
         except Exception as e:
-            msg = f"Error, an unexpected error occurred while calling OpenRouter: {e}"
+            msg = f"Error, an unexpected error occurred while calling OpenRouter: {str(e)}"
             self._log.exception(msg)
             return False, self._missing_response(msg)
         return False, self._missing_response("Unknown error occurred in get_llm_response.")
@@ -223,7 +223,7 @@ if __name__ == "__main__":
             if isinstance(result, str):
                 print(result)
             else:
-                print(json.dumps(result, indent=2))
+                print(json.dumps(result))
         else:
             print(f"\nFailed to get response from OpenRouter.")
             print(f"Error: {result}")

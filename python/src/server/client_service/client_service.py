@@ -173,15 +173,15 @@ class ClientService(IMCPServer):
                 return data
         except Exception as e:
             raise self.ErrorLoadingClientDatabase(
-                f"Error loading client database: {e}") from e
+                f"Error loading client database: {str(e)}") from e
 
     def get_all_client_field_names(self) -> Dict[str, Any]:
         try:
             return {"client_fields": [field.value for field in self.ClientField.__members__.values()]}
         except Exception as e:
-            msg = f"Error retrieving client field names: {e}"
+            msg = f"Error retrieving client field names: {str(e)}"
             self._log.error(msg)
-            return {"error": msg}
+            return json.loads(json.dumps({"error": msg}))
 
     def get_clients(self,
                     field_name: Annotated[str, Field(description="The client field name to search for")],
@@ -190,9 +190,9 @@ class ClientService(IMCPServer):
             regex = re.compile(regular_expression)
             return {"clients": [entry for entry in self._client_db if field_name in entry and regex.search(entry[field_name])]}
         except Exception as e:
-            msg = f"Error searching for clients with key field [{field_name}] and matching expression [{regular_expression}]: {e}"
+            msg = f"Error searching for clients with key field [{field_name}] and matching expression [{regular_expression}]: {str(e)}"
             self._log.error(msg)
-            return {"error": msg}
+            return json.loads(json.dumps({"error": msg}))
 
 
 if __name__ == "__main__":
@@ -217,4 +217,4 @@ if __name__ == "__main__":
             ClientService.ClientField.CLIENT_NAME.value, r"*"))
 
     except ClientService.ErrorLoadingClientDatabase as e:
-        logger.error(f"Failed to load Client database: {e}")
+        logger.error(f"Failed to load Client database: {str(e)}")

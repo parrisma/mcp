@@ -195,4 +195,4 @@ if __name__ == "__main__":
             product_types[StaticDataService.StaticField.PRODUCT_CODE.value])))
 
     except Exception as e:
-        logger.error(f"Failed to initialise static database service: {e}")
+        logger.error(f"Failed to initialise static database service: {str(e)}")

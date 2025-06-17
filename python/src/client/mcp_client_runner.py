@@ -302,7 +302,7 @@ class MCPClientRunner:
                     self._log.error(msg)
                     raise ValueError(msg)
                 except Exception as e:
-                    msg: str = f"Error reading or processing config file {config_file_path}: {e}"
+                    msg: str = f"Error reading or processing config file {config_file_path}: {str(e)}"
                     self._log.error(msg)
                     raise ValueError(msg) from e
             else:
@@ -455,7 +455,7 @@ class MCPClientRunner:
             self._mcp_responses_cache[llm_session] = mcp_sesson_responses
             return list(mcp_sesson_responses.values())
         except Exception as e:
-            msg: str = f"Error merging MCP responses by session: {e}"
+            msg: str = f"Error merging MCP responses by session: {str(e)}"
             self._log.error(msg)
             return mcp_responses
 
@@ -474,7 +474,7 @@ class MCPClientRunner:
             self._clarifications_cache[llm_session] = clarifications_session
             return list(clarifications_session.values())
         except Exception as e:
-            msg: str = f"Error merging clarifications by session: {e}"
+            msg: str = f"Error merging clarifications by session: {str(e)}"
             self._log.error(msg)
             return clarifications
 
@@ -596,15 +596,15 @@ class MCPClientRunner:
         except MCPClientRunner.FailedLLMCall as flc:
             msg = f"LLM call failed: {flc}"
             self._log.error(msg)
-            return {"error": msg, "type": "FailedLLMCall"}
+            return json.loads(json.dumps({"error": msg, "type": "FailedLLMCall"}))
         except ValueError as ve:
             msg = f"Input error for model response: {ve}"
             self._log.error(msg)
-            return {"error": msg, "type": "ValueError"}
+            return json.loads(json.dumps({"error": msg, "type": "ValueError"}))
         except Exception as e:
-            msg = f"An unexpected error occurred while getting model response: {e}"
+            msg = f"An unexpected error occurred while getting model response: {str(e)}"
             self._log.exception(msg)
-            return {"error": msg, "type": "Exception"}
+            return json.loads(json.dumps({"error": msg, "type": "Exception"}))
 
     def _parse_prompt_dist_to_json(self,
                                    prompt_dict: Dict[str, str]) -> Dict[str, Any]:
@@ -646,20 +646,20 @@ class MCPClientRunner:
             if params is None or not isinstance(params, dict):
                 msg = "Invalid or empty parameters provided, [session_id] required as parameter as prompts are retrived by session ID"
                 self._log.error(msg)
-                return {"error": msg, "type": "ValueError"}
+                return json.loads(json.dumps({"error": msg, "type": "ValueError"}))
 
             args = params.get("args", None)
             if not args or not isinstance(args, dict):
                 msg = "No or invalid 'args' provided in parameters for prompts."
                 self._log.error(msg)
-                return {"error": msg, "type": "ValueError"}
+                return json.loads(json.dumps({"error": msg, "type": "ValueError"}))
 
             session_id: str | None = args.get("session_id", None)
 
             if session_id is None:
                 msg = "No [session_id] provided, prompts are retrived by session ID."
                 self._log.error(msg)
-                return {"error": msg, "type": "ValueError"}
+                return json.loads(json.dumps({"error": msg, "type": "ValueError"}))
 
             prompts: Dict[str, Any] = self._prompts.get_prompts_by_session_id(
                 session_id=uuid.UUID(session_id))
@@ -667,9 +667,9 @@ class MCPClientRunner:
             return self._parse_prompt_dist_to_json(prompts)
 
         except Exception as e:
-            msg = f"An unexpected error occurred while getting model prompts: {e}"
+            msg = f"An unexpected error occurred while getting model prompts: {str(e)}"
             self._log.exception(msg)
-            return {"error": msg, "type": "Exception"}
+            return json.loads(json.dumps({"error": msg, "type": "Exception"}))
 
     def get_model_response(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Synchronous wrapper for the async get_model_response method."""
@@ -683,9 +683,9 @@ class MCPClientRunner:
         try:
             return await self._mcp_client.get_details_of_all_servers()
         except Exception as e:
-            msg: str = f"Failed to get MCP server capabilities: {e}"
+            msg: str = f"Failed to get MCP server capabilities: {str(e)}"
             self._log.error(msg=msg)
-            return {"error": msg}
+            return json.loads(json.dumps({"error": msg}))
 
     def get_capabilities(self,
                          params: Dict) -> Dict:

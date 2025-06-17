@@ -204,7 +204,7 @@ class MCPInvoke:
                                       capability_uri=capability_uri,
                                       parameters=parameters))
         except Exception as e:
-            msg = f"Error processing MCP server calls: {e}"
+            msg = f"Error processing MCP server calls: {str(e)}"
             self._log.error(msg)
             results.append({"error": msg})
         return results
@@ -246,7 +246,7 @@ class MCPInvoke:
                     "response": user_response
                 })
         except Exception as e:
-            msg = f"Error processing clarification questions: {e}"
+            msg = f"Error processing clarification questions: {str(e)}"
             self._log.error(msg)
             results.append({"error": msg})
         return results
@@ -265,7 +265,7 @@ class MCPInvoke:
                     self._log.error(msg)
                     raise ValueError(msg)
         except Exception as e:
-            msg = f"Unexpected error extracting MCP server calls from response: {e}"
+            msg = f"Unexpected error extracting MCP server calls from response: {str(e)}"
             self._log.exception(msg=msg)
             raise ValueError(msg)
 
@@ -285,7 +285,7 @@ class MCPInvoke:
                     self._log.error(msg)
                     raise ValueError(msg)
         except Exception as e:
-            msg = f"Unexpected error extracting Clarifications from response: {e}"
+            msg = f"Unexpected error extracting Clarifications from response: {str(e)}"
             self._log.exception(msg=msg)
             raise ValueError(msg)
 
@@ -328,7 +328,7 @@ class MCPInvoke:
                 raise ValueError(msg)
         except Exception as e:
             self._log.exception(
-                f"Unexpected error processing response item {response}: {e}")
+                f"Unexpected error processing response item {response}: {str(e)}")
 
         results["mcp_server_responses"] = mcp_server_responses
         results["clarification_responses"] = clarification_responses

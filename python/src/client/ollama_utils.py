@@ -50,7 +50,7 @@ class Ollama:
             return loaded_ok
         except requests.exceptions.RequestException as e:
             self._log.debug(
-                f"Ollama - An error occurred, getting model [{model_name}] status: {e}")
+                f"Ollama - An error occurred, getting model [{model_name}] status: {str(e)}")
             return False
 
     def clean_json_str(self,
@@ -74,7 +74,7 @@ class Ollama:
                 "error": "Unexpected error while parsing JSON",
                 "details": msg
             }
-        return json.dumps(response, ensure_ascii=False, indent=2)
+        return json.dumps(response, ensure_ascii=False)
 
     def get_ollama_response(self,
                             prompt: str,
@@ -110,13 +110,13 @@ class Ollama:
             return (True, json.loads(json_str))
 
         except requests.exceptions.RequestException as e:
-            return (False, {"error": f"Failed to connect to Ollama: {e}"})
+            return (False, {"error": f"Failed to connect to Ollama: {str(e)}"})
         except json.JSONDecodeError:
             return (False, {"error": "Invalid JSON response from Ollama."})
         except KeyError:
             return (False, {"error": "Unexpected response format from Ollama."})
         except Exception as e:
-            return (False, {"error": f"An unexpected error occurred: {e}"})
+            return (False, {"error": f"An unexpected error occurred: {str(e)}"})
 
     def get_llm_response(self,
                          prompt: str,
@@ -129,6 +129,6 @@ class Ollama:
             # No change needed here now, as reply will always be a Dict
             return res, reply
         except Exception as e:
-            msg: str = f"Error in get_llm_response: {e}"
+            msg: str = f"Error in get_llm_response: {str(e)}"
             self._log.error(msg)
             return False, {"error": msg}

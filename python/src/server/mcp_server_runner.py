@@ -134,7 +134,7 @@ class MCPServerRunner:
             sys.exit(1)
         except Exception as e:
             raise RuntimeError(
-                f"Failed to start or run MCP server: {e}") from e
+                f"Failed to start or run MCP server: {str(e)}") from e
 
 
 if __name__ == "__main__":

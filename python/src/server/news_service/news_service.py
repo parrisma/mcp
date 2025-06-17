@@ -137,15 +137,15 @@ class NewsService(IMCPServer):
                 return data
         except Exception as e:
             raise self.ErrorLoadingNewsConfig(
-                f"Error loading news config: {e}") from e
+                f"Error loading news config: {str(e)}") from e
 
     def get_all_news_field_names(self) -> Dict[str, Any]:
         try:
             return {"news_fields": [field.value for field in self.NewsField.__members__.values()]}
         except Exception as e:
-            msg = f"Error retrieving news field names: {e}"
+            msg = f"Error retrieving news field names: {str(e)}"
             self._log.error(msg)
-            return {"error": msg}
+            return json.loads(json.dumps({"error": msg}))
 
     def get_news(self,
                  stock_name: Annotated[str, Field(description="A regular express for the stock to search for in news articles")]) -> List[Dict[str, Any]]:
@@ -188,7 +188,7 @@ class NewsService(IMCPServer):
                 ))
             return news
         except Exception as e:
-            msg = f"Error searching for news article for [{stock_name}]: {e}"
+            msg = f"Error searching for news article for [{stock_name}]: {str(e)}"
             self._log.error(msg)
             return [{"error": msg}]
 
@@ -216,4 +216,4 @@ if __name__ == "__main__":
         print(service.get_news("(?i)meta pharma"))
 
     except NewsService.ErrorLoadingNewsConfig as e:
-        logger.error(f"Failed will generating test news: {e}")
+        logger.error(f"Failed will generating test news: {str(e)}")

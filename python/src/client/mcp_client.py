@@ -1,5 +1,6 @@
 # pylint: disable=C0301
 import asyncio
+import re
 import logging
 import urllib.parse
 from calendar import c
@@ -11,6 +12,7 @@ from mcp.client.sse import sse_client
 from pydantic import AnyUrl
 import pydantic
 import mcp.types as types
+import json
 
 
 class MCPClient:
@@ -28,6 +30,14 @@ class MCPClient:
 
     class FailedToInvokeMCPServerCapability(Exception):
         pass
+
+    class MCPResponse(Enum):
+        RESULT = "result"
+        RESPONSE = "response"
+        RESULTS = "results"
+        ERROR = "error"
+        SOURCE = "source"
+        DETAILS = "details"
 
     class MCPServerCapabilities(str, Enum):
         SERVER_DETAIL = "server_detail"
@@ -163,7 +173,7 @@ class MCPClient:
                 f"Timeout when trying to connect or communicate with {sse_url}.") from te
         except Exception as e:
             raise MCPClient.FailedToGetMCPServerCapabilities(
-                f"Unable to get MCP capabilities for server at this address {server_base_url}: {e}"
+                f"Unable to get MCP capabilities for server at this address {server_base_url}: {str(e)}"
             ) from e
 
     def _format_tool(self, tool: types.Tool) -> Dict[str, Any]:
@@ -248,9 +258,9 @@ class MCPClient:
                     raise TypeError(
                         f"Unexpected result type: {type(result)}. Expected {type({})}.")
         except Exception as e:
-            msg: str = f"An error occurred while fetching server details. [{e}]"
+            msg: str = f"An error occurred while fetching server details. [{str(e)}]"
             self._log.error(msg=msg)
-            results = {"error": msg}
+            results = {self.MCPResponse.ERROR.value: msg}
         return results
 
     async def _get_server_url(self, server_name: str) -> Optional[str]:
@@ -299,7 +309,7 @@ class MCPClient:
                 raise MCPClient.FailedToFindMCPServerURL(msg)
             return found_url
         except Exception as e:
-            msg = f"_get_server_url: An error occurred while retrieving the server URL for '{server_name}': {e}"
+            msg = f"_get_server_url: An error occurred while retrieving the server URL for '{server_name}': {str(e)}"
             self._log.error(msg=msg)
             raise MCPClient.FailedToFindMCPServerURL(msg) from e
 
@@ -317,41 +327,75 @@ class MCPClient:
                             f"Successfully connected to {sse_url}. created new session with {initialize_result.serverInfo.name}")
 
         except Exception as e:
-            msg = f"_get_server_session: An error occurred while getting session for server '{server_name}': {e}"
+            msg = f"_get_server_session: An error occurred while getting session for server '{server_name}': {str(e)}"
             self._log.error(msg=msg)
             raise MCPClient.FailedToEstablishMCPServerSession(msg) from e
         return session
 
-    def _extract_tool_result(self, tool_result: types.CallToolResult) -> List[str]:
-        result: List[str] = []
+    def _clean_json_str(self,
+                        jason_str: str) -> str:
+        jason_str = re.sub(r"[\n\t`']", "", jason_str, flags=re.MULTILINE)
+        jason_str = re.sub(r"^json", "", jason_str, flags=re.IGNORECASE)
+        response: Dict[str, str] = {}
+        try:
+            response = json.loads(jason_str)
+        except json.JSONDecodeError as je:
+            msg: str = f"JSON Decode Error: {je.msg} at line {je.lineno}, column {je.colno}"
+            self._log.error(msg=msg)
+            response = {
+                self.MCPResponse.ERROR.value: "Invalid JSON format",
+                self.MCPResponse.DETAILS.value: msg
+            }
+        except Exception as e:
+            msg: str = f"Unexpected error while parsing JSON: {str(e)}"
+            self._log.error(msg=msg)
+            response = {
+                self.MCPResponse.ERROR.value: "Unexpected error while parsing JSON",
+                self.MCPResponse.DETAILS.value: msg
+            }
+        return json.dumps(response, ensure_ascii=False)
+
+    def _str_to_json_if_str_is_json(self,
+                                    str_or_json_str: str) -> Dict[str, Any]:
+        try:
+            return json.loads(self._clean_json_str(str_or_json_str))
+        except json.JSONDecodeError:
+            return {self.MCPResponse.RESULT.value: str_or_json_str}
+
+    def _extract_tool_result(self, tool_result: types.CallToolResult) -> List[Dict[str, Any]]:
+        result: List[Dict[str, Any]] = []
         if tool_result is None:
-            result = ["Error, No result retruned from tool execution."]
+            result = [
+                {self.MCPResponse.ERROR.value: "No result retruned from tool execution."}]
         if tool_result.isError:
-            result = ["Error, Tool reported an error and did not return a result"]
-        res: List[str] = []
+            result = [
+                {self.MCPResponse.ERROR.value: "Tool reported an error and did not return a result"}]
+        res: List[Dict[str, Any]] = []
         for content in tool_result.content:
             if isinstance(content, types.TextContent):
-                res.append(str(content.text))
+                res.append(self._str_to_json_if_str_is_json(content.text))
             else:
                 result = [
-                    f"Error, Unsupported tool result type: [{type(content)}]"]
+                    {self.MCPResponse.ERROR.value: f"Unsupported tool result type: [{type(content)}]"}]
         if len(res) > 0:
             result = res
 
         return result
 
+    # TODO - make return type same as _extract_tool_result
     def _extract_resource_result(self,
-                                 resource_result: types.ReadResourceResult) -> List[str]:
-        result: List[str] = []
+                                 resource_result: types.ReadResourceResult) -> List[Dict[str, Any]]:
+        result: List[Dict[str, Any]] = []
         if resource_result is None:
-            result = ["Error, No result retruned from tool execution."]
-        res: List[str] = []
+            result = [
+                {self.MCPResponse.ERROR.value: "No result retruned from tool execution."}]
+        res: List[Dict[str, Any]] = []
         for content in resource_result.contents:
             if isinstance(content, types.TextResourceContents):
-                res.append(str(content.text))
+                res.append(self._str_to_json_if_str_is_json(content.text))
             else:
                 result = [
-                    f"Error, Unsupported tool result type: [{type(content)}]"]
+                    {self.MCPResponse.ERROR.value: f"Unsupported tool result type: [{type(content)}]"}]
         if len(res) > 0:
             result = res
 
@@ -379,7 +423,7 @@ class MCPClient:
                         params = f"{key}/{urllib.parse.quote(value)}"
             return pydantic.AnyUrl(f"{url.split("//")[0] + "//"}{params}")
         except Exception as e:
-            msg = f"_encode_arguments_into_url: An error occurred while encoding arguments into URL '{url}': {e}"
+            msg = f"_encode_arguments_into_url: An error occurred while encoding arguments into URL '{url}': {str(e)}"
             self._log.error(msg=msg)
             raise ValueError(msg) from e
 
@@ -390,39 +434,40 @@ class MCPClient:
         resource_uri: str,
         arguments: dict[str, Any]
     ) -> Any:
-        session: Optional[ClientSession] = None
-        result: Optional[Dict[str, Any]] = {}
-        result["source"] = self._request_source(
+        mcp_session: Optional[ClientSession] = None
+        result: Dict[str, List[Dict[str, Any]]] = {
+            self.MCPResponse.RESULTS.value: []}
+        result[self.MCPResponse.RESULTS.value].append({self.MCPResponse.SOURCE.value: self._request_source(
             server_name=server_name,
             capability_name=resource_name,
-            arguments=arguments)
+            arguments=arguments)})
         try:
             sse_url: Optional[str] = await self._get_server_url(server_name)
             if sse_url:
                 sse_url = self.get_full_server_url(sse_url)
                 async with sse_client(sse_url) as (read_stream, write_stream):
-                    async with ClientSession(read_stream, write_stream) as session:
-                        initialize_result: types.InitializeResult = await session.initialize()
+                    async with ClientSession(read_stream, write_stream) as mcp_session:
+                        initialize_result: types.InitializeResult = await mcp_session.initialize()
                         self._log.info(
                             f"Successfully connected to {sse_url} to get resource '{resource_name}' on server '{initialize_result.serverInfo.name}'.")
                         resource_any_uri: pydantic.AnyUrl = self._encode_arguments_into_url(
                             url=resource_uri, arguments=arguments)
-                        resource_result: types.ReadResourceResult = await session.read_resource(resource_any_uri)
+                        resource_result: types.ReadResourceResult = await mcp_session.read_resource(resource_any_uri)
                         if resource_result is None:
                             raise MCPClient.FailedToInvokeMCPServerCapability(
                                 f"Resource '{resource_name}' returned no result from server '{server_name}'.")
-                        result["results"] = self._extract_resource_result(
-                            resource_result)
+                        result[self.MCPResponse.RESPONSE.value].append(
+                            {self.MCPResponse.RESULTS.value: self._extract_resource_result(resource_result)})
             else:
                 raise MCPClient.FailedToFindMCPServerURL(
                     f"Server URL for '{server_name}' could not be found in the cache.")
         except Exception as e:
-            msg = f"execute_resource: An error occurred while executing tool '{resource_name}' on server '{server_name}': {e}"
+            msg = f"execute_resource: An error occurred while executing tool '{resource_name}' on server '{server_name}': {str(e)}"
             self._log.error(msg=msg)
-            result = {
-                "error": msg,
-                "details": str(e)
-            }
+            result[self.MCPResponse.RESULTS.value].append({
+                self.MCPResponse.ERROR.value: msg,
+                self.MCPResponse.DETAILS.value: str(e)
+            })
         return result
 
     async def execute_tool(
@@ -431,37 +476,38 @@ class MCPClient:
         tool_name: str,
         arguments: dict[str, Any]
     ) -> Any:
-        session: Optional[ClientSession] = None
-        result: Optional[Dict[str, Any]] = {}
-        result["source"] = self._request_source(
+        mcp_session: Optional[ClientSession] = None
+        result: Dict[str, List[Dict[str, Any]]] = {
+            self.MCPResponse.RESULTS.value: []}
+        result[self.MCPResponse.RESULTS.value].append({self.MCPResponse.SOURCE.value: self._request_source(
             server_name=server_name,
             capability_name=tool_name,
-            arguments=arguments)
+            arguments=arguments)})
         try:
             sse_url: Optional[str] = await self._get_server_url(server_name)
             if sse_url:
                 sse_url = self.get_full_server_url(sse_url)
                 async with sse_client(sse_url) as (read_stream, write_stream):
-                    async with ClientSession(read_stream, write_stream) as session:
-                        initialize_result: types.InitializeResult = await session.initialize()
+                    async with ClientSession(read_stream, write_stream) as mcp_session:
+                        initialize_result: types.InitializeResult = await mcp_session.initialize()
                         self._log.info(
                             f"Successfully connected to {sse_url} to execute tool '{tool_name}' on server '{initialize_result.serverInfo.name}'.")
-                        tool_result: types.CallToolResult = await session.call_tool(tool_name, arguments)
+                        tool_result: types.CallToolResult = await mcp_session.call_tool(tool_name, arguments)
                         if tool_result is None:
                             raise MCPClient.FailedToInvokeMCPServerCapability(
                                 f"Tool '{tool_name}' returned no result from server '{server_name}'.")
-                        result["results"] = self._extract_tool_result(
-                            tool_result)
+                        result[self.MCPResponse.RESULTS.value].append({self.MCPResponse.RESPONSE.value: self._extract_tool_result(
+                            tool_result)})
             else:
                 raise MCPClient.FailedToFindMCPServerURL(
                     f"Server URL for '{server_name}' could not be found in the cache.")
         except Exception as e:
-            msg = f"execute_tool: An error occurred while executing tool '{tool_name}' on server '{server_name}': {e}"
+            msg = f"execute_tool: An error occurred while executing tool '{tool_name}' on server '{server_name}': {str(e)}"
             self._log.error(msg=msg)
-            result = {
-                "error": msg,
-                "details": str(e)
-            }
+            result[self.MCPResponse.RESULTS.value].append({
+                self.MCPResponse.ERROR.value: msg,
+                self.MCPResponse.DETAILS.value: str(e)
+            })
         return result
 
     def get_mcp_server_url_list(self) -> Dict[int, str]:

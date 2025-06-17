@@ -170,15 +170,15 @@ class InstrumentService(IMCPServer):
                 return data
         except Exception as e:
             raise self.ErrorLoadingInstrumentDatabase(
-                f"Error loading instrument database: {e}") from e
+                f"Error loading instrument database: {str(e)}") from e
 
     def get_all_instrument_field_names(self) -> Dict[str, Any]:
         try:
             return {"instrument_fields": [field.value for field in self.InstrumentField.__members__.values()]}
         except Exception as e:
-            msg = f"Error retrieving instrument field names: {e}"
+            msg = f"Error retrieving instrument field names: {str(e)}"
             self._log.error(msg)
-            return {"error": msg}
+            return json.loads(json.dumps({"error": msg}))
 
     def get_instruments(self,
                         field_name: Annotated[str, Field(description="The instrument field name to search for")],
@@ -191,9 +191,9 @@ class InstrumentService(IMCPServer):
                 regex = re.compile(regular_expression)
             return {"instruments": [entry for entry in self._instument_db if field_name in entry and regex.search(entry[field_name])]}
         except Exception as e:
-            msg = f"Error searching for instruments with key field [{field_name}] and matching expression [{regular_expression}]: {e}"
+            msg = f"Error searching for instruments with key field [{field_name}] and matching expression [{regular_expression}]: {str(e)}"
             self._log.error(msg)
-            return {"error": msg}
+            return json.loads(json.dumps({"error": msg}))
 
 
 if __name__ == "__main__":
@@ -230,4 +230,4 @@ if __name__ == "__main__":
             InstrumentService.InstrumentField.INSTRUMENT_LONG_NAME.value, r"^Alpha.*"))
 
     except InstrumentService.ErrorLoadingInstrumentDatabase as e:
-        logger.error(f"Failed to load instrument database: {e}")
+        logger.error(f"Failed to load instrument database: {str(e)}")

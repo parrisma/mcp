@@ -191,7 +191,7 @@ class MCPServer:
                 self.logger.info(f"Tool [{tool_name}] registered")
             except Exception as e:
                 raise RuntimeError(
-                    f"Failed to register tool [{tool_name}]: {e}") from e
+                    f"Failed to register tool [{tool_name}]: {str(e)}") from e
         self.logger.info("MCP Server Registering tools completed")
 
     def _register_resources(self,
@@ -210,7 +210,7 @@ class MCPServer:
                 self.logger.info(f"Resource [{resource_name}] registered")
             except Exception as e:
                 raise RuntimeError(
-                    f"Failed to register resource [{resource_name}]: {e}") from e
+                    f"Failed to register resource [{resource_name}]: {str(e)}") from e
         self.logger.info("MCP Server Registering resources completed")
 
     def _register_prompts(self,
@@ -229,7 +229,7 @@ class MCPServer:
                 self.logger.info(f"Prompt [{prompt_name}] registered")
             except Exception as e:
                 raise RuntimeError(
-                    f"Failed to register prompt [{prompt_name}]: {e}") from e
+                    f"Failed to register prompt [{prompt_name}]: {str(e)}") from e
         self.logger.info("MCP Server Registering prompts completed")
 
     def run(self,
@@ -243,7 +243,7 @@ class MCPServer:
                 f"Exited MCP server '{self._server.server_name}' on {self._host}:{self._port}")
         except Exception as e:
             raise RuntimeError(
-                f"Error running MCP server '{self._server.server_name}': {e}") from e
+                f"Error running MCP server '{self._server.server_name}': {str(e)}") from e
 
 
 if __name__ == "__main__":

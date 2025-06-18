@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from ast import Str
 from typing import Callable, List, Tuple, Dict, Any
 from enum import Enum
 
@@ -14,6 +13,7 @@ class IMCPServer(ABC):
     class ConfigFields(Enum):
         DATA_PATH = "data_path"
         AUX_DB_PATH = "aux_db_path"
+        AUX_DB_NAME = "aux_db_name"
 
     @abstractmethod
     def __init__(self,

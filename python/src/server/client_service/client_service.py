@@ -9,7 +9,7 @@ import os
 import random
 from i_mcp_server import IMCPServer
 from enum import Enum
-from static_data_service import StaticDataService
+from static_data_service.static_data_service import StaticDataService
 
 
 class ClientService(IMCPServer):

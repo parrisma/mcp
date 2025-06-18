@@ -1,1 +1,2 @@
-
+from .news_service import NewsService
+from .article_generator import NewsArticleGenerator

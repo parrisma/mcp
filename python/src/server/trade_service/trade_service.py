@@ -12,7 +12,7 @@ import uuid
 import json
 import os
 import random
-from static_data_service import StaticDataService
+from static_data_service.static_data_service import StaticDataService
 from client_service import ClientService
 from instrument_service import tickers
 

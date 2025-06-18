@@ -1,7 +1,6 @@
 from typing import List, Tuple
 # Just for debugging, LLM will extract by calling service, this data is from the instrument.json file
 
-
 def get_instr_tickers() -> List[Tuple[str, str, str]]:
     return [
         ("SEDOL", "B93992XYZ", "Meta Capital"),
@@ -303,5 +302,5 @@ def get_instr_tickers() -> List[Tuple[str, str, str]]:
         ("Reuters_Code", "HDO.AX", "Digital Markets"),
         ("SEDOL", "B24429XYZ", "Neo Investments"),
         ("ISIN", "DE0000034262345", "Neo Investments"),
-        ("Reuters_Code", "DRWW.N", "Neo Investments"),
+        ("Reuters_Code", "DRWW.N", "Neo Investments")
     ]

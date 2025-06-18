@@ -1,6 +1,7 @@
 from turtle import st
 from typing import Dict, Any, Callable, List, Tuple, Annotated
 from pydantic import Field
+import copy
 import logging
 import re
 import uuid
@@ -8,9 +9,9 @@ import json
 import os
 from i_mcp_server import IMCPServer
 from enum import Enum
-from static_data_service import StaticDataService
-from news_service.article_generator import NewsArticleGenerator
-from instrument_service import InstrumentService
+from static_data_service.static_data_service import StaticDataService
+from .article_generator import NewsArticleGenerator
+from instrument_service.instrument_service import InstrumentService
 import random
 
 
@@ -28,7 +29,6 @@ class NewsService(IMCPServer):
         SERVER_NAME = "server_name"
         DB_PATH = IMCPServer.ConfigFields.DATA_PATH.value
         DB_NAME = "db_name"
-        INSTRUMENT_DB_PATH = "instrument_db_path"
 
     def __init__(self,
                  logger: logging.Logger,
@@ -82,17 +82,23 @@ class NewsService(IMCPServer):
         instrument_db_path = json_config.get(
             IMCPServer.ConfigFields.AUX_DB_PATH.value, None)
         if not instrument_db_path:
-            instrument_db_path = json_config[NewsService.ConfigField.INSTRUMENT_DB_PATH.value] = json_config.get(
-                IMCPServer.ConfigFields.AUX_DB_PATH.value, None)
-            if not instrument_db_path:
-                raise ValueError(
-                    "News service - Missing required instrument db path sent via json conifig as : instrument_db_path or aux_db_path")
+            raise ValueError(
+                "News service - Missing required instrument db path sent via json conifig as : --aux_db_path")
+
+        instrument_db_name = json_config.get(
+            IMCPServer.ConfigFields.AUX_DB_NAME.value, None)
+        if not instrument_db_name:
+            raise ValueError(
+                "News service - Missing required instrument db name sent via json conifig as : --aux_db_name")
 
         self._json_config_news: Dict[str, Any] = dict(json_config)
-        self._json_config_news[NewsService.ConfigField.DB_PATH.value] = instrument_db_path
+
+        config_copy: Dict[str, Any] = copy.deepcopy(self._json_config_news)
+        config_copy[InstrumentService.ConfigField.DB_NAME.value] = instrument_db_name
+        config_copy[InstrumentService.ConfigField.DB_PATH.value] = instrument_db_path
         self._instrumnt_service: InstrumentService = InstrumentService(
             logger=self._log,
-            json_config=self._json_config_news)
+            json_config=config_copy)
         if not self._instrumnt_service:
             raise self.ErrorLoadingNewsConfig(
                 "Local Instrument Service could not be initialized, which news servce needs to function.")
@@ -157,7 +163,7 @@ class NewsService(IMCPServer):
 
             if "error" in instrument:
                 raise ValueError(
-                    f"No instruments found for stock name [{stock_name}]: {instrument['error']}")
+                    f"Error searching for instruments for stock pattern [{stock_name}]: {instrument['error']}")
 
             instruments = instrument.get("instruments", None)
             if not instruments or len(instruments) == 0:
@@ -191,29 +197,3 @@ class NewsService(IMCPServer):
             msg = f"Error searching for news article for [{stock_name}]: {str(e)}"
             self._log.error(msg)
             return [{"error": msg}]
-
-
-if __name__ == "__main__":
-    # Example usage
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger("NewsServiceExample")
-
-    config = {}
-    config[NewsService.ConfigField.DB_NAME.value] = "news_config.json"
-    config[NewsService.ConfigField.DB_PATH.value] = "python/src/server/news_service"
-    config[NewsService.ConfigField.INSTRUMENT_DB_PATH.value] = "python/src/server/instrument_service"
-    config[NewsService.ConfigField.SERVER_NAME.value] = "NewsService"
-
-    try:
-        service = NewsService(logger,
-                              config)
-
-        print(service.get_all_news_field_names()
-              )
-        print(service.get_news("(?i)XXXX"))  # Generated error as 0 returned
-        print(service.get_news("(?i)meta"))  # Generated error as > 1 returned
-        # Generated error as > 1 returned
-        print(service.get_news("(?i)meta pharma"))
-
-    except NewsService.ErrorLoadingNewsConfig as e:
-        logger.error(f"Failed will generating test news: {str(e)}")

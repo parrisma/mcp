@@ -9,7 +9,7 @@ import os
 import random
 from i_mcp_server import IMCPServer
 from enum import Enum
-from static_data_service import StaticDataService
+from static_data_service.static_data_service import StaticDataService
 from .tickers import get_instr_tickers
 
 
@@ -83,9 +83,17 @@ class InstrumentService(IMCPServer):
             raise self.ErrorLoadingInstrumentDatabase(
                 "Database name is not specified in the configuration.")
 
+        # Generating is really only a one off to boostrap the database.
+        gen_random: bool = False
         self._full_db_path = os.path.join(self._db_path, self._db_name)
         if not os.path.exists(self._full_db_path):
-            self._generate_random_instruments(self._full_db_path)
+            if not gen_random:
+                raise self.ErrorLoadingInstrumentDatabase(
+                    f"Instrument database file {self._full_db_path} does not exist.")
+            else:
+                self._log.info(
+                    f"Instrument database file {self._full_db_path} does not exist, generating random instruments.")
+                self._generate_random_instruments(self._full_db_path)
 
         self._log.info(
             f"InstrumentService initialized name: {self._server_name} db: {self._full_db_path}")

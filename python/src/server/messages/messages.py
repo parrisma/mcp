@@ -9,7 +9,7 @@ import signal
 import sys
 
 
-class MCPClientWebServer:
+class MessageService:
 
     class QueryParamKeys(Enum):
         PATH = "path"
@@ -31,13 +31,11 @@ class MCPClientWebServer:
         CORS(self._app, resources={r"/*": {"origins": f"http://localhost:*"}})
         self._host: str = host
         self._port: int = port
-        self._routes: Dict[str, MCPClientWebServer.WebCallback] = {}
+        self._routes: Dict[str, MessageService.WebCallback] = {}
         self._app.route('/')(self._home)
 
-        self._messages: Dict[str, str] = {}
-
     def _home(self) -> Response:
-        html = "<html><head><title>Client Service - Available Routes</title></head><body>"
+        html = "<html><head><title>MEssage Service  - Available Routes</title></head><body>"
         html += "<h1>Available Routes</h1><ul>"
         for route in self._routes:
             func_name: str = getattr(
@@ -47,19 +45,18 @@ class MCPClientWebServer:
         return Response(html, mimetype="text/html")
 
     def _web_user_callback_wrapper(self,
-                                   callback: "MCPClientWebServer.WebUserCallback") -> Response:
+                                   callback: "MessageService.WebUserCallback") -> Response:
         query_params: Dict[str, Any] = {}
         query_params[self.QueryParamKeys.PATH.value] = request.path
 
-        # Handle both GET and POST parameters
-        # Handle both GET and POST parameters
         args_dict: Dict[str, Any] = request.args.to_dict()
 
         # If this is a POST request with JSON body, use the JSON data directly for args
         if request.method == 'POST' and request.is_json:
             json_data = request.get_json()
             if isinstance(json_data, dict):
-                args_dict = json_data  # Use JSON data directly
+                args_dict = json_data # Use JSON data directly
+
 
         query_params[self.QueryParamKeys.ARGS.value] = args_dict
         result: Dict[str, Any] = call(callback, query_params)
@@ -68,8 +65,8 @@ class MCPClientWebServer:
     def add_route(self,
                   route: str,
                   methods: List[Literal['GET', 'POST', 'PUT', 'DELETE']],
-                  handler: "MCPClientWebServer.WebUserCallback") -> None:
-        wrapped_callback: MCPClientWebServer.WebCallback = partial(
+                  handler: "MessageService.WebUserCallback") -> None:
+        wrapped_callback: MessageService.WebCallback = partial(
             self._web_user_callback_wrapper, callback=handler)
         update_wrapper(wrapped_callback, handler)
         self._app.route(route)(wrapped_callback)
@@ -116,7 +113,7 @@ if __name__ == '__main__':
             return {"message": f"This is a test callback response at {request.full_path} with params: {params_as_json}"}
 
     test_callback = TestCallback()
-    client = MCPClientWebServer(host='0.0.0.0', port=5000)
+    client = MessageService(host='0.0.0.0', port=5000)
     methods: List[str] = ['GET', 'POST']
     route = '/test'
     client.add_route(route=route,

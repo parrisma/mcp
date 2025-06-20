@@ -7,6 +7,7 @@ from static_data_service.static_data_service import StaticDataService
 from client_service.client_service import ClientService
 from trade_service.trade_service import TradeService
 from news_service.news_service import NewsService
+from equity_research_service.equity_research_service import EquityResearchService
 
 
 class MCPServerFactory:
@@ -41,5 +42,7 @@ class MCPServerFactory:
             return TradeService(logger, json_config)
         elif server_type.lower() == 'news':
             return NewsService(logger, json_config)
+        elif server_type.lower() == 'equity_research':
+            return EquityResearchService(logger, json_config)
         else:
             raise ValueError(f"Unsupported server type: {server_type}")

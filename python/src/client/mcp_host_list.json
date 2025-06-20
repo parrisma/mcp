@@ -22,5 +22,9 @@
   {
     "host": "localhost",
     "port": 6282
+  },
+  {
+    "host": "localhost",
+    "port": 6283
   }
 ]

@@ -116,6 +116,27 @@
       }
     },
     {
+      "name": "MCP Server - Equity Research Service",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--config-dir=./config",
+        "--config-file=equity_research_server_config.json",
+        "--server-type=equity_research",
+        "--server-data-path=./python/src/server/equity_research_service",
+        "--aux-db-path=./python/src/server/instrument_service",
+        "--aux-db-name=instrument.json",
+        "--port=6283",
+        "--debug"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+      }
+    },
+    {
       "name": "MCP Workbench Service",
       "type": "debugpy",
       "request": "launch",
@@ -218,6 +239,17 @@
       }
     },
     {
+      "name": "Test - Equity Research Service",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/server/equity_research_service/equity_research_service.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+      }
+    },
+    {
       "name": "Test - News Service (pytest)",
       "type": "debugpy",
       "request": "launch",
@@ -226,6 +258,22 @@
       "cwd": "${workspaceFolder}",
       "args": [
         "python/src/server/news_service/test_news_service.py",
+        "-v",
+        "-s"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+      }
+    },
+    {
+      "name": "Test - Equity Research Service (pytest)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "python/src/server/equity_research_service/test_equity_research_service.py",
         "-v",
         "-s"
       ],
@@ -254,6 +302,24 @@
       "env": {
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH",
         "MCP_LOCAL_SERVER_MODE": "False"
+      }
+    },
+    {
+      "name": "MCP Server - Message Service",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--config-dir=./config",
+        "--config-file=message_server_config.json",
+        "--server-type=message",
+        "--port=6284",
+        "--debug"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
       }
     }
   ]

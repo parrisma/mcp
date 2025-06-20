@@ -1,0 +1,38 @@
+{
+  "name": "EquityResearch",
+  "instructions": "MCP Server - Equity Research Model Context Protocol Server Implementation",
+  "version": "1.0.0",
+  "tools": {
+    "get_all_research_field_names": {
+      "name": "get_all_research_field_names",
+      "description": "Get a list of the fields that are held by the equity research service for each research report",
+      "annotations": {
+        "title": "Get all equity research field names",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_research": {
+      "name": "get_research",
+      "description": "Get a list of matching equity research reports by passing a stock name and a case sensitive regex pattern, all research reports for that stock will be returned",
+      "annotations": {
+        "title": "Get all equity research reports that match the given stock name regex pattern",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  },
+  "resources": {},
+  "prompts": {},
+  "serverInfo": {
+    "name": "Equity Research Server",
+    "version": "1.0.0"
+  },
+  "transport": {
+    "type": "sse"
+  }
+}

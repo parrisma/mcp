@@ -225,7 +225,7 @@
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}",
       "args": [
-        "python/src/server/news_service/news_service_test.py",
+        "python/src/server/news_service/test_news_service.py",
         "-v",
         "-s"
       ],

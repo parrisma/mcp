@@ -161,7 +161,7 @@
         "The recent {event_type} has cast considerable uncertainty over {stock_name}, a notable entity in the {sector} industry. Market analysts covering {market_id} are actively revising their financial forecasts, citing material risks, including an anticipated {financial_figure_negative} contraction in revenue. {name} issued a cautionary note, advising to \"exercise extreme caution regarding {stock_name}; further adverse developments may be forthcoming.\" An internal source, speaking on condition of anonymity, indicated that \"employee morale has been significantly impacted by these events.\"",
         "A significant {event_type} has reverberated through {stock_name}, materially affecting its standing in the {sector} market. The {market_id} trading session was characterized by substantial losses for the company, resulting in an erosion of {financial_figure_negative} in market capitalization. {name} acknowledged, \"We are profoundly concerned by these developments and are allocating all available resources to formulate a comprehensive response.\"",
         "Investor sentiment towards {stock_name} has deteriorated sharply following the latest {event_type}. The {sector} firm's equity on the {market_id} exchange encountered intense selling pressure, declining to a {financial_figure_negative} low. Industry expert {name} observed, \"This event raises pertinent questions regarding the overall stability of the {sector} segment.\"",
-        "Disclosures of a debilitating {event_type} have precipitated widespread selling of {stock_name} shares, a key participant in the {sector} domain. The {market_id} trading environment reflected pervasive apprehension, with trading volumes escalating to {financial_figure_extreme_negative_volume}. {name} advised, \"The current market action is indicative of a security experiencing rapid devaluation.\"",
+        "Disclosures of a debilitating {event_type} have precipitated widespread selling of {stock_name} shares, a key participant in the {sector} domain. The {market_id} trading environment reflected pervasive apprehension, with trading volumes escalating to {financial_figure_extremely_negative_volume}. {name} advised, \"The current market action is indicative of a security experiencing rapid devaluation.\"",
         "{stock_name}'s competitive standing in the {sector} sector is now under significant threat following the impactful {event_type}. The {market_id} exchange recorded a share price decrease of {financial_figure_negative} amidst the ensuing market turbulence. {name} commented, \"The company is currently navigating an exceptionally challenging operational environment.\"",
         "The repercussions of the {event_type} continue to adversely affect {stock_name} within the {sector} industry, as its {market_id} listed stock declined to {financial_figure_negative}. Industry analyst {name} noted, \"The company's competitive advantages have been notably diminished by this event.\"",
         "A shocking {event_type} has severely hampered {stock_name}'s operations within the {sector} market. The {market_id} market recorded a loss of {financial_figure_negative} for the company's valuation. An employee, who wished to remain unnamed, stated, \"We're all worried about what comes next.\"",
@@ -418,6 +418,19 @@
       "10.5%",
       "£52 million",
       "7.5%"
+    ],
+    "negative_share_price": [
+      "£0.25 per share",
+      "£0.30 per share",
+      "£0.28 per share",
+      "£0.20 per share",
+      "£0.15 per share",
+      "£0.35 per share",
+      "£0.22 per share",
+      "£0.18 per share",
+      "£0.32 per share",
+      "£0.26 per share",
+      "£0.19 per share"
     ],
     "extremely_negative_volume": [
       "record 50 million shares traded",

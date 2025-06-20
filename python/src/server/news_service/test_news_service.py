@@ -1,11 +1,12 @@
 import logging
+from typing import List, Tuple
 import pytest
 import enum
 import copy
 from news_service import NewsService
 from python.src.server.i_mcp_server import IMCPServer
-# Adjusted import
 from python.src.server.instrument_service.instrument_service import InstrumentService
+from python.src.server.instrument_service.instrument_service import get_instr_tickers
 
 # Configure logging for tests
 logger = logging.getLogger("NewsServiceTest")
@@ -101,3 +102,21 @@ def test_get_news_specific_match(news_service_instance):
         for result in results:
             for field in expected_fields:
                 assert field in result, f"Missing field: {field}"
+
+
+def test_stress_test_news(news_service_instance):
+    tickers: List[Tuple[str, str, str]] = get_instr_tickers()
+    if not tickers:
+        pytest.skip("No instrument tickers available for stress test.")
+    logger.info(f"Running stress test with {len(tickers)} tickers.")
+    for ticker in tickers:
+        stock_name = ticker[2]
+        logger.info(f"Testing news retrieval for stock: {stock_name}")
+        results = news_service_instance.get_news(stock_name)
+        assert isinstance(
+            results, list), f"Expected list for stock {stock_name}"
+        if not results:
+            assert "No news articles returned for stock {stock_name} where name is a valid instrument name."
+        else:
+            logger.warning(
+                f"No news articles returned for stock {stock_name}.")

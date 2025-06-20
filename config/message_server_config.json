@@ -1,0 +1,36 @@
+{
+  "name": "Message Service",
+  "instructions": "MCP Server - A message service to post chat messages",
+  "version": "1.0.0",
+  "tools": {
+    "post_message": {
+      "name": "post_message",
+      "description": "Post a message to the chat",
+      "annotations": {
+        "title": "Post a message to the chat channel",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_message_channels": {
+      "name": "get_message_channels",
+      "description": "Get the list of all available message channels, their GUID and description",
+      "annotations": {
+        "title": "Get the list of all available message channels, their GUID and description",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  },
+  "serverInfo": {
+    "name": "MessageService",
+    "version": "1.0.0"
+  },
+  "transport": {
+    "type": "sse"
+  }
+}

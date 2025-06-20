@@ -1,0 +1,20 @@
+.message-list-container {
+  height: 250px; /* Adjusted height to match TextField */
+  overflow-y: auto; /* Enable vertical scrolling */
+  background-color: #1a1a1a; /* Dark background, similar to Bloomberg */
+  color: #cccccc; /* Light grey text color */
+  padding: 10px;
+  border: 1px solid #333333; /* Dark border */
+  font-family: 'Arial', sans-serif; /* Example font */
+}
+
+.message-item {
+  margin-bottom: 4px;
+  padding: 1px;
+  border-bottom: none; /* Remove separator line */
+  color: #FFBF00; /* Amber color for Bloomberg messages */
+}
+
+.message-item:last-child {
+  border-bottom: none; /* No border for the last item */
+}

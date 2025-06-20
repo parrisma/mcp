@@ -137,6 +137,37 @@
       }
     },
     {
+      "name": "MCP Server - Message Service",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--config-dir=./config",
+        "--config-file=message_server_config.json",
+        "--server-type=messages",
+        "--server-data-path=./python/src/server/messages",
+        "--port=6284",
+        "--debug"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+      }
+    },
+    {
+      "name": "WEB Message Service",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/server/messages/messages.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": ["--port=5174"],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/client:$PYTHONPATH"
+      }
+    },
+    {
       "name": "MCP Workbench Service",
       "type": "debugpy",
       "request": "launch",
@@ -149,7 +180,7 @@
         "--ollama-model=qwen2.5:72b"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}",
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/client:$PYTHONPATH",
         "OPENROUTER_API_KEY": "${env:OPENROUTER_API_KEY}"
       }
     },
@@ -302,24 +333,6 @@
       "env": {
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH",
         "MCP_LOCAL_SERVER_MODE": "False"
-      }
-    },
-    {
-      "name": "MCP Server - Message Service",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
-      "console": "integratedTerminal",
-      "cwd": "${workspaceFolder}",
-      "args": [
-        "--config-dir=./config",
-        "--config-file=message_server_config.json",
-        "--server-type=message",
-        "--port=6284",
-        "--debug"
-      ],
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
       }
     }
   ]

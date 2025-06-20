@@ -8,6 +8,7 @@ from client_service.client_service import ClientService
 from trade_service.trade_service import TradeService
 from news_service.news_service import NewsService
 from equity_research_service.equity_research_service import EquityResearchService
+from messages.message_service import MessageService
 
 
 class MCPServerFactory:
@@ -44,5 +45,7 @@ class MCPServerFactory:
             return NewsService(logger, json_config)
         elif server_type.lower() == 'equity_research':
             return EquityResearchService(logger, json_config)
+        elif server_type.lower() == 'messages':
+            return MessageService(logger, json_config)
         else:
             raise ValueError(f"Unsupported server type: {server_type}")

@@ -442,6 +442,7 @@ SettingsAndStatus.propTypes = {
   setClientHostValue: PropTypes.func.isRequired,
   clientPortValue: PropTypes.string.isRequired,
   setClientPortValue: PropTypes.func.isRequired,
+  onResetMessages: PropTypes.func, // Add prop type for the new function
 };
 
 export default SettingsAndStatus;

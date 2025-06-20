@@ -1,122 +1,186 @@
-from operator import call
+from email import message
+from math import e
+from re import A
+from tkinter import ALL
 from typing import Dict, Protocol, Any, Literal, List
 from functools import partial, update_wrapper
-from flask import Flask, Response, jsonify, request
-from flask_cors import CORS
 import json
 from enum import Enum
-import signal
-import sys
+import argparse
+import threading
+import time
+from typing import Optional
+import uuid
 
+from sqlalchemy import TIMESTAMP
+from mcp_client_web_server import MCPClientWebServer
+
+
+# Only works for single subscriber, multiple subscribers will need a more complex solution
+# and we are not trying to demo message service with multiple subscribers at this time.
 
 class MessageService:
 
-    class QueryParamKeys(Enum):
-        PATH = "path"
-        ARGS = "args"
+    class JsonMessageKeys(Enum):
+        CHANNEL_ID_GUID = "channel_id"
+        MESSAGES = "messages"
+        MESSAGE = "message"
+        ERROR = "error"
+        OK = "ok"
+        STATUS = "status"
+        ALL = "all"
+        TIMESTAMP = "timestamp"
 
         def __str__(self) -> str:
             return self.value
 
-    class WebUserCallback(Protocol):
-        def __call__(self, params: Dict) -> Dict: ...
-
-    class WebCallback(Protocol):
-        def __call__(self) -> Response: ...
-
     def __init__(self,
                  host: str,
                  port: int) -> None:
-        self._app = Flask(__name__)
-        CORS(self._app, resources={r"/*": {"origins": f"http://localhost:*"}})
-        self._host: str = host
-        self._port: int = port
-        self._routes: Dict[str, MessageService.WebCallback] = {}
-        self._app.route('/')(self._home)
 
-    def _home(self) -> Response:
-        html = "<html><head><title>MEssage Service  - Available Routes</title></head><body>"
-        html += "<h1>Available Routes</h1><ul>"
-        for route in self._routes:
-            func_name: str = getattr(
-                self._routes[route], "__name__", "unknown")
-            html += f"<li><a href='{route}'>{route}</a> - {func_name}</li>"
-        html += "</ul></body></html>"
-        return Response(html, mimetype="text/html")
+        self._args = self._parse_args()
 
-    def _web_user_callback_wrapper(self,
-                                   callback: "MessageService.WebUserCallback") -> Response:
-        query_params: Dict[str, Any] = {}
-        query_params[self.QueryParamKeys.PATH.value] = request.path
+        self._host: str = self._args.host
+        if not self._host:
+            self._host = host
 
-        args_dict: Dict[str, Any] = request.args.to_dict()
+        self._port: int = self._args.port
+        if not self._port:
+            self._port = port
 
-        # If this is a POST request with JSON body, use the JSON data directly for args
-        if request.method == 'POST' and request.is_json:
-            json_data = request.get_json()
-            if isinstance(json_data, dict):
-                args_dict = json_data # Use JSON data directly
+        self._web_server = MCPClientWebServer(host=self._host, port=self._port)
 
+        self._web_server.add_route(route='/send_message',
+                                   methods=['POST'],
+                                   handler=self._post_message)
+        self._web_server.add_route(route='/get_message',
+                                   methods=['GET'],
+                                   handler=self._get_messages)
 
-        query_params[self.QueryParamKeys.ARGS.value] = args_dict
-        result: Dict[str, Any] = call(callback, query_params)
-        return jsonify(result)
+        self._messages: Dict[str, Any] = {}
+        self._messages_lock = threading.Lock()
 
-    def add_route(self,
-                  route: str,
-                  methods: List[Literal['GET', 'POST', 'PUT', 'DELETE']],
-                  handler: "MessageService.WebUserCallback") -> None:
-        wrapped_callback: MessageService.WebCallback = partial(
-            self._web_user_callback_wrapper, callback=handler)
-        update_wrapper(wrapped_callback, handler)
-        self._app.route(route)(wrapped_callback)
-        self._routes[route] = wrapped_callback
-        self._app.add_url_rule(
-            route, view_func=self._routes[route], methods=methods)
+    def _parse_args(self) -> argparse.Namespace:
+        parser = argparse.ArgumentParser(description='Message Service')
+        parser.add_argument('--host', default='0.0.0.0',
+                            help='Host to bind the server to')
+        parser.add_argument('--port', type=int, default=5000,
+                            help='Port to bind the server to')
+        args: argparse.Namespace = parser.parse_args()
+        return args
 
-    def shutdown_server(self):
-        # This function is designed to be called from a request handler
-        # to shut down the Werkzeug server.
-        shutdown = request.environ.get('werkzeug.server.shutdown')
-        if shutdown is None:
-            raise RuntimeError('Not running with the Werkzeug Server')
-        shutdown()
-        return 'Server shutting down...'
+    def _post_message(self,
+                      params: Dict) -> Dict:
+        # Check if the required parameters are present
+        if 'args' in params:
+            params = params['args']
+        else:
+            return {self.JsonMessageKeys.ERROR.value: "Missing 'args' in parameters."}
+
+        if not isinstance(params, dict):
+            return {self.JsonMessageKeys.ERROR.value: "Invalid parameters format. Expected a dictionary."}
+
+        if self.JsonMessageKeys.CHANNEL_ID_GUID.value not in params:
+            return {self.JsonMessageKeys.ERROR.value: f"Missing required parameter: {self.JsonMessageKeys.CHANNEL_ID_GUID.value}"}
+
+        if self.JsonMessageKeys.MESSAGE.value not in params:
+            return {self.JsonMessageKeys.ERROR.value: f"Missing required parameter: {self.JsonMessageKeys.MESSAGE.value}"}
+
+        channel_id_guid = params[self.JsonMessageKeys.CHANNEL_ID_GUID.value]
+        message = params[self.JsonMessageKeys.MESSAGE.value]
+
+        # Validate that channel_id_guid is a valid UUID
+        try:
+            _ = uuid.UUID(channel_id_guid)
+        except ValueError:
+            return {self.JsonMessageKeys.ERROR.value: f"Invalid UUID format for {self.JsonMessageKeys.CHANNEL_ID_GUID.value}"}
+
+        # Add the message to our internal storage
+        self._add_message(channel_id_guid, message)
+
+        # Return success response
+        return {
+            self.JsonMessageKeys.STATUS.value: self.JsonMessageKeys.OK.value,
+        }
+
+    def _add_message(self,
+                     channel_id_guid: str,
+                     message: Dict[str, Any]) -> None:
+        """Adds a message to the internal message list."""
+        with self._messages_lock:
+            if channel_id_guid not in message:
+                self._messages[channel_id_guid] = [message]
+            else:
+                self._messages[channel_id_guid].append(message)
+
+    def _get_messages(self,
+                      params: Dict) -> Dict[str, Any]:
+        # Check if the required parameters are present
+        if 'args' in params:
+            params = params['args']
+        else:
+            return {self.JsonMessageKeys.ERROR.value: "Missing 'args' in parameters."}
+
+        if not isinstance(params, dict):
+            return {self.JsonMessageKeys.ERROR.value: "Invalid parameters format. Expected a dictionary."}
+
+        if self.JsonMessageKeys.CHANNEL_ID_GUID.value not in params:
+            return {self.JsonMessageKeys.ERROR.value: f"Missing required parameter: {self.JsonMessageKeys.CHANNEL_ID_GUID.value}"}
+
+        if self.JsonMessageKeys.ALL.value in params:
+            all = True
+        else:
+            all = False
+
+        channel_id_guid = params[self.JsonMessageKeys.CHANNEL_ID_GUID.value]
+        try:
+            _ = uuid.UUID(channel_id_guid)
+        except ValueError:
+            return {self.JsonMessageKeys.ERROR.value: f"Invalid UUID format for {self.JsonMessageKeys.CHANNEL_ID_GUID.value}",
+                    self.JsonMessageKeys.CHANNEL_ID_GUID.value: channel_id_guid}
+
+        messages: List[str] = self._wait_for_message_with_channel_id(
+            channel_id_as_guid=channel_id_guid)
+        # Add timestamps to messages if they don't already have them
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        if messages:
+            if all:
+                return {self.JsonMessageKeys.MESSAGES.value: messages,
+                        self.JsonMessageKeys.TIMESTAMP.value: timestamp,
+                        self.JsonMessageKeys.CHANNEL_ID_GUID.value: channel_id_guid}
+            else:
+                return {self.JsonMessageKeys.MESSAGE.value: messages[-1],
+                        self.JsonMessageKeys.TIMESTAMP.value: timestamp,
+                        self.JsonMessageKeys.CHANNEL_ID_GUID.value: channel_id_guid}
+        else:
+            return {self.JsonMessageKeys.ERROR.value: [f"Failed to retrieve messages for channel ID: {channel_id_guid}"],
+                    self.JsonMessageKeys.TIMESTAMP.value: timestamp,
+                    self.JsonMessageKeys.CHANNEL_ID_GUID.value: channel_id_guid}
+
+    def _wait_for_message_with_channel_id(self,
+                                          channel_id_as_guid: str,
+                                          timeout: int = 10*60) -> List[str]:
+        """
+        Blocks until a message with the specified channel ID is found in the internal message list.
+        Returns the message if found within the timeout, otherwise returns None.
+        """
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            with self._messages_lock:
+                if channel_id_as_guid in self._messages and self._messages[channel_id_as_guid]:
+                    messages = self._messages[channel_id_as_guid]
+                    # Clear the messages after retrieving them so we only get new messages on subsequent calls
+                    self._messages[channel_id_as_guid] = []
+                    return messages
+            time.sleep(0.1)
+        return [f"Timed out, no messages arrived on channel id {channel_id_as_guid}"]
 
     def run(self) -> None:
-        # Signal handler for graceful shutdown
-        def signal_handler(sig, frame):
-            print(f"Received signal {sig}, shutting down server...")
-            # In a real application, you might want to do more cleanup here
-            sys.exit(0)
-
-        signal.signal(signal.SIGINT, signal_handler)
-        signal.signal(signal.SIGTERM, signal_handler)
-
-        # Add a shutdown route (optional, mainly for testing)
-        self._app.route('/shutdown')(self.shutdown_server)
-
-        try:
-            self._app.run(host=self._host, port=self._port)
-        finally:
-            # This block might not always be reached on abrupt termination,
-            # but it's good practice for cleaner exits.
-            print("Flask server process finished.")
+        self._web_server.run()
 
 
 if __name__ == '__main__':
 
-    class TestCallback:
-        def any_callback(self,
-                         params: Dict) -> Dict:
-            params_as_json: str = json.dumps(params)
-            return {"message": f"This is a test callback response at {request.full_path} with params: {params_as_json}"}
-
-    test_callback = TestCallback()
-    client = MessageService(host='0.0.0.0', port=5000)
-    methods: List[str] = ['GET', 'POST']
-    route = '/test'
-    client.add_route(route=route,
-                     methods=['GET', 'POST'],
-                     handler=test_callback.any_callback)
-    client.run()
+    message_service = MessageService(host='0.0.0.0',
+                                     port=5000)
+    message_service.run()

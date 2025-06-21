@@ -1,18 +1,55 @@
+.message-list-wrapper {
+  border: 1px solid #333333; /* Dark border around the entire component */
+  background-color: #1a1a1a; /* Dark background */
+}
+
+.tab-container {
+  display: flex;
+  background-color: #2a2a2a; /* Slightly lighter background for tabs */
+  border-bottom: 1px solid #333333;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 8px 16px;
+  background-color: #2a2a2a;
+  color: #cccccc;
+  border: none;
+  border-right: 1px solid #333333;
+  cursor: pointer;
+  font-family: 'Arial', sans-serif;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.tab-button:last-child {
+  border-right: none;
+}
+
+.tab-button:hover {
+  background-color: #3a3a3a;
+}
+
+.tab-button.active {
+  background-color: #1a1a1a;
+  color: #FFBF00; /* Amber color for active tab */
+  border-bottom: 2px solid #FFBF00;
+}
+
 .message-list-container {
-  height: 250px; /* Adjusted height to match TextField */
+  height: 195px; /* Reduced to match FinalAnswer TextField height minus tab header */
   overflow-y: auto; /* Enable vertical scrolling */
   background-color: #1a1a1a; /* Dark background, similar to Bloomberg */
   color: #cccccc; /* Light grey text color */
   padding: 10px;
-  border: 1px solid #333333; /* Dark border */
   font-family: 'Arial', sans-serif; /* Example font */
 }
 
 .message-item {
-  margin-bottom: 4px;
-  padding: 1px;
-  border-bottom: none; /* Remove separator line */
-  color: #FFBF00; /* Amber color for Bloomberg messages */
+  margin-bottom: 4px; /* Reduced vertical space by 50% (from 8px) */
+  padding: 1px; /* Reduced padding */
+  border-bottom: none; /* Removed separator line */
+  color: #FFBF00; /* Amber color for messages */
 }
 
 .message-item:last-child {

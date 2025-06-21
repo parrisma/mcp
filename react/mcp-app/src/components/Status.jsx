@@ -206,7 +206,7 @@ function Status({
         </Box>
         {/* Second column: MessageList */}
         <Box>
-          <MessageList messages={[{ text: 'Message 1' }, { text: 'Message 2' }, { text: 'Message 3' }]} />
+          <MessageList />
         </Box>
       </Box>
       <Box mb={2}>

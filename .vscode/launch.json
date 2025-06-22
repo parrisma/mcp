@@ -168,6 +168,21 @@
       }
     },
     {
+      "name": "Chroma (vector) DB",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "bash",
+      "args": [
+        "${workspaceFolder}/python/src/server/vector_db_service/bootstrap_chroma.sh"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/python/src/server/vector_db_service",
+      "presentation": {
+        "reveal": "always", // Always show the terminal
+        "panel": "new" // Open in a new terminal panel
+      }
+    },
+    {
       "name": "MCP Workbench Service",
       "type": "debugpy",
       "request": "launch",
@@ -190,18 +205,6 @@
       "request": "launch",
       "url": "http://localhost:5173/",
       "webRoot": "${workspaceFolder}/react/mcp-app/src"
-    },
-    {
-      "name": "Test - Openrouter Utils",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${workspaceFolder}/python/src/client/openrouter_utils.py",
-      "console": "integratedTerminal",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}",
-        "OPENROUTER_API_KEY": "${env:OPENROUTER_API_KEY}"
-      }
     },
     {
       "name": "Test - MCP Invoker",
@@ -313,6 +316,19 @@
       }
     },
     {
+      "name": "Test - OpenRouter Utils (pytest)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": ["python/src/client/test_openrouter.py", "-v", "-s"],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python/src/client:$PYTHONPATH",
+        "OPENROUTER_API_KEY": "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"
+      }
+    },
+    {
       "name": "Test - FX Rates",
       "type": "debugpy",
       "request": "launch",
@@ -333,6 +349,30 @@
       "env": {
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH",
         "MCP_LOCAL_SERVER_MODE": "False"
+      }
+    },
+    {
+      "name": "Test - Chroma DB",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/server/vector_db_service/chroma_util.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "OLLAMA_HOST": "http://ollama-gpu:11434",
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+      }
+    },
+    {
+      "name": "Test - Ollama Embedding",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/server/vector_db_service/ollama_embedding.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "OLLAMA_HOST": "http://ollama-gpu:11434",
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
       }
     }
   ]

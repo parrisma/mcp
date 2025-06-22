@@ -11,7 +11,6 @@ import threading
 import time
 from typing import Optional
 import uuid
-
 from sqlalchemy import TIMESTAMP
 from mcp_client_web_server import MCPClientWebServer
 
@@ -159,7 +158,7 @@ class MessageService:
 
     def _wait_for_message_with_channel_id(self,
                                           channel_id_as_guid: str,
-                                          timeout: int = 10*60) -> List[str]:
+                                          timeout: int = 60*60) -> List[str]:
         """
         Blocks until a message with the specified channel ID is found in the internal message list.
         Returns the message if found within the timeout, otherwise returns None.

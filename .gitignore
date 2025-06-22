@@ -188,3 +188,6 @@ prompt_logs/
 
 # General
 **/x.json
+
+# Chroma data directories
+**/chroma_data/

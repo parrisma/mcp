@@ -29,18 +29,25 @@ class OpenRouter:
                 format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                 handlers=[logging.StreamHandler()]
             )
+
         if openrouter_url is None:
-            openrouter_url = OPENROUTER_API_BASE_URL
+            self._openrouter_url = OPENROUTER_API_BASE_URL
         else:
             self._openrouter_url: str = openrouter_url
+
         self._api_key: str = api_key
+
         if not model_name:
             self._model_name = DEFAULT_OPENROUTER_MODEL
         else:
             self._model_name: str = model_name
+
         self._temperature: float = temperature
+
         self._max_tokens: int | None = max_tokens
+
         self._url: str = f"{OPENROUTER_API_BASE_URL}/chat/completions"
+
         if system_prompt is not None:
             self._system_prompt: str = system_prompt
         else:
@@ -67,7 +74,7 @@ class OpenRouter:
         return self._temperature
 
     def _clean_json_str(self,
-                         jason_str: str) -> Dict[str, Any]:
+                        jason_str: str) -> Dict[str, Any]:
         jason_str = re.sub(r"[\n\t`']", "", jason_str, flags=re.MULTILINE)
         jason_str = re.sub(r"^json", "", jason_str, flags=re.IGNORECASE)
         response: Dict[str, str] = {}
@@ -140,10 +147,10 @@ class OpenRouter:
         try:
             self._log.debug(
                 f"Sending request to OpenRouter: URL='{self._url}', Model='{self._model_name}', Payload='{json.dumps(payload)}'")
-            response: requests.Response = requests.post(self._url, 
+            response: requests.Response = requests.post(self._url,
                                                         headers=headers,
-                                                        json=payload, 
-                                                        timeout=120) 
+                                                        json=payload,
+                                                        timeout=120)
             response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
 
             response_data = response.json()
@@ -192,38 +199,3 @@ class OpenRouter:
             self._log.exception(msg)
             return False, self._missing_response(msg)
         return False, self._missing_response("Unknown error occurred in get_llm_response.")
-
-
-if __name__ == "__main__":
-    # Example usage:
-    # Ensure you have OPENROUTER_API_KEY environment variable set or pass it directly.
-    api_key_env = os.environ.get("OPENROUTER_API_KEY")
-    if not api_key_env:
-        print("Please set the OPENROUTER_API_KEY environment variable to run the example.")
-    else:
-        print("Testing OpenRouter API call...")
-
-        openrouter = OpenRouter(api_key=api_key_env)
-
-        test_prompt_path = os.path.join(
-            os.path.dirname(__file__), "test_prompt.txt")
-        if os.path.isfile(test_prompt_path):
-            with open(test_prompt_path, "r", encoding="utf-8") as f:
-                test_prompt = f.read().strip()
-        else:
-            test_prompt = "How a model context protocol server helpful to an LLM ?"
-
-        success, result = openrouter.get_llm_response(
-            prompt=test_prompt
-        )
-
-        if success:
-            print(f"Prompt: {test_prompt}")
-            print("Response:")
-            if isinstance(result, str):
-                print(result)
-            else:
-                print(json.dumps(result))
-        else:
-            print(f"\nFailed to get response from OpenRouter.")
-            print(f"Error: {result}")

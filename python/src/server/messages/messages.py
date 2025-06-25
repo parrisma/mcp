@@ -55,6 +55,9 @@ class MessageService:
         self._web_server.add_route(route='/get_message',
                                    methods=['GET'],
                                    handler=self._get_messages)
+        self._web_server.add_route(route='/debug_messages',
+                                   methods=['GET'],
+                                   handler=self._debug_messages)
 
         self._messages: Dict[str, Any] = {}
         self._messages_lock = threading.Lock()
@@ -107,7 +110,7 @@ class MessageService:
                      message: Dict[str, Any]) -> None:
         """Adds a message to the internal message list."""
         with self._messages_lock:
-            if channel_id_guid not in message:
+            if channel_id_guid not in self._messages:
                 self._messages[channel_id_guid] = [message]
             else:
                 self._messages[channel_id_guid].append(message)
@@ -160,7 +163,7 @@ class MessageService:
                                           channel_id_as_guid: str,
                                           timeout: int = 60*60) -> List[str]:
         """
-        Blocks until a message with the specified channel ID is found in the internal message list.
+        Blocks until a NEW message with the specified channel ID is found in the internal message list.
         Returns the message if found within the timeout, otherwise returns None.
         """
         start_time = time.time()
@@ -173,6 +176,15 @@ class MessageService:
                     return messages
             time.sleep(0.1)
         return [f"Timed out, no messages arrived on channel id {channel_id_as_guid}"]
+
+    def _debug_messages(self, params: Dict) -> Dict[str, Any]:
+        """Debug endpoint to see current message state"""
+        with self._messages_lock:
+            return {
+                "message_count_by_channel": {k: len(v) for k, v in self._messages.items()},
+                "all_messages": self._messages,
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            }
 
     def run(self) -> None:
         self._web_server.run()

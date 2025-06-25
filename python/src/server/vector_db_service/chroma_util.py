@@ -1,5 +1,5 @@
 from curses import meta
-from typing import Optional, Tuple, List, Callable, Dict
+from typing import Optional, Tuple, List, Callable, Dict, Any
 import logging
 import numpy as np
 import json
@@ -153,8 +153,8 @@ class ChromaDBUtils:
 
     def get_similar_docs(self,
                          doc_to_match: str,
-                         source_type_hint: Optional[str],
-                         num_similar: int = 5) -> List[List[str]]:
+                         num_similar: int = 5,
+                         source_type_hint: Optional[str] = None) -> List[List[str]] | Dict[str, Any]:
         search_embedding = self._embedding_generator.generate_embedding(
             doc_to_match)
         if search_embedding is None or len(search_embedding) == 0:

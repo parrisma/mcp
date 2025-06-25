@@ -16,7 +16,7 @@
         "--debug"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:$PYTHONPATH"
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
       }
     },
     {
@@ -35,7 +35,7 @@
         "--debug"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
       }
     },
     {
@@ -54,7 +54,7 @@
         "--debug"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
       }
     },
     {
@@ -73,7 +73,7 @@
         "--debug"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
       }
     },
     {
@@ -91,7 +91,7 @@
         "--debug"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
       }
     },
     {
@@ -112,7 +112,7 @@
         "--debug"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
       }
     },
     {
@@ -133,7 +133,7 @@
         "--debug"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
       }
     },
     {
@@ -152,7 +152,27 @@
         "--debug"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
+      }
+    },
+    {
+      "name": "MCP Server - VectorDB Service",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--config-dir=./config",
+        "--config-file=vector_db_server_config.json",
+        "--server-type=vectordb",
+        "--server-data-path=./python/src/server/vector_db_service",
+        "--port=6285",
+        "--debug"
+      ],
+      "env": {
+        "OLLAMA_HOST": "http://ollama-gpu:11434",
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
       }
     },
     {
@@ -164,7 +184,7 @@
       "cwd": "${workspaceFolder}",
       "args": ["--port=5174"],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/client:$PYTHONPATH"
+        "PYTHONPATH": "${workspaceFolder}/python/src/client:${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
       }
     },
     {

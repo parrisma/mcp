@@ -6,6 +6,8 @@ const MessageList = () => {
   const [messagesTab1, setMessagesTab1] = useState([]);
   const [messagesTab2, setMessagesTab2] = useState([]);
   const [messagesTab3, setMessagesTab3] = useState([]);
+  const [lastFetchTime, setLastFetchTime] = useState({});
+  const [fetchErrors, setFetchErrors] = useState({});
 
   const tabs = [
     {
@@ -32,32 +34,79 @@ const MessageList = () => {
   ];
 
   const fetchMessage = async (url, setMessages, tabIndex) => {
+    const now = new Date().toISOString();
+    setLastFetchTime(prev => ({ ...prev, [tabIndex]: now }));
+    
     try {
+      console.log(`Tab ${tabIndex} making blocking call to: ${url}`);
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      console.log(`Switching to tab ${tabIndex} for message:`, data);
-      setMessages(prevMessages => [...prevMessages, data]);
-      setActiveTab(tabIndex); // Switch to this tab when a message arrives
-      // Fetch the next message immediately after receiving one
-      fetchMessage(url, setMessages, tabIndex);
+      console.log(`Tab ${tabIndex} received data:`, data);
+      
+      // Clear any previous errors for this tab
+      setFetchErrors(prev => ({ ...prev, [tabIndex]: null }));
+      
+      // Add the message - no duplicate checking needed since backend only returns new messages
+      if (data && (data.message || data.content)) {
+        setMessages(prevMessages => {
+          setActiveTab(tabIndex); // Switch to this tab when a new message arrives
+          return [...prevMessages, data];
+        });
+      }
     } catch (error) {
-      console.error("Fetching message failed:", error);
-      // Optionally, add a delay before retrying on error
-      setTimeout(() => fetchMessage(url, setMessages, tabIndex), 5000); // Retry after 5 seconds
+      console.error(`Fetching message failed for tab ${tabIndex}:`, error);
+      setFetchErrors(prev => ({ ...prev, [tabIndex]: error.message }));
+      throw error; // Re-throw to trigger retry logic
     }
   };
 
   useEffect(() => {
     console.log('MessageList component mounted with tabs:', tabs.length);
-    // Start fetching for all tabs
+    
+    // Track active fetches to prevent multiple requests per tab
+    const activeFetches = new Set();
+    let isMounted = true;
+    
+    // Start blocking fetch for each tab
+    const startBlockingFetch = async (tab, index) => {
+      if (activeFetches.has(index)) {
+        console.log(`Tab ${index} already has active fetch, skipping`);
+        return;
+      }
+      
+      activeFetches.add(index);
+      
+      while (isMounted) {
+        try {
+          console.log(`Tab ${index} starting blocking fetch...`);
+          await fetchMessage(tab.url, tab.setMessages, index);
+          console.log(`Tab ${index} received response, starting next fetch...`);
+        } catch (error) {
+          console.error(`Blocking fetch error for tab ${index}:`, error);
+          if (isMounted) {
+            // Wait before retrying on error
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        }
+      }
+      
+      activeFetches.delete(index);
+    };
+
+    // Start blocking fetch for each tab
     tabs.forEach((tab, index) => {
-      console.log(`Starting fetch for tab ${index} with URL:`, tab.url);
-      fetchMessage(tab.url, tab.setMessages, index);
+      startBlockingFetch(tab, index);
     });
-  }, []); // Empty dependency array means this effect runs once on mount
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      console.log('MessageList unmounting, stopping all fetches');
+    };
+  }, []);
 
   const handleTabClick = (tabIndex) => {
     setActiveTab(tabIndex);
@@ -73,15 +122,29 @@ const MessageList = () => {
             key={tab.id}
             className={`tab-button ${activeTab === index ? 'active' : ''}`}
             onClick={() => handleTabClick(index)}
+            title={`${tab.name} - Messages: ${tab.messages.length}${fetchErrors[index] ? ` - Error: ${fetchErrors[index]}` : ''}`}
           >
-            {tab.name}
+            {tab.name} ({tab.messages.length})
+            {fetchErrors[index] && <span style={{color: 'red'}}> ⚠</span>}
           </button>
         ))}
       </div>
       <div className="message-list-container">
+        {currentTab.messages.length === 0 && (
+          <div className="message-item" style={{color: '#888', fontStyle: 'italic'}}>
+            No messages yet...
+            {lastFetchTime[activeTab] && ` (Last fetch: ${new Date(lastFetchTime[activeTab]).toLocaleTimeString()})`}
+            {fetchErrors[activeTab] && ` - Error: ${fetchErrors[activeTab]}`}
+          </div>
+        )}
         {currentTab.messages.map((message, index) => (
           <div key={index} className="message-item">
-            {`${message.timestamp}: ${message.message}`}
+            {message.timestamp && message.message
+              ? `${message.timestamp}: ${message.message}`
+              : message.content
+                ? `${message.timestamp || 'No timestamp'}: ${message.content}`
+                : JSON.stringify(message, null, 2)
+            }
           </div>
         ))}
       </div>

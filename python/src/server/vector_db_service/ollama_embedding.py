@@ -18,7 +18,7 @@ class OllamaEmbedding:
         QWEN2_5_72B = "qwen2.5:72b"
 
     ollama_model = OllamaModel.QWEN2_5_72B.value
-    # running inside container so ollama_gpu is host name of the ollama container
+    # running inside container so ollama-gpu is host name of the ollama container
     # To access this outside of the dev container use localhost:11434
     ollama_host = "http://ollama-gpu:11434"
 
@@ -33,6 +33,13 @@ class OllamaEmbedding:
         self._log: logging.Logger = self._configure_logging()
         self._log.debug(
             f"OllamaUtils initialized with model: {self._model}, host: {self._host}")
+        if self.ollama_running_and_model_loaded():
+            self._log.info(
+                f"Ollama model [{self._model}] is loaded and ready for use.")
+        else:
+            msg = f"Ollama model [{self._model}] is not loaded or Ollama is not running at {self._host}."
+            self._log.error(msg)
+            raise self.OllamaGenerationError(msg)
 
     def _configure_logging(self) -> logging.Logger:
         log: logging.Logger = logging.getLogger("mcp-client-runner")

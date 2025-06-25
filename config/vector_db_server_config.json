@@ -1,0 +1,38 @@
+{
+  "name": "VectorDB",
+  "instructions": "MCP Server - Vector DB Model Context Protocol Server Implementation",
+  "version": "1.0.0",
+  "tools": {
+    "put_doc": {
+      "name": "put_doc",
+      "description": "Save the given text so it can later be recovered by semantic search.",
+      "annotations": {
+        "title": "Save the given text so it can later be recovered by semantic search.",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_related_docs": {
+      "name": "get_related_docs",
+      "description": "Given a text fragment, search for related documents, updates, news, events etc of any type",
+      "annotations": {
+        "title": "Given a text fragment, search for related documents, updates, news, events etc of any type",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  },
+  "resources": {},
+  "prompts": {},
+  "serverInfo": {
+    "name": "VectorDB Server",
+    "version": "1.0.0"
+  },
+  "transport": {
+    "type": "sse"
+  }
+}

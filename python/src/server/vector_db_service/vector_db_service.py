@@ -3,6 +3,7 @@ from re import M
 from tkinter.tix import STATUS
 from typing import Dict, Any, Callable, List, Tuple, Annotated
 from urllib import response
+from xml.sax import handler
 from flask.cli import F
 from pydantic import Field
 from enum import Enum
@@ -13,6 +14,8 @@ import json
 import os
 from i_mcp_server import IMCPServer
 from chroma_util import ChromaDBUtils
+from vector_db_web import VectorDBWeb
+import threading
 
 
 class VectorDBService(IMCPServer):
@@ -82,6 +85,17 @@ class VectorDBService(IMCPServer):
             raise self.ErrorLoadingVectorDBConfig(
                 "VectorDB config is empty or could not be loaded.")
 
+        # Expose Web interface for VectorDB for document add.
+        handlers: Dict[VectorDBWeb.handlerFunctions, Callable] = {
+            VectorDBWeb.handlerFunctions.ADD_DOCUMENT: self.put_doc_web_call,
+        }
+        self._vector_db_web = VectorDBWeb(handlers=handlers)
+        # Start the Vector DB Web interface in a separate thread
+        web_thread = threading.Thread(
+            target=self._vector_db_web.run, daemon=True)
+        web_thread.start()
+        self._log.info(f"Started VectorDB Web interface in background thread")
+
     @property
     def server_name(self) -> str:
         return self._server_name
@@ -120,6 +134,31 @@ class VectorDBService(IMCPServer):
         except Exception as e:
             raise self.ErrorLoadingVectorDBConfig(
                 f"Error loading VectorDB config: {str(e)}") from e
+
+    def put_doc_web_call(self,
+                         document: Dict[str, Any]) -> Dict[str, Any]:
+        if isinstance(document, dict):
+            if "args" in document and isinstance(document["args"], dict):
+                document = document["args"]
+            else:
+                msg = "Document is not a valid dictionary."
+                self._log.error(msg=msg)
+                return {self.VectorDBField.ERROR.value: msg}                
+                
+            if self._vector_db_web.WebMessageKeys.DOCUMENT.value in document:
+                document = document[self._vector_db_web.WebMessageKeys.DOCUMENT.value]
+                res = self.put_doc(document=document)
+                if res and self.VectorDBField.OK.value in res:
+                    return {self.VectorDBField.OK.value: res[self.VectorDBField.OK.value]}
+                else:
+                    msg = "Failed to add document to vector DB."
+                    self._log.error(msg=msg)
+                    return {self.VectorDBField.ERROR.value: msg}
+            else:
+                msg = "Document is not a valid dictionary."
+                self._log.error(msg=msg)
+                return {self.VectorDBField.ERROR.value: msg}
+        return {self.VectorDBField.ERROR.value: "Invalid document format"}
 
     def put_doc(self,
                 document: Annotated[str, Field(description="Document to add to vector DB for later semantic search")]) -> Dict[str, Any]:

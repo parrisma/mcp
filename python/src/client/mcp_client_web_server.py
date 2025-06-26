@@ -7,6 +7,7 @@ import json
 from enum import Enum
 import signal
 import sys
+import threading
 
 
 class MCPClientWebServer:
@@ -93,8 +94,12 @@ class MCPClientWebServer:
             # In a real application, you might want to do more cleanup here
             sys.exit(0)
 
-        signal.signal(signal.SIGINT, signal_handler)
-        signal.signal(signal.SIGTERM, signal_handler)
+        # Only register signal handlers if this is the main thread
+        if threading.current_thread() is threading.main_thread():
+            signal.signal(signal.SIGINT, signal_handler)
+            signal.signal(signal.SIGTERM, signal_handler)
+        else:
+            print("Not registering signal handlers in non-main thread")
 
         # Add a shutdown route (optional, mainly for testing)
         self._app.route('/shutdown')(self.shutdown_server)

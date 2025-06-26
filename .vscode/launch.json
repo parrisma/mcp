@@ -172,7 +172,7 @@
       ],
       "env": {
         "OLLAMA_HOST": "http://ollama-gpu:11434",
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
+        "PYTHONPATH": "${workspaceFolder}/python/src/client:${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
       }
     },
     {
@@ -279,6 +279,17 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+      }
+    },
+    {
+      "name": "Test - Vector DB Web Service",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/server/vector_db_service/vector_db_web.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/client:$PYTHONPATH"
       }
     },
     {

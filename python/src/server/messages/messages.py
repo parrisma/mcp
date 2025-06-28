@@ -1,15 +1,15 @@
-from email import message
-from math import e
-from re import A
-from tkinter import ALL
-from typing import Dict, Protocol, Any, Literal, List
-from functools import partial, update_wrapper
-import json
-from enum import Enum
 import argparse
+import json
+import logging
+import random
 import threading
 import time
 import uuid
+from enum import Enum
+from typing import Any, Dict, List
+
+import requests
+
 from mcp_client_web_server import MCPClientWebServer
 
 
@@ -35,7 +35,10 @@ class MessageService:
                  host: str,
                  port: int) -> None:
 
-        self._args = self._parse_args()
+        self._log: logging.Logger = self._configure_logging()
+        self._log.debug(f"MessageService starting")
+
+        self._args: argparse.Namespace = self._parse_args()
 
         self._host: str = self._args.host
         if not self._host:
@@ -45,6 +48,13 @@ class MessageService:
         if not self._port:
             self._port = port
 
+        self._log.debug(
+            f"MessageService initialized with host: {host}, port: {port}")
+
+        # Initialize document storage settings with defaults
+        self._document_storage_host: str = "0.0.0.0"
+        self._document_storage_port: int = 6000
+
         self._web_server = MCPClientWebServer(host=self._host, port=self._port)
 
         self._web_server.add_route(route='/send_message',
@@ -53,12 +63,21 @@ class MessageService:
         self._web_server.add_route(route='/get_message',
                                    methods=['GET'],
                                    handler=self._get_messages)
-        self._web_server.add_route(route='/debug_messages',
-                                   methods=['GET'],
-                                   handler=self._debug_messages)
 
         self._messages: Dict[str, Any] = {}
         self._messages_lock = threading.Lock()
+
+        self._log.info(f"Started Message Web interface in background thread")
+
+    def _configure_logging(self) -> logging.Logger:
+        log: logging.Logger = logging.getLogger("MessageWebServer")
+        if not logging.getLogger().hasHandlers():
+            logging.basicConfig(
+                level=logging.DEBUG,
+                format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                handlers=[logging.StreamHandler()]
+            )
+        return log
 
     def _parse_args(self) -> argparse.Namespace:
         parser = argparse.ArgumentParser(description='Message Service')
@@ -97,6 +116,13 @@ class MessageService:
 
         # Add the message to our internal storage
         self._add_message(channel_id_guid, message)
+
+        # Additionally, try to post to document storage (don't fail if this fails)
+        try:
+            self._post_message_to_document_storage(message, channel_id_guid)
+        except Exception as e:
+            self._log.warning(
+                f"Failed to post message to document storage, but continuing: {str(e)}")
 
         # Return success response
         return {
@@ -180,9 +206,50 @@ class MessageService:
         with self._messages_lock:
             return {
                 "message_count_by_channel": {k: len(v) for k, v in self._messages.items()},
-                "all_messages": self._messages,
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
             }
+
+    def _post_message_to_document_storage(self,
+                                          message: str,
+                                          channel_id: str) -> bool:
+        try:
+            # Create document combining message, channel_id and timestamp
+            timestamp = int(time.time())
+            document = {
+                "message": message,
+                "channel_id": channel_id,
+                "timestamp": timestamp
+            }
+            document_json = json.dumps(document)
+
+            # URL encode the document
+            import urllib.parse
+            encoded_document = urllib.parse.quote(document_json)
+
+            # 10% chance to include a random desk
+            desk_param = ""
+            if random.random() < 0.1:  # 10% chance
+                desk_number = random.randint(1, 9)
+                desk_param = f"&desk=Desk{desk_number:03d}"
+
+            # Form the URL
+            url = f"http://{self._document_storage_host}:{self._document_storage_port}/add_document?document={encoded_document}&document_type=message{desk_param}"
+
+            # Make the request
+            response = requests.get(url, timeout=5)  # 5 second timeout
+            if response.status_code == 200:
+                self._log.debug(
+                    f"Message document posted successfully to storage: {url}")
+                return True
+            else:
+                self._log.warning(
+                    f"Failed to post message document to storage. Status code: {response.status_code}")
+                return False
+
+        except Exception as e:
+            self._log.warning(
+                f"Error posting message document to storage: {str(e)}")
+            return False
 
     def run(self) -> None:
         self._web_server.run()

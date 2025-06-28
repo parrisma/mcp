@@ -5,8 +5,9 @@ from urllib import response
 import uuid
 import json
 import os
+import random
 from enum import Enum
-from typing import Callable, List, Tuple, Annotated, Dict, Any
+from typing import Callable, List, Tuple, Annotated, Dict, Any, Optional
 from anyio import Path
 from flask.config import T
 from i_mcp_server import IMCPServer
@@ -20,6 +21,8 @@ class MessageService(IMCPServer):
     class JsonMessageKeys(Enum):
         MESSAGE_PORT = "message_port"
         MESSAGE_HOST = "message_host"
+        VECTOR_DB_HOST = "vector_db_host"
+        VECTOR_DB_PORT = "vector_db_port"
         CHANNELS = "channels"
         CHANNEL_ID = "channel_id"
         CHANNEL_DESCRIPTION = "channel_description"
@@ -167,6 +170,8 @@ class MessageService(IMCPServer):
                       channel_id: Annotated[str, Field(description="The GUID of the channel to post the message to")]) -> Dict[str, Any]:
         self._log.info(f"Posting message: {message} to channel: {channel_id}")
         response = {}
+
+        # First, try to post to the main message service
         if self._invoke_message_url(self._form_message_url(channel_id, message)):
             self._log.info(
                 f"Message posted successfully to channel {channel_id}")
@@ -180,6 +185,7 @@ class MessageService(IMCPServer):
                 self.JsonMessageKeys.STATUS.value: "ERROR",
                 self.JsonMessageKeys.CHANNEL_ID.value: channel_id,
             }
+
         return response
 
     def _get_message_channels(self) -> List[Dict[str, Any]]:

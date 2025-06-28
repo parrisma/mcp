@@ -5,9 +5,9 @@
   "tools": {
     "put_doc": {
       "name": "put_doc",
-      "description": "Save the given text so it can later be recovered by semantic search.",
+      "description": "Save the given text with document type and desk categorization so it can later be recovered by semantic search. Parameters: document (required), document_type (optional: news, research, message, trade, general), desk (optional: trading desk identifier).",
       "annotations": {
-        "title": "Save the given text so it can later be recovered by semantic search.",
+        "title": "Save the given text with document type and desk categorization so it can later be recovered by semantic search.",
         "readOnlyHint": true,
         "destructiveHint": false,
         "idempotentHint": true,

@@ -1,19 +1,45 @@
-[
-  [
+{
+  "response": [
     {
-      "results": [
-        {
-          "source": "Capability [get_trades] called on server [Trade] with parameters: [field_name='trading_account_id', regular_expression='TRD_HK_002']"
-        },
-        {
-          "result": [
-            {
-              "error": "Error searching for trades with key field [trading_account_id] and matching expression [TRD_HK_002]: Field name trading_account_id is not a defined trade field."
-            }
-          ]
-        }
-      ]
+      "desk": "no-desk-restriction",
+      "document": "HelloToYou",
+      "document_guid": "a6236d64-2498-49b0-90fc-d173666d0b1b",
+      "document_type": "news",
+      "similarity": 271987.62,
+      "type": "news"
+    },
+    {
+      "desk": "no-desk-restriction",
+      "document": "Pi3.142",
+      "document_guid": "737931f2-dc15-435f-a61b-6e7dd019c59c",
+      "document_type": "research",
+      "similarity": 154379.69,
+      "type": "research"
+    },
+    {
+      "desk": "no-desk-restriction",
+      "document": "hi",
+      "document_guid": "2c7540cf-80a6-4a13-a976-fad0c0ace664",
+      "document_type": "general",
+      "similarity": 122937.62,
+      "type": "general"
+    },
+    {
+      "desk": "no-desk-restriction",
+      "document": "Hello",
+      "document_guid": "279604ad-36fa-41fc-8f28-cf58ee0741a4",
+      "document_type": "general",
+      "similarity": 109495.14,
+      "type": "general"
+    },
+    {
+      "desk": "no-desk-restriction",
+      "document": "Hello",
+      "document_guid": "32ab0b16-ae54-4dda-9732-66c68bcdec87",
+      "document_type": "news",
+      "similarity": 109495.14,
+      "type": "news"
     }
   ],
-  []
-]
+  "status": "Found 5 related documents for fragment: 3.14..."
+}

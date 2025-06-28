@@ -1,22 +1,13 @@
-from email import message
-from math import e
-from re import A
-from tkinter import ALL
-from tkinter.tix import STATUS
-from typing import Dict, Any, Callable, Optional
-from functools import partial, update_wrapper
-import json
 from enum import Enum
-import argparse
-from unittest.mock import DEFAULT
-from xml.sax import handler
+from typing import Any, Callable, Dict, Optional
 
-from numpy import add
-import test
+from httpx import get
+from ollama import Message
 from mcp_client_web_server import MCPClientWebServer
 
 DEFAULT_PORT = 6000
 DEFAULT_HOST = '0.0.0.0'
+
 
 class VectorDBWeb:
 
@@ -27,8 +18,16 @@ class VectorDBWeb:
         ERROR = "error"
         OK = "ok"
 
+    class DocumentType(Enum):
+        NEWS = "news"
+        RESEARCH = "research"
+        MESSAGE = "message"
+        TRADE = "trade"
+        GENERAL = "general"
+
     class handlerFunctions(Enum):
         ADD_DOCUMENT = "_add_document"
+        GET_DOCUMENT = "_get_document"
 
     def __init__(self,
                  handlers: Dict[handlerFunctions, Callable],
@@ -59,17 +58,21 @@ class VectorDBWeb:
             raise ValueError(
                 "Add document handler must be provided to vector_db_web.")
 
+        get_handler: Callable | None = handlers.get(
+            self.handlerFunctions.GET_DOCUMENT, None)
+        if get_handler is None:
+            raise ValueError(
+                "Get document handler must be provided to vector_db_web.")
+
         self._web_server.add_route(route='/add_document',
                                    methods=['POST'],
                                    handler=add_handler)
 
-        self._messages: Dict[str, Any] = {}
+        self._web_server.add_route(route='/get_document',
+                                   methods=['GET'],
+                                   handler=get_handler)
 
-    def _add_document(self,
-                      document: str) -> Dict[str, Any]:
-        return {
-            self.WebMessageKeys.STATUS.value: self.WebMessageKeys.OK.value,
-        }
+        self._messages: Dict[str, Any] = {}
 
     def run(self) -> None:
         self._web_server.run()
@@ -83,8 +86,15 @@ if __name__ == '__main__':
             VectorDBWeb.WebMessageKeys.DOCUMENT.value: document
         }
 
+    def test_get_document(request: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            VectorDBWeb.WebMessageKeys.STATUS.value: VectorDBWeb.WebMessageKeys.OK.value,
+            "response": "Test response for document search"
+        }
+
     handlers: Dict[VectorDBWeb.handlerFunctions, Callable[..., Dict[str, Any]]] = {
-        VectorDBWeb.handlerFunctions.ADD_DOCUMENT: test_add_document}
+        VectorDBWeb.handlerFunctions.ADD_DOCUMENT: test_add_document,
+        VectorDBWeb.handlerFunctions.GET_DOCUMENT: test_get_document}
 
     vector_db_web_service = VectorDBWeb(host='0.0.0.0',
                                         port=6000,

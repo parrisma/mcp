@@ -39,6 +39,7 @@ class ChromaDBUtils:
         TYPE_NEWS = "news"
         TYPE_RESEARCH = "research"
         TYPE_CHAT = "chat"
+        TYPE_TRADE = "trade"
 
     def __init__(self,
                  host: str = chroma_host,

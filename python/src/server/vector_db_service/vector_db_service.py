@@ -33,6 +33,11 @@ class VectorDBService(IMCPServer):
         DOC_TYPE = "type"
         RESPONSE = "response"
         STATUS = "status"
+        NO_DESK_RESTRICTION = "no-desk-restriction"
+        DOCUMENT_TYPE = "document_type"
+        DESK = "desk"
+        DOCUMENT_FRAGMENT = "document_fragment"
+        NUM_RESULTS = "num_results"
 
     class ConfigField(Enum):
         SERVER_NAME = "server_name"
@@ -85,9 +90,10 @@ class VectorDBService(IMCPServer):
             raise self.ErrorLoadingVectorDBConfig(
                 "VectorDB config is empty or could not be loaded.")
 
-        # Expose Web interface for VectorDB for document add.
+        # Expose Web interface for VectorDB for document add and get.
         handlers: Dict[VectorDBWeb.handlerFunctions, Callable] = {
             VectorDBWeb.handlerFunctions.ADD_DOCUMENT: self.put_doc_web_call,
+            VectorDBWeb.handlerFunctions.GET_DOCUMENT: self.get_doc_web_call,
         }
         self._vector_db_web = VectorDBWeb(handlers=handlers)
         # Start the Vector DB Web interface in a separate thread
@@ -143,15 +149,23 @@ class VectorDBService(IMCPServer):
             else:
                 msg = "Document is not a valid dictionary."
                 self._log.error(msg=msg)
-                return {self.VectorDBField.ERROR.value: msg}                
-                
+                return {self.VectorDBField.ERROR.value: msg}
+
             if self._vector_db_web.WebMessageKeys.DOCUMENT.value in document:
-                document = document[self._vector_db_web.WebMessageKeys.DOCUMENT.value]
-                res = self.put_doc(document=document)
+                doc_text = document[self._vector_db_web.WebMessageKeys.DOCUMENT.value]
+
+                # Extract optional parameters with defaults
+                document_type = document.get(
+                    VectorDBService.VectorDBField.DOCUMENT_TYPE.value, VectorDBWeb.DocumentType.GENERAL.value)
+                desk = document.get(
+                    VectorDBService.VectorDBField.DESK.value, VectorDBService.VectorDBField.NO_DESK_RESTRICTION.value)
+
+                res = self.put_doc(document=doc_text,
+                                   document_type=document_type, desk=desk)
                 if res and self.VectorDBField.OK.value in res:
                     return {self.VectorDBField.OK.value: res[self.VectorDBField.OK.value]}
                 else:
-                    msg = "Failed to add document to vector DB."
+                    msg = f"Failed to add document to vector DB: {res.get(self.VectorDBField.ERROR.value, 'Unknown error')}"
                     self._log.error(msg=msg)
                     return {self.VectorDBField.ERROR.value: msg}
             else:
@@ -160,8 +174,47 @@ class VectorDBService(IMCPServer):
                 return {self.VectorDBField.ERROR.value: msg}
         return {self.VectorDBField.ERROR.value: "Invalid document format"}
 
+    def get_doc_web_call(self,
+                         request: Dict[str, Any]) -> Dict[str, Any]:
+        if isinstance(request, dict):
+            if "args" in request and isinstance(request["args"], dict):
+                request = request["args"]
+            else:
+                msg = "Request is not a valid dictionary."
+                self._log.error(msg=msg)
+                return {self.VectorDBField.ERROR.value: msg}
+
+            # Extract document_fragment (required parameter)
+            if self.VectorDBField.DOCUMENT_FRAGMENT.value in request:
+                document_fragment = request[self.VectorDBField.DOCUMENT_FRAGMENT.value]
+
+                # Extract optional parameters with defaults
+                num_results = request.get(
+                    self.VectorDBField.NUM_RESULTS.value, 5)
+
+                # Validate num_results
+                if not isinstance(num_results, int) or num_results < 1 or num_results > 100:
+                    num_results = 5
+
+                res = self.get_related_docs(document_fragment=document_fragment,
+                                            num_results=num_results)
+                if res and (self.VectorDBField.RESPONSE.value in res or self.VectorDBField.ERROR.value in res):
+                    return res
+                else:
+                    msg = "Failed to retrieve related documents."
+                    self._log.error(msg=msg)
+                    return {self.VectorDBField.ERROR.value: msg}
+            else:
+                msg = "document_fragment parameter is required."
+                self._log.error(msg=msg)
+                return {self.VectorDBField.ERROR.value: msg}
+        return {self.VectorDBField.ERROR.value: "Invalid request format"}
+
     def put_doc(self,
-                document: Annotated[str, Field(description="Document to add to vector DB for later semantic search")]) -> Dict[str, Any]:
+                document: Annotated[str, Field(description="Document to add to vector DB for later semantic search")],
+                document_type: Annotated[str, Field(
+                    description="Type of document from VectorDBWeb.DocumentType enum (news, research, message, trade, general)")] = VectorDBWeb.DocumentType.GENERAL.value,
+                desk: Annotated[str, Field(description="Trading desk identifier for document categorization")] = "general") -> Dict[str, Any]:
         if self._chroma_running:
             try:
                 if not document or not isinstance(document, str) or len(document) == 0:
@@ -169,13 +222,33 @@ class VectorDBService(IMCPServer):
                     self._log.error(msg=msg)
                     raise ValueError(msg)
 
-                meta = {
-                    ChromaDBUtils.ChromaMeta.TYPE.value: ChromaDBUtils.ChromaMeta.TYPE_GENERAL.value
+                # Validate document_type against VectorDBWeb.DocumentType enum
+                valid_types = [
+                    doc_type.value for doc_type in VectorDBWeb.DocumentType]
+                if document_type not in valid_types:
+                    msg = f"Invalid document_type '{document_type}'. Must be one of: {valid_types}"
+                    self._log.error(msg=msg)
+                    raise ValueError(msg)
+
+                # Map VectorDBWeb.DocumentType to ChromaMeta types
+                type_mapping = {
+                    VectorDBWeb.DocumentType.NEWS.value: ChromaDBUtils.ChromaMeta.TYPE_NEWS.value,
+                    VectorDBWeb.DocumentType.RESEARCH.value: ChromaDBUtils.ChromaMeta.TYPE_RESEARCH.value,
+                    VectorDBWeb.DocumentType.MESSAGE.value: ChromaDBUtils.ChromaMeta.TYPE_CHAT.value,
+                    VectorDBWeb.DocumentType.TRADE.value: ChromaDBUtils.ChromaMeta.TYPE_TRADE.value,
+                    VectorDBWeb.DocumentType.GENERAL.value: ChromaDBUtils.ChromaMeta.TYPE_GENERAL.value
                 }
+
+                meta = {
+                    ChromaDBUtils.ChromaMeta.TYPE.value: type_mapping[document_type],
+                    VectorDBService.VectorDBField.DESK.value: desk,
+                    VectorDBService.VectorDBField.DOCUMENT_TYPE.value: document_type
+                }
+
                 res = self._chroma.add_document(document=document,
                                                 metadata=meta)
                 if res:
-                    msg = f"Document added to ChromaDB: {document[:25]}..."
+                    msg = f"Document added to ChromaDB (type: {document_type}, desk: {desk}): {document[:25]}..."
                     self._log.info(msg=msg)
                     return {self.VectorDBField.OK.value: msg}
                 else:
@@ -204,13 +277,33 @@ class VectorDBService(IMCPServer):
             if res and len(res) > 0:
                 for doc in res:
                     if isinstance(doc, list) and len(doc) >= 3:
-                        if self.VectorDBField.UUID.value in doc[2] and self.VectorDBField.DOC_TYPE.value in doc[2]:
+                        if self.VectorDBField.UUID.value in doc[2]:
                             meta: Dict[str, Any] = doc[2]  # type: ignore
-                            response.append({self.VectorDBField.DOCUMENT_GUID.value: meta[self.VectorDBField.UUID.value],
-                                             self.VectorDBField.DOCUMENT_GUID.value: meta[self.VectorDBField.DOC_TYPE.value],
-                                             self.VectorDBField.SIMILARITY.value: doc[1],
-                                             self.VectorDBField.DOCUMENT.value: doc[0]}
-                                            )
+                            doc_response = {
+                                self.VectorDBField.DOCUMENT_GUID.value: meta[self.VectorDBField.UUID.value],
+                                self.VectorDBField.SIMILARITY.value: doc[0],
+                                self.VectorDBField.DOCUMENT.value: doc[1],
+                                self.VectorDBField.DOC_TYPE.value: meta.get(
+                                    self.VectorDBField.DOC_TYPE.value, "restricted")
+                            }
+
+                            # Add document type if available
+                            if self.VectorDBField.DOCUMENT_TYPE.value in meta:
+                                doc_response[self.VectorDBField.DOCUMENT_TYPE.value] = meta[self.VectorDBField.DOCUMENT_TYPE.value]
+                            elif self.VectorDBField.DOC_TYPE.value in meta:
+                                doc_response[self.VectorDBField.DOCUMENT_TYPE.value] = meta[self.VectorDBField.DOC_TYPE.value]
+
+                            # Add desk if available
+                            if self.VectorDBField.DESK.value in meta:
+                                doc_response[self.VectorDBField.DESK.value] = meta[self.VectorDBField.DESK.value]
+                            else:
+                                doc_response[self.VectorDBField.DESK.value] = VectorDBService.VectorDBField.NO_DESK_RESTRICTION.value
+
+                            # Add the original type field for backward compatibility
+                            if self.VectorDBField.DOC_TYPE.value in meta:
+                                doc_response[self.VectorDBField.DOC_TYPE.value] = meta[self.VectorDBField.DOC_TYPE.value]
+
+                            response.append(doc_response)
                 if len(response) > 0:
                     msg = f"Found {len(response)} related documents for fragment: {document_fragment[:25]}..."
                     self._log.info(msg=msg)

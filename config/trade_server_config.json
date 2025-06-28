@@ -146,6 +146,83 @@
         "openWorldHint": false
       }
     },
+    "get_all_staff_types": {
+      "name": "get_all_staff_types",
+      "description": "Get a list of all staff types with their three character mnemonic codes (TDS, TRD, OPS, FIN, TEC, CPM).",
+      "annotations": {
+        "title": "Get all staff types",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_staff_by_type": {
+      "name": "get_staff_by_type",
+      "description": "Get a list of all staff members for a specific staff type code = three character mnemonic (e.g., TRD for traders, TDS for sales traders).",
+      "annotations": {
+        "title": "Get staff by type",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_staff_type_description": {
+      "name": "get_staff_type_description",
+      "description": "Get the description for a specific three character staff type code (e.g., TRD, TDS, OPS, FIN, TEC, CPM).",
+      "annotations": {
+        "title": "Get staff type description",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_desks_staff_has_access_to": {
+      "name": "get_desks_staff_has_access_to",
+      "description": "Get all trading desks that a specific staff member has access to view data for. Use this to determine which desk data a staff member is authorized to see based on their access permissions.",
+      "annotations": {
+        "title": "Get desks staff has access to",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_staff_who_have_access_to_desk": {
+      "name": "get_staff_who_have_access_to_desk",
+      "description": "Get all staff members who have access to view data for a specific trading desk. Use this to find out which staff can see data from a particular desk.",
+      "annotations": {
+        "title": "Get staff who have access to desk",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "does_staff_id_have_desk_access": {
+      "name": "does_staff_id_have_desk_access",
+      "description": "Check if a specific staff member has access to view data for a specific trading desk. Returns true/false to verify access permissions before showing sensitive desk data.",
+      "annotations": {
+        "title": "Check if staff has desk access",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    "get_permissions": {
+      "name": "get_permissions",
+      "description": "Get the permissions for a specific user role, showing what capabilities (trades, instruments, news, research, clients, messages, datamine) they have read/write access to. Use this to understand what a role can do in the system.",
+      "annotations": {
+        "title": "Get permissions for user role",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
     "get_trades": {
       "name": "get_trades",
       "description": "Get a list of matching trades by passing a field name (can be nested using dots) and a case sensitive regex pattern. All trades with the field that matches the pattern are returned.",

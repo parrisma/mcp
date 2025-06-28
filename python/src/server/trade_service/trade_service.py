@@ -13,8 +13,13 @@ import json
 import os
 import random
 from static_data_service.static_data_service import StaticDataService
+from static_data_service.permissions import Permissions
 from client_service import ClientService
 from instrument_service import tickers
+from .staff import Staff
+from .desks import Desks
+from .algo_strategies import AlgoStrategies
+from brokers import Brokers
 
 
 class TradeService(IMCPServer):
@@ -58,73 +63,15 @@ class TradeService(IMCPServer):
         ANALYTICS_VWAP = "analytics.vwap"
         ANALYTICS_VOLUME_PARTICIPATION = "analytics.volume_participation"
 
-    _algo_strategies: List[Tuple[str, str]] = [
-        ("VWAP", "Volume Weighted Average Price - trades in proportion to historical volume"),
-        ("TWAP", "Time Weighted Average Price - executes evenly over time"),
-        ("ARRV", "Arrival Price - minimizes implementation shortfall"),
-        ("POVL", "Percentage of Volume - trades as a % of real-time market volume"),
-        ("CLSE", "Close - targets the closing auction"),
-        ("OPCL", "Opportunistic Close - adapts to volume near market close"),
-        ("SORR", "Smart Order Router - routes orders to best venues for execution"),
-        ("LIQD", "Liquidity Seeking - aggressively searches for hidden liquidity"),
-        ("DRKA", "Dark Aggregator - combines multiple dark pools for execution"),
-        ("ALPH", "Alpha Seeking - uses predictive signals to optimize timing"),
-        ("SNPR", "Sniper - waits passively, then quickly executes when liquidity appears"),
-        ("ICBG", "Iceberg - shows small visible size, hides the rest"),
-        ("TOPN", "Target Open - focuses execution around market open"),
-        ("TCLS", "Target Close - focuses execution around market close"),
-        ("VCUR", "Volume Curve - follows a predefined historical volume profile"),
-        ("IMPL", "Implementation Shortfall - balances market impact and price risk")
-    ]
+    _algo_strategies = AlgoStrategies()
 
-    _brokers: List[Tuple[str, str]] = [
-        ("BKRX1029AA", "Cascade Ridge Capital"),
-        ("ZFTR8821LP", "Orion Summit Markets"),
-        ("MLQW7265RC", "ArborPoint Financial"),
-        ("G8YZ0013DV", "Vanguardon Trading Co."),
-        ("XTPL4532HK", "Ironwave Global Brokers"),
-        ("JREX9082BM", "Silverstrand Securities"),
-        ("QWNE1206TK", "Evermist Holdings Ltd."),
-        ("HFUL3479NZ", "Zephyr Rock Investments"),
-        ("DMKO6314XY", "Bluecore Trading Group"),
-        ("PNVG7763JU", "Elmspire Institutional")
-    ]
+    _brokers: Brokers = Brokers()
 
-    _traders: List[Tuple[str, str, str]] = [
-        ("TRD_HK_001", "Alice Johnson", "Desk001"),
-        ("TRD_HK_002", "Bob Smith", "Desk001"),
-        ("TRD_NY_003", "Charlie Brown", "Desk001"),
-        ("TRD_SY_004", "Diana Prince", "Desk001"),
-        ("TRD_SY_005", "Ethan Hunt", "Desk001"),
-        ("TRD_SG_006", "Fiona Gallagher", "Desk001"),
-        ("TRD_SG_007", "George Costanza", "Desk001"),
-        ("TRD_LN_008", "Hannah Montana", "Desk001"),
-        ("TRD_LN_009", "Ian Malcolm", "Desk001"),
-        ("TRD_HK_010", "Julia Roberts", "Desk001"),
-        ("TRD_TK_011", "Yuki Tanaka", "Desk002"),
-        ("TRD_FR_012", "Sophie Dubois", "Desk003"),
-        ("TRD_DE_013", "Lukas Schneider", "Desk004"),
-        ("TRD_BR_014", "Gabriel Silva", "Desk005"),
-        ("TRD_IN_015", "Priya Sharma", "Desk006"),
-        ("TRD_CN_016", "Wei Zhang", "Desk007"),
-        ("TRD_RU_017", "Anastasia Ivanova", "Desk008"),
-        ("TRD_AU_018", "Liam Wilson", "Desk009"),
-        ("TRD_ZA_019", "Thabo Nkosi", "Desk010"),
-        ("TRD_IT_020", "Giulia Romano", "Desk002")
-    ]
+    _staff = Staff()
 
-    _desks = [
-        ("Desk001", "Large Cap Equities Desk"),
-        ("Desk002", "Small/Mid Cap Equities Desk"),
-        ("Desk003", "Equity Derivatives Desk"),
-        ("Desk004", "Equity Index Desk"),
-        ("Desk005", "Emerging Markets Equities Desk"),
-        ("Desk006", "Quantitative Equities Desk"),
-        ("Desk007", "Program Trading Desk"),
-        ("Desk008", "Equity Market Making Desk"),
-        ("Desk009", "ETF Trading Desk"),
-        ("Desk010", "Equity Sector Rotation Desk")
-    ]
+    _desks = Desks()
+
+    _permissions = Permissions()
 
     _sides = ["Buy", "Sell"]
 
@@ -238,9 +185,9 @@ class TradeService(IMCPServer):
             datetime.timedelta(seconds=random.randint(5, 60))
         client_id = random.choice(self._client_ids)
         account_number = random.choice(self._trading_account_ids)
-        trader = (random.choice(self._traders))[0]
-        desk_1 = random.choice(self._desks)[0]
-        desk_2 = random.choice(self._desks)[0]
+        trader = (random.choice(self._staff.get_all_trader_data()))[0]
+        desk_1 = random.choice(self._desks.get_all_desks())
+        desk_2 = random.choice(self._desks.get_all_desks())
 
         return {
             "trade_id": f"TRD_{str(uuid.uuid4())}",
@@ -268,7 +215,7 @@ class TradeService(IMCPServer):
             "counterparty": {
                 "client_id": client_id,
                 "account_number": account_number,
-                "broker": random.choice(self._brokers),
+                "broker": random.choice(self._brokers.get_all_brokers()),
                 "trader_id": trader
             },
             "settlement": {
@@ -346,6 +293,14 @@ class TradeService(IMCPServer):
             ("get_trader_description", self.get_trader_description),
             ("get_all_desks", self.get_all_desks),
             ("get_desk_description", self.get_desk_description),
+            ("get_all_staff_types", self.get_all_staff_types),
+            ("get_staff_by_type", self.get_staff_by_type),
+            ("get_staff_type_description", self.get_staff_type_description),
+            ("get_desks_staff_has_access_to", self.get_desks_staff_has_access_to),
+            ("get_staff_who_have_access_to_desk",
+             self.get_staff_who_have_access_to_desk),
+            ("does_staff_id_have_desk_access", self.does_staff_id_have_desk_access),
+            ("get_permissions", self.get_permissions),
             ("get_all_trade_field_names", self.get_all_trade_field_names),
             ("get_all_sides", self.get_all_sides),
             ("get_all_order_types", self.get_all_order_types),
@@ -367,48 +322,127 @@ class TradeService(IMCPServer):
         raise NotImplementedError("handle_request must be implemented.")
 
     def get_all_algo_types(self) -> Dict[str, Any]:
-        algo_types = [code for code, _ in self._algo_strategies]
+        algo_types = self._algo_strategies.get_all_algo_types()
         return {"algo_types": algo_types}
 
     def get_algo_description(self,
                              code: Annotated[str, Field(description="The algo type code to get the description of")]) -> Dict[str, str]:
-        for c, desc in self._algo_strategies:
-            if c == code:
-                return {"algo_description": desc}
+        description = self._algo_strategies.get_algo_description(code)
+        if description:
+            return {"algo_description": description}
         return json.loads(json.dumps({"error": f"No such [{code}] algo type"}))
 
     def get_all_brokers(self) -> Dict[str, Any]:
-        brokers = [code for code, _ in self._brokers]
+        brokers = [code for code, _ in self._brokers.get_all_brokers()]
         return {"brokers": brokers}
 
     def get_broker_description(self,
                                code: Annotated[str, Field(description="The broker code to get the description of")]) -> Dict[str, str]:
-        for c, desc in self._brokers:
+        for c, desc in self._brokers.get_all_brokers():
             if c == code:
                 return {"broker_description": desc}
         return json.loads(json.dumps({"error": f"No such [{code}] broker"}))
 
     def get_all_traders(self) -> Dict[str, Any]:
-        traders = [code for code, _, _ in self._traders]
+        traders = self._staff.get_all_traders()
         return {"traders": traders}
 
     def get_trader_description(self,
                                code: Annotated[str, Field(description="The trader code to get the description of")]) -> Dict[str, str]:
-        for c, name, desk in self._traders:
-            if c == code:
-                return {"trader_description": f"{name} ({desk})"}
+        description = self._staff.get_trader_description(code)
+        if description:
+            return {"trader_description": description}
         return json.loads(json.dumps({"error": f"No such [{code}] trader"}))
 
     def get_all_desks(self) -> Dict[str, Any]:
-        desks = [code for code, _ in self._desks]
+        desks = self._desks.get_all_desks()
         return {"desks": desks}
 
     def get_desk_description(self,
                              code: Annotated[str, Field(description="The desk code to get the description of")]) -> Dict[str, str]:
-        for c, desc in self._desks:
-            if c == code:
-                return {"desk_description": desc}
+        description = self._desks.get_desk_description(code)
+        if description:
+            return {"desk_description": description}
         return json.loads(json.dumps({"error": f"No such [{code}] desk"}))
+
+    def get_all_staff_types(self) -> Dict[str, Any]:
+        staff_types_with_descriptions = Staff.get_all_staff_types_with_descriptions()
+        staff_types = [code for code, _ in staff_types_with_descriptions]
+        return {"staff_types": staff_types}
+
+    def get_staff_by_type(self,
+                          staff_type: Annotated[str, Field(description="The staff type code to get staff members for")]) -> Dict[str, Any]:
+        staff_members = Staff.get_staff_by_type(staff_type)
+        return {"staff_members": staff_members}
+
+    def get_staff_type_description(self,
+                                   staff_code: Annotated[str, Field(description="The three character staff type code to get the description for")]) -> Dict[str, str]:
+        description = Staff.get_staff_type_description(staff_code)
+        if description:
+            return {"staff_type_description": description}
+        return json.loads(json.dumps({"error": f"Staff type '{staff_code}' does not exist"}))
+
+    def get_desks_staff_has_access_to(self,
+                                      staff_id: Annotated[str, Field(description="The staff ID (e.g., 'TRD_HK_001') to get desk access permissions for")]) -> Dict[str, Any]:
+        """Get all trading desks that a specific staff member has access to view data for."""
+        try:
+            desks = Staff.get_desks_staff_has_access_to(staff_id)
+            if desks:
+                return {"staff_id": staff_id, "accessible_desks": desks}
+            else:
+                return {"staff_id": staff_id, "accessible_desks": [], "message": f"Staff member '{staff_id}' has no desk access or does not exist"}
+        except Exception as e:
+            msg = f"Error retrieving desk access for staff '{staff_id}': {str(e)}"
+            self._log.error(msg)
+            return json.loads(json.dumps({"error": msg}))
+
+    def get_staff_who_have_access_to_desk(self,
+                                          desk_code: Annotated[str, Field(description="The desk code (e.g., 'Desk001') to get staff access list for")]) -> Dict[str, Any]:
+        """Get all staff members who have access to view data for a specific trading desk."""
+        try:
+            staff_list = Staff.get_staff_who_have_access_to_desk(desk_code)
+            if staff_list:
+                return {"desk_code": desk_code, "authorized_staff": staff_list}
+            else:
+                return {"desk_code": desk_code, "authorized_staff": [], "message": f"No staff have access to desk '{desk_code}' or desk does not exist"}
+        except Exception as e:
+            msg = f"Error retrieving staff access for desk '{desk_code}': {str(e)}"
+            self._log.error(msg)
+            return json.loads(json.dumps({"error": msg}))
+
+    def does_staff_id_have_desk_access(self,
+                                       staff_id: Annotated[str, Field(description="The staff ID (e.g., 'TRD_HK_001') to check access for")],
+                                       desk_code: Annotated[str, Field(description="The desk code (e.g., 'Desk001') to check access to")]) -> Dict[str, Any]:
+        """Check if a specific staff member has access to view data for a specific trading desk."""
+        try:
+            has_access = Staff.does_staff_id_have_desk_access(
+                staff_id, desk_code)
+            return {
+                "staff_id": staff_id,
+                "desk_code": desk_code,
+                "has_access": has_access,
+                "message": f"Staff '{staff_id}' {'has' if has_access else 'does not have'} access to desk '{desk_code}'"
+            }
+        except Exception as e:
+            msg = f"Error checking access for staff '{staff_id}' to desk '{desk_code}': {str(e)}"
+            self._log.error(msg)
+            return json.loads(json.dumps({"error": msg}))
+
+    def get_permissions(self,
+                        role: Annotated[str, Field(description="The user role name (e.g., 'Sales Trader', 'Execution Trader', 'Operations', 'Finance', 'Technology', 'Compliance', 'Research') to get permissions for")]) -> Dict[str, Any]:
+        """Get the permissions for a specific user role, showing what capabilities they have read/write access to."""
+        try:
+            permissions = self._permissions.get_permissions(role)
+            return {
+                "role": role,
+                "permissions": permissions
+            }
+        except ValueError as e:
+            return json.loads(json.dumps({"error": str(e)}))
+        except Exception as e:
+            msg = f"Error retrieving permissions for role '{role}': {str(e)}"
+            self._log.error(msg)
+            return json.loads(json.dumps({"error": msg}))
 
     def get_all_trade_field_names(self) -> Dict[str, Any]:
         try:

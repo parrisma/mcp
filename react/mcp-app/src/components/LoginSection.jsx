@@ -34,7 +34,8 @@ const roles = [
   "Operations",
   "Finance",
   "Technology",
-  "Compliance"
+  "Compliance",
+  "Research"
 ];
 
 // Props: role, setRole, username, setUsername, staffId, setStaffId, handleLogin (from App.jsx), loginMessage (from App.jsx)

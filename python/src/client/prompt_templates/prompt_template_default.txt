@@ -29,6 +29,9 @@ MCP Calls → Execute MCP action using available servers and their capabilities
 <<AI SAFTY SECTION - START>>
 {ai_saftey_statement}
 <<AI SAFTY SECTION - END>>
+<<PERMISSIONS AND ACCESS SECTION - START>>
+{permissions_and_access_statement}
+<<PERMISSIONS AND ACCESS SECTION - END>>
 <<ORGANISATION SECTION - START>>
 {org_statement}
 <<ORGANISATION SECTION - END>>

@@ -7,6 +7,11 @@ from pydantic import Field
 from i_mcp_server import IMCPServer
 from .fx import FxConverter
 from .permissions import Permissions
+from .industries import Industries
+from .products import Products
+from .brokers import Brokers
+from .venues import Venues
+from .currencies import Currencies
 
 
 class StaticDataService(IMCPServer):
@@ -29,52 +34,6 @@ class StaticDataService(IMCPServer):
         DB_PATH = "db_path"
         DB_NAME = "db_name"
 
-    _industries: List[str] = [
-        "Technology", "Energy", "Healthcare", "Semiconductors", "Renewable Energy",
-        "Financial Services", "Mining", "Automotive", "Retail", "Telecommunications",
-        "Pharmaceuticals", "Entertainment", "Aerospace", "Biotechnology", "Agriculture"
-    ]
-
-    _products: List[Tuple[str, str]] = [
-        ("EQ", "Cash Equity"),
-        ("DR", "Depositary Receipt"),
-    ]
-
-    _brokers: List[Tuple[str, str]] = [
-        ("BKRX1029AA", "Cascade Ridge Capital"),
-        ("ZFTR8821LP", "Orion Summit Markets"),
-        ("MLQW7265RC", "ArborPoint Financial"),
-        ("G8YZ0013DV", "Vanguardon Trading Co."),
-        ("XTPL4532HK", "Ironwave Global Brokers"),
-        ("JREX9082BM", "Silverstrand Securities"),
-        ("QWNE1206TK", "Evermist Holdings Ltd."),
-        ("HFUL3479NZ", "Zephyr Rock Investments"),
-        ("DMKO6314XY", "Bluecore Trading Group"),
-        ("PNVG7763JU", "Elmspire Institutional")
-    ]
-
-    _venues: List[Tuple[str, str]] = [
-        ("XNYS", "New York Stock Exchange"),
-        ("XNAS", "NASDAQ"),
-        ("XLON", "London Stock Exchange"),
-        ("XJPX", "Tokyo Stock Exchange"),
-        ("XPAR", "Euronext Paris"),
-        ("XETR", "Frankfurt Stock Exchange"),
-        ("XHKG", "Hong Kong Stock Exchange"),
-        ("XASX", "Australian Securities Exchange"),
-        ("XTSE", "Toronto Stock Exchange"),
-        ("XSHG", "Shanghai Stock Exchange"),
-        ("XSHE", "Shenzhen Stock Exchange"),
-        ("BATE", "BATS Europe"),
-        ("XCBF", "Cboe Global Markets"),
-        ("XSES", "Singapore Exchange"),
-        ("XFRA", "Deutsche Börse AG")
-    ]
-
-    _currencies: List[str] = ["USD", "GBP", "JPY",
-                              "EUR", "AUD", "HKD",
-                              "CAD", "CNY"]
-
     def __init__(self,
                  logger: logging.Logger,
                  json_config: Dict[str, Any]) -> None:
@@ -86,45 +45,50 @@ class StaticDataService(IMCPServer):
         self._server_name: str = f"{self._base_name}{str(uuid.uuid4()).upper()}"
         self._fx_converter: FxConverter = FxConverter()
         self._permissions: Permissions = Permissions()
+        self._industries: Industries = Industries()
+        self._products: Products = Products()
+        self._brokers: Brokers = Brokers()
+        self._venues: Venues = Venues()
+        self._currencies: Currencies = Currencies()
 
     def get_all_roles(self) -> Dict[str, List[str]]:
         return {self.StaticField.ROLES.value: self._permissions.get_roles()}
 
     def get_all_currencies(self) -> Dict[str, Any]:
-        return {self.StaticField.CURRENCY.value: self._currencies.copy()}
+        return {self.StaticField.CURRENCY.value: self._currencies.get_all_currencies()}
 
     def get_all_venue_codes(self) -> Dict[str, Any]:
-        venue_codes = [code for code, _ in self._venues]
+        venue_codes = self._venues.get_all_venue_codes()
         return {self.StaticField.VENUE.value: venue_codes}
 
     def get_venue_description(self,
                               code: Annotated[str, Field(description="The venue code to get the venue description of")]) -> Dict[str, str]:
-        for c, desc in self._venues:
-            if c == code:
-                return {self.StaticField.VENUE_DESCRIPTION.value: desc}
+        desc = self._venues.get_venue_description(code)
+        if desc is not None:
+            return {self.StaticField.VENUE_DESCRIPTION.value: desc}
         return {self.StaticField.ERROR.value: f"No such [{code}] venue"}
 
     def get_all_industries(self) -> Dict[str, List[str]]:
-        return {self.StaticField.INDUSTRY.value: self._industries.copy()}
+        return {self.StaticField.INDUSTRY.value: self._industries.get_all_industries()}
 
     def get_all_broker_codes(self) -> Dict[str, List[str]]:
-        return {self.StaticField.BROKER_CODE.value: [code for code, _ in self._brokers]}
+        return {self.StaticField.BROKER_CODE.value: self._brokers.get_all_broker_codes()}
 
     def get_broker_name(self,
                         code: Annotated[str, Field(description="The broker code to get the broker description of")]) -> Dict[str, str]:
-        for broker_code, name in self._brokers:
-            if broker_code == code:
-                return {self.StaticField.BROKER_NAME.value: name}
+        name = self._brokers.get_broker_name(code)
+        if name is not None:
+            return {self.StaticField.BROKER_NAME.value: name}
         return {self.StaticField.ERROR.value: f"No such broker [{code}]"}
 
     def get_all_product_type_codes(self) -> Dict[str, List[str]]:
-        return {self.StaticField.PRODUCT_CODE.value: [code for code, _ in self._products]}
+        return {self.StaticField.PRODUCT_CODE.value: self._products.get_all_product_type_codes()}
 
     def get_product_type_description(self,
                                      code: Annotated[str, Field(description="The product type code to get the product description of")]) -> Dict[str, str]:
-        for product_code, desc in self._products:
-            if product_code == code:
-                return {self.StaticField.PRODUCT_TYPE_DESCRIPTION.value: desc}
+        desc = self._products.get_product_type_description(code)
+        if desc is not None:
+            return {self.StaticField.PRODUCT_TYPE_DESCRIPTION.value: desc}
         return {self.StaticField.ERROR.value: f"No such product [{code}]"}
 
     def get_fx_rate(self,

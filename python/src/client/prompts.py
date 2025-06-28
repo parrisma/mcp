@@ -31,7 +31,7 @@ class Prompts:
         DEFAULT = "prompt_template_default.txt"
         SERVER_DEFINITION = "prompt_template_server_defintion.txt"
         AI_SAFTEY_STATEMENT = "prompt_safety_statement.txt"
-        # Default, should be overridden via login details.
+        ACCESS_PERMISSIONS = "prompt_permissions_and_access.txt"
         USER_ROLE_DEFINITION = "prompt_sales_trader_role_definition.txt"
         ORG_STATEMENT = "prompt_org_statement.txt"
         DEFAULT_PROMPT = "default"
@@ -143,6 +143,8 @@ class Prompts:
                                                   self.PromptSettings.SERVER_DEFINITION.value),
                                                  ("ai_saftey_statement",
                                                   self.PromptSettings.AI_SAFTEY_STATEMENT.value),
+                                                 ("permissions_and_access_statement",
+                                                  self.PromptSettings.ACCESS_PERMISSIONS.value),
                                                  ("user_role_definition",
                                                   role_fragment_file),
                                                  ("org_statement",

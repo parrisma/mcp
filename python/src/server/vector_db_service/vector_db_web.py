@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import Any, Callable, Dict, Optional
-
+import os
 from httpx import get
 from ollama import Message
 from mcp_client_web_server import MCPClientWebServer

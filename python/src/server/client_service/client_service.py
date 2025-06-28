@@ -197,7 +197,7 @@ class ClientService(IMCPServer):
 
 if __name__ == "__main__":
     # Example usage
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger("ClientServiceExample")
 
     config = {}

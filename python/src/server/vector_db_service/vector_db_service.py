@@ -1,21 +1,16 @@
-from curses import meta
-from re import M
-from tkinter.tix import STATUS
-from typing import Dict, Any, Callable, List, Tuple, Annotated
-from urllib import response
-from xml.sax import handler
-from flask.cli import F
-from pydantic import Field
-from enum import Enum
-import random
-import logging
-import uuid
 import json
+import logging
 import os
+import threading
+import uuid
+from enum import Enum
+from typing import Any, Annotated, Callable, Dict, List, Tuple
+
+from pydantic import Field
+
 from i_mcp_server import IMCPServer
 from .chroma_util import ChromaDBUtils
 from .vector_db_web import VectorDBWeb
-import threading
 
 
 class VectorDBService(IMCPServer):
@@ -82,7 +77,7 @@ class VectorDBService(IMCPServer):
             self._chroma_running = True
             self._log.info("ChromaDB is running and accessible.")
         else:
-            self._log.error("Vedtopr DB connot function, ChromaDB is not running or not accessible. "
+            self._log.error("Vector DB connot function, ChromaDB is not running or not accessible. "
                             "Ensure that the ChromaDB service is up and running.")
 
         self._vectordb_config: Dict[str, Any] = self._load_vectordb_config()

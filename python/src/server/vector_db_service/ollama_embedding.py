@@ -45,7 +45,7 @@ class OllamaEmbedding:
         log: logging.Logger = logging.getLogger("mcp-client-runner")
         if not logging.getLogger().hasHandlers():
             logging.basicConfig(
-                level=logging.INFO,
+                level=logging.DEBUG,
                 format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                 handlers=[logging.StreamHandler()]
             )

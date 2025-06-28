@@ -10,7 +10,7 @@ from python.src.server.instrument_service.instrument_service import get_instr_ti
 
 # Configure logging for tests
 logger = logging.getLogger("NewsServiceTest")
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 # Examine instrument.json as part of InstrumentService for these test cases, should stay fixed as DB is checked into git.
 

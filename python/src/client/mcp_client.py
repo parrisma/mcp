@@ -78,7 +78,7 @@ class MCPClient:
         # This helps ensure logs are visible if the calling application hasn't configured logging
         if not logging.getLogger().hasHandlers():
             logging.basicConfig(
-                level=logging.INFO,
+                level=logging.DEBUG,
                 format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                 handlers=[logging.StreamHandler()]
             )

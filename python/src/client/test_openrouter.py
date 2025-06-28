@@ -8,7 +8,7 @@ from openrouter_utils import DEFAULT_OPENROUTER_MODEL
 
 # Configure logging for tests
 logger = logging.getLogger("OpenRouterTest")
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 
 @pytest.fixture(scope="module")

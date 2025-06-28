@@ -25,7 +25,7 @@ class OpenRouter:
         self._log: logging.Logger = logging.getLogger(__name__)
         if not logging.getLogger().hasHandlers():
             logging.basicConfig(
-                level=logging.INFO,
+                level=logging.DEBUG,
                 format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                 handlers=[logging.StreamHandler()]
             )

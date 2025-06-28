@@ -65,7 +65,7 @@ class ChromaDBUtils:
         log: logging.Logger = logging.getLogger(self._collection_name)
         if not logging.getLogger().hasHandlers():
             logging.basicConfig(
-                level=logging.INFO,
+                level=logging.DEBUG,
                 format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                 handlers=[logging.StreamHandler()]
             )
@@ -87,7 +87,7 @@ class ChromaDBUtils:
                 collection = self._persistent_client.create_collection(
                     self._collection_name, metadata={"created_at": time.time()})
                 self._log.debug(
-                    f"Chroma - creating new collection: {collection.name}")
+                    f"Chroma - created new collection: {collection.name}")
 
             collections = self._persistent_client.list_collections()
             if collection.name in [col.name for col in collections]:

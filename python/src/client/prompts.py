@@ -55,7 +55,7 @@ class Prompts:
         self._log: logging.Logger = logging.getLogger(__name__)
         if not logging.getLogger().hasHandlers():
             logging.basicConfig(
-                level=logging.INFO,  # Default to INFO, can be overridden by application
+                level=logging.DEBUG,  # Default to DEBUG, can be overridden by application
                 format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                 handlers=[logging.StreamHandler()]
             )

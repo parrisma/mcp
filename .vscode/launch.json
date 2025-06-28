@@ -571,6 +571,29 @@
         "group": "5_Test",
         "order": 16
       }
+    },
+    {
+      "name": "Inject Test Data - Trade Vectorizer",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "python.src.server.trade_service.trade_vectorizer",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--config-dir=./config",
+        "--config-file=vector_db_server_config.json",
+        "--server-type=vectordb",
+        "--server-data-path=./python/src/server/vector_db_service",
+        "--debug"
+      ],
+      "env": {
+        "OLLAMA_HOST": "http://ollama-gpu:11434",
+        "PYTHONPATH": "${config:serverOnlyPythonPath}:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "6_InjectData",
+        "order": 1
+      }
     }
   ]
 }

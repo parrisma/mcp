@@ -232,7 +232,7 @@ if __name__ == "__main__":
         print(f"Import error: {str(e)}")
         sys.exit(1)
     
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger("EquityResearchService")
     
     try:

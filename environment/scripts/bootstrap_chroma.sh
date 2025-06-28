@@ -73,7 +73,15 @@ echo
 echo "##################################    4    #######################################"
 echo
 echo "> Starting ChromaDB container..."
-docker run -d --name chromadb --network="$network_name" -p "$chroma_port:$chroma_port" -v "$chroma_data_volume:/chroma/chroma" -e IS_PERSISTENT=TRUE "$chroma_image" > /dev/null
+
+docker run -d \
+  --name chromadb \
+  --network="$network_name" \
+  -p "$chroma_port:$chroma_port" \
+  -v "$chroma_data_volume:/chroma/chroma" \
+  -e IS_PERSISTENT=TRUE \
+  -e PERSIST_DIRECTORY=/chroma/chroma \
+  "$chroma_image" > /dev/null
 
 echo "> Waiting for ChromaDB container to be running..."
 tries=0
@@ -87,9 +95,3 @@ while [[ "$tries" -lt "10" ]]; do
         sleep 2
     fi
 done
-
-
-echo
-echo "##################################   Running  #######################################"
-echo
-while true; do sleep 1; done

@@ -222,7 +222,7 @@ if __name__ == "__main__":
     print(tickers)
 
     # Example usage
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger("InstrumentServiceExample")
 
     config = {}

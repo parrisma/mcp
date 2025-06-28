@@ -38,7 +38,7 @@ class MCPInvoke:
             __name__)
         if not self._log.hasHandlers():
             logging.basicConfig(
-                level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+                level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
         self._capability_handlers: Dict[str, MCPInvoke.MCPCapabilityHandler] = {
             str(MCPClient.MCPServerCapabilities.TOOLS): self._handle_tool_call,

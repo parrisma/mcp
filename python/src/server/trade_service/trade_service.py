@@ -504,9 +504,10 @@ class TradeService(IMCPServer):
             return json.loads(json.dumps({"error": msg}))
 
 
+
 if __name__ == "__main__":
     # Example usage
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger("TradeServiceExample")
 
     config = {}

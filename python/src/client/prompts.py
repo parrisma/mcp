@@ -9,7 +9,7 @@ from typing import Dict, Optional, Protocol, List, Any
 from datetime import datetime
 from flask import session
 from langchain.prompts import PromptTemplate
-import mcp
+from static_data_service import Permissions
 import random
 
 from numpy import var
@@ -39,24 +39,13 @@ class Prompts:
         def __str__(self) -> str:
             return self.value
 
-    class UserRole(Enum):
-        SALES_TRADER = "Sales Trader"
-        EXECUTION_TRADER = "Execution Trader"
-        OPERATIONS = "Operations"
-        FINANCE = "Finance"
-        TECHNOLOGY = "Technology"
-        COMPLIANCE = "Compliance"
-
-        def __str__(self) -> str:
-            return self.value
-
     role_to_fragment: Dict[str, str] = {
-        UserRole.SALES_TRADER.value: "prompt_sales_trader_role_definition.txt",
-        UserRole.EXECUTION_TRADER.value: "prompt_execution_trader_role_definition.txt",
-        UserRole.OPERATIONS.value: "prompt_operations_role_definition.txt",
-        UserRole.FINANCE.value: "prompt_finance_role_definition.txt",
-        UserRole.TECHNOLOGY.value: "prompt_technology_role_definition.txt",
-        UserRole.COMPLIANCE.value: "prompt_compliance_role_definition.txt",
+        Permissions.UserRole.SALES_TRADER.value: "prompt_sales_trader_role_definition.txt",
+        Permissions.UserRole.EXECUTION_TRADER.value: "prompt_execution_trader_role_definition.txt",
+        Permissions.UserRole.OPERATIONS.value: "prompt_operations_role_definition.txt",
+        Permissions.UserRole.FINANCE.value: "prompt_finance_role_definition.txt",
+        Permissions.UserRole.TECHNOLOGY.value: "prompt_technology_role_definition.txt",
+        Permissions.UserRole.COMPLIANCE.value: "prompt_compliance_role_definition.txt",
     }
 
     def __init__(self,
@@ -141,7 +130,7 @@ class Prompts:
                                 user_role: Optional[str]) -> Dict[str, Any]:
         all_fragments: Dict[str, Any] = {}
         if user_role is None:
-            user_role_key = self.UserRole.SALES_TRADER.value
+            user_role_key = Permissions.UserRole.SALES_TRADER.value
         else:
             user_role_key = user_role
         role_fragment_file: Optional[str] = self.role_to_fragment.get(
@@ -207,7 +196,7 @@ class Prompts:
                    loadTemplateFragments: Optional[LoadTemplateFragments] = None,
                    makePromptTemplate: Optional[MakePromptTemplate] = None) -> str:
         try:
-            if user_role not in [role.value for role in self.UserRole]:
+            if user_role not in [role.value for role in Permissions.UserRole]:
                 raise ValueError(
                     f"Role '{user_role}' is not defined in User Role")
 
@@ -314,7 +303,7 @@ def tests() -> None:
         prompts = Prompts(template_root_folder=None,
                           default_prompt_file_name=None)
         session_id: uuid.UUID = uuid.uuid4()
-        roles_list = [role.value for role in Prompts.UserRole]
+        roles_list = [role.value for role in Permissions.UserRole]
         print(f"Available roles: {roles_list}")
         for i in range(3):
             user_role = random.choice(roles_list)

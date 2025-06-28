@@ -100,7 +100,7 @@ RUN conda run -n mcp conda install -c conda-forge ollama-python
 RUN conda run -n mcp conda install anaconda::flask
 RUN conda run -n mcp conda install -c conda-forge flask-cors
 RUN conda run -n mcp pip install chromadb
-
+RUN conda run -n mcp pip install hvac
 
 RUN conda clean -a -y
 RUN echo 'conda activate mcp' >> ~/.bashrc
@@ -117,15 +117,16 @@ COPY --chown=mcp-dev:mcp-dev react/mcp-app/package.json ./package.json
 
 RUN curl -I https://registry.npmjs.org
 
-ENV NVM_DIR=/home/mcp-dev/.nvm
-ENV NODE_VERSION=20.17.0
-
-RUN bash -c "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash && \
-    source $NVM_DIR/nvm.sh && \
-    nvm install $NODE_VERSION && \
-    nvm alias default $NODE_VERSION && \
-    nvm use $NODE_VERSION && \
-    npm install -g npm@latest"
+RUN bash -c " \
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash && \
+    export NVM_DIR=\"/home/mcp-dev/.nvm\" && \
+    [ -s \"$NVM_DIR/nvm.sh\" ] && \\. \"$NVM_DIR/nvm.sh\" && \
+    [ -s \"$NVM_DIR/bash_completion\" ] && \\. \"$NVM_DIR/bash_completion\" && \
+    nvm install 20.17.0 && \
+    nvm alias default 20.17.0 && \
+    nvm use 20.17.0 && \
+    npm install -g npm@latest \
+"
 
 # --- End React App Setup ---
 

@@ -1,28 +1,25 @@
-import asyncio
 import argparse
+import asyncio
+import datetime
+import enum
 import json
 import logging
-import datetime
 import os
+import re
 import uuid
-import enum
-
 from pathlib import Path
-from tkinter import N
-from tkinter.filedialog import Open
-from typing import List, Dict, Any, Optional, Tuple
-from click import prompt
+from typing import Any, Dict, List, Optional, Tuple
+
 from yarl import URL
 
 from .mcp_client import MCPClient
-from ..server.network_utils import NetworkUtils
-from .ollama_utils import Ollama
 from .mcp_client_web_server import MCPClientWebServer
 from .mcp_invoke import MCPInvoke
+from .ollama_utils import Ollama
 from .openrouter_utils import OpenRouter
 from .prompts import Prompts
-from python.src.client import prompts
-import re
+from network_utils import NetworkUtils
+from vault import Vault
 
 
 class MCPClientRunner:
@@ -46,8 +43,9 @@ class MCPClientRunner:
         OPENROUTER_API_KEY = "openrouter_api_key"
         TIME = "time"
 
-        def as_str(self) -> str:
-            return str(self.value)
+    class Secrets(str, enum.Enum):
+        PATH = "mcp"
+        OPENROUTER_API_KEY = "openrouter-api-key"
 
     class PingResponseKeys(str, enum.Enum):
         PING = "ping"
@@ -69,6 +67,8 @@ class MCPClientRunner:
 
         self._debug_mode: bool = False  # Initialize debug_mode
         self._set_logging(args)
+
+        self._vault = Vault()
 
         self._ollama_host_url: URL | None = None
         self._ollama_model_name: str | None = None
@@ -101,10 +101,14 @@ class MCPClientRunner:
         self._openrouter_url: URL = URL(args.openrouter_url)
         self._openrouter_model: str = args.openrouter_model
         self._openrouter_api_key: str = args.openrouter_api_key
+
+        if not self._openrouter_api_key:
+            # Add secret : bash environment/scripts/add_secrets.sh mcp openrouter-api-key "sk-or-v1-5b4ad9..."
+            self._openrouter_api_key = self._vault.get_api_key(self.Secrets.PATH.value,self.Secrets.OPENROUTER_API_KEY.value)
+
         self._openrouter: OpenRouter | None = self._setup_openrouter(openrouter_url=self._openrouter_url,
                                                                      openrouter_model=self._openrouter_model,
                                                                      openrouter_api_key=self._openrouter_api_key)
-
         if not self._ollama_enabled and not self._openrouter:
             msg = "Neither Ollama nor OpenRouter is enabled. Client will not be able to call LLMs."
             self._log.error(msg)

@@ -1,8 +1,51 @@
 {
   "version": "0.2.0",
+  "compounds": [
+    {
+      "name": "1. MCP - Launch All Services",
+      "configurations": [
+        "2. MCP Server - Hello World",
+        "2. MCP Server - Instrument Data",
+        "2. MCP Server - Client Data",
+        "2. MCP Server - Trade Data",
+        "2. MCP Server - Static Data",
+        "2. MCP Server - News Service",
+        "2. MCP Server - Equity Research Service",
+        "2. MCP Server - Message Service",
+        "2. MCP Server - VectorDB Service",
+        "2. WEB Message Service"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "group": "1_MCP_Commands",
+        "order": 1
+      }
+    },
+    {
+      "name": "1. MCP - Launch Workbench",
+      "configurations": ["3. MCP Workbench Service"],
+      "stopAll": true,
+      "presentation": {
+        "group": "1_MCP_Commands",
+        "order": 2
+      }
+    },
+    {
+      "name": "1. MCP - Launch UI",
+      "configurations": [
+        "4.1 MCP Workbench UI (NPM)",
+        "4.2 MCP Workbench UI (React)"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "group": "1_MCP_Commands",
+        "order": 3
+      }
+    }
+  ],
   "configurations": [
     {
-      "name": "MCP Server - Hello World",
+      "name": "2. MCP Server - Hello World",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
@@ -16,11 +59,15 @@
         "--debug"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
+        "PYTHONPATH": "${config:serverOnlyPythonPath}:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "2_MCP_Service",
+        "order": 1
       }
     },
     {
-      "name": "MCP Server - Instrument Data",
+      "name": "2. MCP Server - Instrument Data",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
@@ -35,11 +82,15 @@
         "--debug"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
+        "PYTHONPATH": "${config:serverOnlyPythonPath}:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "2_MCP_Service",
+        "order": 2
       }
     },
     {
-      "name": "MCP Server - Client Data",
+      "name": "2. MCP Server - Client Data",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
@@ -54,11 +105,15 @@
         "--debug"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
+        "PYTHONPATH": "${config:serverOnlyPythonPath}:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "2_MCP_Service",
+        "order": 3
       }
     },
     {
-      "name": "MCP Server - Trade Data",
+      "name": "2. MCP Server - Trade Data",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
@@ -73,11 +128,15 @@
         "--debug"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
+        "PYTHONPATH": "${config:serverOnlyPythonPath}:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "2_MCP_Service",
+        "order": 4
       }
     },
     {
-      "name": "MCP Server - Static Data",
+      "name": "2. MCP Server - Static Data",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
@@ -91,11 +150,15 @@
         "--debug"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
+        "PYTHONPATH": "${config:serverOnlyPythonPath}:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "2_MCP_Service",
+        "order": 5
       }
     },
     {
-      "name": "MCP Server - News Service",
+      "name": "2. MCP Server - News Service",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
@@ -112,11 +175,15 @@
         "--debug"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
+        "PYTHONPATH": "${config:serverOnlyPythonPath}:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "2_MCP_Service",
+        "order": 6
       }
     },
     {
-      "name": "MCP Server - Equity Research Service",
+      "name": "2. MCP Server - Equity Research Service",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
@@ -133,11 +200,15 @@
         "--debug"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
+        "PYTHONPATH": "${config:serverOnlyPythonPath}:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "2_MCP_Service",
+        "order": 7
       }
     },
     {
-      "name": "MCP Server - Message Service",
+      "name": "2. MCP Server - Message Service",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
@@ -152,11 +223,15 @@
         "--debug"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
+        "PYTHONPATH": "${config:serverOnlyPythonPath}:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "2_MCP_Service",
+        "order": 8
       }
     },
     {
-      "name": "MCP Server - VectorDB Service",
+      "name": "2. MCP Server - VectorDB Service",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/python/src/server/mcp_server_runner.py",
@@ -172,11 +247,15 @@
       ],
       "env": {
         "OLLAMA_HOST": "http://ollama-gpu:11434",
-        "PYTHONPATH": "${workspaceFolder}/python/src/client:${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
+        "PYTHONPATH": "${config:serverOnlyPythonPath}:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "2_MCP_Service",
+        "order": 9
       }
     },
     {
-      "name": "WEB Message Service",
+      "name": "2. WEB Message Service",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/python/src/server/messages/messages.py",
@@ -184,26 +263,15 @@
       "cwd": "${workspaceFolder}",
       "args": ["--port=5174"],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/client:${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:$PYTHONPATH"
-      }
-    },
-    {
-      "name": "Chroma (vector) DB",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "bash",
-      "args": [
-        "${workspaceFolder}/python/src/server/vector_db_service/bootstrap_chroma.sh"
-      ],
-      "console": "integratedTerminal",
-      "cwd": "${workspaceFolder}/python/src/server/vector_db_service",
+        "PYTHONPATH": "${config:serverOnlyPythonPath}:$PYTHONPATH"
+      },
       "presentation": {
-        "reveal": "always", // Always show the terminal
-        "panel": "new" // Open in a new terminal panel
+        "group": "2_MCP_Service",
+        "order": 10
       }
     },
     {
-      "name": "MCP Workbench Service",
+      "name": "3. MCP Workbench Service",
       "type": "debugpy",
       "request": "launch",
       "module": "python.src.client.mcp_client_runner",
@@ -215,16 +283,39 @@
         "--ollama-model=qwen2.5:72b"
       ],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/client:$PYTHONPATH",
+        "PYTHONPATH": "${config:clientServerPythonPath}:$PYTHONPATH",
         "OPENROUTER_API_KEY": "${env:OPENROUTER_API_KEY}"
+      },
+      "presentation": {
+        "group": "3_MCP_Workbench",
+        "order": 1
       }
     },
     {
-      "name": "MCP Workbench UI (react)",
+      "name": "4.1 MCP Workbench UI (NPM)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/react/mcp-app",
+      "env": {},
+      "skipFiles": ["<node_internals>/**"],
+      "presentation": {
+        "group": "4_MCP_UI",
+        "order": 1,
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "name": "4.2 MCP Workbench UI (React)",
       "type": "chrome",
       "request": "launch",
       "url": "http://localhost:5173/",
-      "webRoot": "${workspaceFolder}/react/mcp-app/src"
+      "webRoot": "${workspaceFolder}/react/mcp-app/src",
+      "presentation": {
+        "group": "4_MCP_UI",
+        "order": 2
+      }
     },
     {
       "name": "Test - MCP Invoker",
@@ -235,6 +326,10 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "PYTHONPATH": "${workspaceFolder}"
+      },
+      "presentation": {
+        "group": "5_Test",
+        "order": 1
       }
     },
     {
@@ -246,6 +341,10 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "PYTHONPATH": "${workspaceFolder}"
+      },
+      "presentation": {
+        "group": "5_Test",
+        "order": 2
       }
     },
     {
@@ -257,6 +356,10 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "5_Test",
+        "order": 3
       }
     },
     {
@@ -268,6 +371,10 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "5_Test",
+        "order": 4
       }
     },
     {
@@ -279,6 +386,10 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "5_Test",
+        "order": 5
       }
     },
     {
@@ -290,6 +401,10 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/client:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "5_Test",
+        "order": 6
       }
     },
     {
@@ -301,6 +416,10 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "5_Test",
+        "order": 7
       }
     },
     {
@@ -312,6 +431,10 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "5_Test",
+        "order": 8
       }
     },
     {
@@ -328,6 +451,10 @@
       ],
       "env": {
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "5_Test",
+        "order": 9
       }
     },
     {
@@ -344,6 +471,10 @@
       ],
       "env": {
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "5_Test",
+        "order": 10
       }
     },
     {
@@ -357,6 +488,10 @@
       "env": {
         "PYTHONPATH": "${workspaceFolder}/python/src/client:$PYTHONPATH",
         "OPENROUTER_API_KEY": "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"
+      },
+      "presentation": {
+        "group": "5_Test",
+        "order": 11
       }
     },
     {
@@ -368,6 +503,10 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "5_Test",
+        "order": 12
       }
     },
     {
@@ -380,6 +519,10 @@
       "env": {
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH",
         "MCP_LOCAL_SERVER_MODE": "False"
+      },
+      "presentation": {
+        "group": "5_Test",
+        "order": 13
       }
     },
     {
@@ -392,6 +535,10 @@
       "env": {
         "OLLAMA_HOST": "http://ollama-gpu:11434",
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "5_Test",
+        "order": 14
       }
     },
     {
@@ -404,6 +551,25 @@
       "env": {
         "OLLAMA_HOST": "http://ollama-gpu:11434",
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "5_Test",
+        "order": 15
+      }
+    },
+    {
+      "name": "Test - Vault",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/lib/vault.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python/src/lib:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "5_Test",
+        "order": 16
       }
     }
   ]

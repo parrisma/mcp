@@ -6,6 +6,7 @@ from enum import Enum
 from pydantic import Field
 from i_mcp_server import IMCPServer
 from .fx import FxConverter
+from .permissions import Permissions
 
 
 class StaticDataService(IMCPServer):
@@ -14,6 +15,7 @@ class StaticDataService(IMCPServer):
         PRODUCT_TYPE = "Product_Type"
         INDUSTRY = "Industry"
         CURRENCY = "Currency"
+        ROLES = "Roles"
         VENUE = "Venue"
         VENUE_DESCRIPTION = "Venue_Description"
         BROKER_CODE = "Broker_Code"
@@ -69,8 +71,9 @@ class StaticDataService(IMCPServer):
         ("XFRA", "Deutsche Börse AG")
     ]
 
-    _currencies: List[str] = ["USD", "GBP",
-                              "JPY", "EUR", "AUD", "HKD", "CAD", "CNY"]
+    _currencies: List[str] = ["USD", "GBP", "JPY",
+                              "EUR", "AUD", "HKD",
+                              "CAD", "CNY"]
 
     def __init__(self,
                  logger: logging.Logger,
@@ -82,6 +85,10 @@ class StaticDataService(IMCPServer):
             StaticDataService.ConfigField.DB_NAME.value, "StaticDataService")
         self._server_name: str = f"{self._base_name}{str(uuid.uuid4()).upper()}"
         self._fx_converter: FxConverter = FxConverter()
+        self._permissions: Permissions = Permissions()
+
+    def get_all_roles(self) -> Dict[str, List[str]]:
+        return {self.StaticField.ROLES.value: self._permissions.get_roles()}
 
     def get_all_currencies(self) -> Dict[str, Any]:
         return {self.StaticField.CURRENCY.value: self._currencies.copy()}

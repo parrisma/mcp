@@ -13,8 +13,8 @@ import uuid
 import json
 import os
 from i_mcp_server import IMCPServer
-from chroma_util import ChromaDBUtils
-from vector_db_web import VectorDBWeb
+from .chroma_util import ChromaDBUtils
+from .vector_db_web import VectorDBWeb
 import threading
 
 

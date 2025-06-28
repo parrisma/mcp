@@ -1,4 +1,3 @@
-import collections.abc
 from typing import Optional, Mapping
 
 # Default rates: 1 unit of KEY currency = VALUE units of USD.

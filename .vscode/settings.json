@@ -1,0 +1,37 @@
+{
+    "python.defaultInterpreterPath": "/usr/bin/python3",
+    "python.terminal.activateEnvironment": true,
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/python/src/server",
+        "${workspaceFolder}/python/src/client",
+        "${workspaceFolder}/python/src/lib",
+        "${workspaceFolder}/python/src/server/static_data_service",
+        "${workspaceFolder}/python/src/server/vector_db_service",
+        "${workspaceFolder}/python/src/server/messages",
+        "${workspaceFolder}/python/src/server/instrument_service",
+        "${workspaceFolder}/python/src/server/client_service",
+        "${workspaceFolder}/python/src/server/trade_service",
+        "${workspaceFolder}/python/src/server/news_service",
+        "${workspaceFolder}/python/src/server/equity_research_service"
+    ],
+    "serverOnlyPythonPath": "${workspaceFolder}/python/src/lib:${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:${workspaceFolder}/python/src/client",
+    "clientServerPythonPath": "${workspaceFolder}/python/src/lib:${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:${workspaceFolder}/python/src/server/vector_db_service:${workspaceFolder}/python/src/client",
+    "python.analysis.autoSearchPaths": true,
+    "python.analysis.autoImportCompletions": true,
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.formatting.provider": "black",
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": [
+        "python/tests",
+        "python/src",
+        "python/src/lib",
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.autoTestDiscoverOnSaveEnabled": true,
+    "files.associations": {
+        "*.py": "python"
+    },
+    "python.envFile": "${workspaceFolder}/.env"
+}

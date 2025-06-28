@@ -9,7 +9,7 @@ import time
 import chromadb
 from enum import Enum
 from chromadb.config import Settings
-from ollama_embedding import OllamaEmbedding
+from .ollama_embedding import OllamaEmbedding
 
 # Chroma settings
 #

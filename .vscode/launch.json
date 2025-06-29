@@ -594,6 +594,24 @@
         "group": "6_InjectData",
         "order": 1
       }
+    },
+    {
+      "name": "Inject Test Data - Bulk News Generator",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/server/news_service/generate_bulk_news.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "http://localhost:6000"
+      ],
+      "env": {
+        "PYTHONPATH": "${config:serverOnlyPythonPath}:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "6_InjectData",
+        "order": 2
+      }
     }
   ]
 }

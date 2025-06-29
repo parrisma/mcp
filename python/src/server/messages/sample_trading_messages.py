@@ -304,7 +304,8 @@ class SampleTradingMessages:
                         results["total_failed"] += 1
                         print(
                             f"✗ Failed to post message to {channel_name}: {message_text[:50]}...")
-                        print(f"  Message server status: {response.status_code}")
+                        print(
+                            f"  Message server status: {response.status_code}")
                         if response.text:
                             print(f"  Response: {response.text[:100]}")
 
@@ -335,12 +336,12 @@ class SampleTradingMessages:
                                  message_server_port: int = 5000) -> Dict[str, bool]:
         """
         Test connectivity to the message server.
-        
+
         Returns:
             Dictionary indicating whether the message server is accessible
         """
         import requests
-        
+
         results = {
             "message_server": False,
             "message_server_url": f"http://{message_server_host}:{message_server_port}"

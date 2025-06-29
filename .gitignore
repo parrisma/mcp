@@ -194,3 +194,7 @@ prompt_logs/
 
 # Bulk news summary files
 bulk_news_summary*.json
+
+# Bulk research summary files  
+bulk_research_summary*.json
+test_bulk_research_summary*.json

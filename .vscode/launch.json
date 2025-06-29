@@ -423,21 +423,6 @@
       }
     },
     {
-      "name": "Test - Equity Research Service",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${workspaceFolder}/python/src/server/equity_research_service/equity_research_service.py",
-      "console": "integratedTerminal",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
-      },
-      "presentation": {
-        "group": "5_Test",
-        "order": 8
-      }
-    },
-    {
       "name": "Test - News Service (pytest)",
       "type": "debugpy",
       "request": "launch",
@@ -454,7 +439,7 @@
       },
       "presentation": {
         "group": "5_Test",
-        "order": 9
+        "order": 8
       }
     },
     {
@@ -474,7 +459,7 @@
       },
       "presentation": {
         "group": "5_Test",
-        "order": 10
+        "order": 9
       }
     },
     {
@@ -491,7 +476,7 @@
       },
       "presentation": {
         "group": "5_Test",
-        "order": 11
+        "order": 10
       }
     },
     {
@@ -506,7 +491,7 @@
       },
       "presentation": {
         "group": "5_Test",
-        "order": 12
+        "order": 11
       }
     },
     {
@@ -522,7 +507,7 @@
       },
       "presentation": {
         "group": "5_Test",
-        "order": 13
+        "order": 12
       }
     },
     {
@@ -538,7 +523,7 @@
       },
       "presentation": {
         "group": "5_Test",
-        "order": 14
+        "order": 13
       }
     },
     {
@@ -554,7 +539,7 @@
       },
       "presentation": {
         "group": "5_Test",
-        "order": 15
+        "order": 14
       }
     },
     {
@@ -569,7 +554,7 @@
       },
       "presentation": {
         "group": "5_Test",
-        "order": 16
+        "order": 15
       }
     },
     {
@@ -602,15 +587,29 @@
       "program": "${workspaceFolder}/python/src/server/news_service/generate_bulk_news.py",
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}",
-      "args": [
-        "http://localhost:6000"
-      ],
+      "args": ["http://localhost:6000"],
       "env": {
         "PYTHONPATH": "${config:serverOnlyPythonPath}:$PYTHONPATH"
       },
       "presentation": {
         "group": "6_InjectData",
         "order": 2
+      }
+    },
+    {
+      "name": "Inject Test Data - Bulk Research Generator",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/src/server/equity_research_service/generate_bulk_research.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": ["http://localhost:6000", "http://localhost:6283"],
+      "env": {
+        "PYTHONPATH": "${config:serverOnlyPythonPath}:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "6_InjectData",
+        "order": 3
       }
     }
   ]

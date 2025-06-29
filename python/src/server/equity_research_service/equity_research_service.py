@@ -1,17 +1,24 @@
-from typing import Dict, Any, Callable, List, Tuple, Annotated
-from pydantic import Field
+# Standard library imports
 import copy
-import logging
-import re
-import uuid
+import importlib.util
 import json
+import logging
 import os
-from i_mcp_server import IMCPServer
+import random
+import re
+import sys
+import uuid
 from enum import Enum
+from typing import Dict, Any, Callable, List, Tuple, Annotated
+
+# Third-party imports
+from pydantic import Field
+
+# Local application imports
+from i_mcp_server import IMCPServer
+from instrument_service.instrument_service import InstrumentService
 from static_data_service.static_data_service import StaticDataService
 from .report_generator import EquityReportGenerator
-from instrument_service.instrument_service import InstrumentService
-import random
 
 
 class EquityResearchService(IMCPServer):
@@ -202,9 +209,6 @@ class EquityResearchService(IMCPServer):
 
 # Allow the file to be run directly for testing
 if __name__ == "__main__":
-    import sys
-    import os
-    import importlib.util
     
     # Add the parent directory to sys.path to allow imports when running directly
     parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))

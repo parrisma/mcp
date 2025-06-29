@@ -9,7 +9,6 @@ import signal
 import sys
 import threading
 import logging
-from .sample_trading_messages import SampleTradingMessages
 
 
 class MCPClientWebServer:
@@ -50,10 +49,10 @@ class MCPClientWebServer:
                 handlers=[logging.StreamHandler()]
             )
         return log
-    
+
     def _home(self) -> Response:
         self._log.debug("Home page requested")
-        
+
         html = "<html><head><title>Client Service - Available Routes</title></head><body>"
         html += "<h1>Available Routes</h1><ul>"
         for route in self._routes:
@@ -61,14 +60,15 @@ class MCPClientWebServer:
                 self._routes[route], "__name__", "unknown")
             html += f"<li><a href='{route}'>{route}</a> - {func_name}</li>"
         html += "</ul></body></html>"
-        
+
         self._log.debug(f"Home page generated with {len(self._routes)} routes")
         return Response(html, mimetype="text/html")
 
     def _web_user_callback_wrapper(self,
                                    callback: "MCPClientWebServer.WebUserCallback") -> Response:
-        self._log.debug(f"Processing {request.method} request to {request.path}")
-        
+        self._log.debug(
+            f"Processing {request.method} request to {request.path}")
+
         query_params: Dict[str, Any] = {}
         query_params[self.QueryParamKeys.PATH.value] = request.path
 
@@ -87,7 +87,7 @@ class MCPClientWebServer:
 
         query_params[self.QueryParamKeys.ARGS.value] = args_dict
         self._log.debug(f"Final query params: {query_params}")
-        
+
         try:
             result: Dict[str, Any] = call(callback, query_params)
             self._log.debug(f"Callback result: {result}")
@@ -103,35 +103,38 @@ class MCPClientWebServer:
                   methods: List[Literal['GET', 'POST', 'PUT', 'DELETE']],
                   handler: "MCPClientWebServer.WebUserCallback") -> None:
         self._log.debug(f"Adding route: {route} with methods: {methods}")
-        
+
         wrapped_callback: MCPClientWebServer.WebCallback = partial(
             self._web_user_callback_wrapper, callback=handler)
         update_wrapper(wrapped_callback, handler)
-        
+
         self._app.route(route)(wrapped_callback)
         self._routes[route] = wrapped_callback
         self._app.add_url_rule(
             route, view_func=self._routes[route], methods=methods)
-        
-        self._log.debug(f"Route {route} successfully registered with methods: {methods}")
+
+        self._log.debug(
+            f"Route {route} successfully registered with methods: {methods}")
 
     def shutdown_server(self):
         # This function is designed to be called from a request handler
         # to shut down the Werkzeug server.
         self._log.debug("Shutdown request received")
-        
+
         shutdown = request.environ.get('werkzeug.server.shutdown')
         if shutdown is None:
-            self._log.error("Not running with the Werkzeug Server - cannot shutdown")
+            self._log.error(
+                "Not running with the Werkzeug Server - cannot shutdown")
             raise RuntimeError('Not running with the Werkzeug Server')
-        
+
         self._log.info("Shutting down server...")
         shutdown()
         return 'Server shutting down...'
 
     def run(self) -> None:
-        self._log.info(f"Starting MCPClientWebServer on {self._host}:{self._port}")
-        
+        self._log.info(
+            f"Starting MCPClientWebServer on {self._host}:{self._port}")
+
         # Signal handler for graceful shutdown
         def signal_handler(sig, frame):
             self._log.info(f"Received signal {sig}, shutting down server...")
@@ -140,18 +143,21 @@ class MCPClientWebServer:
 
         # Only register signal handlers if this is the main thread
         if threading.current_thread() is threading.main_thread():
-            self._log.debug("Registering signal handlers for graceful shutdown")
+            self._log.debug(
+                "Registering signal handlers for graceful shutdown")
             signal.signal(signal.SIGINT, signal_handler)
             signal.signal(signal.SIGTERM, signal_handler)
         else:
-            self._log.warning("Not registering signal handlers in non-main thread")
+            self._log.warning(
+                "Not registering signal handlers in non-main thread")
 
         # Add a shutdown route (optional, mainly for testing)
         self._log.debug("Adding shutdown route")
         self._app.route('/shutdown')(self.shutdown_server)
 
         try:
-            self._log.info(f"Flask server starting on {self._host}:{self._port}")
+            self._log.info(
+                f"Flask server starting on {self._host}:{self._port}")
             self._app.run(host=self._host, port=self._port)
         except Exception as e:
             self._log.error(f"Error running Flask server: {str(e)}")
@@ -160,17 +166,3 @@ class MCPClientWebServer:
             # This block might not always be reached on abrupt termination,
             # but it's good practice for cleaner exits.
             self._log.info("Flask server process finished.")
-
-    def get_sample_trading_messages(self) -> List[Dict[str, str]]:
-        """Generate sample chat messages for trading channels based on MCP data"""
-        return SampleTradingMessages.get_all_sample_messages()
-
-    def get_messages_by_channel(self, channel: str) -> List[Dict[str, str]]:
-        """Get sample messages for a specific channel"""
-        return SampleTradingMessages.get_messages_by_channel(channel)
-
-    def get_available_channels(self) -> List[str]:
-        """Get list of available channel names"""
-        return SampleTradingMessages.get_available_channels()
-
-    # ...existing code...

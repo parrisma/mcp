@@ -574,6 +574,29 @@
       }
     },
     {
+      "name": "Test - Instrument Service (pytest)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "python/src/server/instrument_service/test_instrument_service.py",
+        "-v",
+        "-s",
+        "--server-name=Instrument",
+        "--port=6278",
+        "--host=localhost",
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python/src/client:${config:serverOnlyPythonPath}:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "5_Test",
+        "order": 17
+      }
+    },
+    {
       "name": "Inject Test Data - Trade Vectorizer",
       "type": "debugpy",
       "request": "launch",

@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 @pytest.mark.order(1)
 def test_startup():
-    print("\n🔧 Running startup...")
+    print("\nRunning startup...")
     assert True
 
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './MessageList.css'; // Import the CSS file
 
 const MessageList = () => {
@@ -8,6 +8,9 @@ const MessageList = () => {
   const [messagesTab3, setMessagesTab3] = useState([]);
   const [lastFetchTime, setLastFetchTime] = useState({});
   const [fetchErrors, setFetchErrors] = useState({});
+  
+  // Use useRef to store lastMessageUuid so it's always current
+  const lastMessageUuidRef = useRef({});
 
   const tabs = [
     {
@@ -33,11 +36,19 @@ const MessageList = () => {
     }
   ];
 
-  const fetchMessage = async (url, setMessages, tabIndex) => {
+  const fetchMessage = async (baseUrl, setMessages, tabIndex) => {
     const now = new Date().toISOString();
     setLastFetchTime(prev => ({ ...prev, [tabIndex]: now }));
     
     try {
+      // Build URL with message_uuid parameter if we have one for this tab
+      let url = baseUrl;
+      const currentLastMessageUuid = lastMessageUuidRef.current[tabIndex];
+      if (currentLastMessageUuid) {
+        const separator = baseUrl.includes('?') ? '&' : '?';
+        url = `${baseUrl}${separator}message_uuid=${currentLastMessageUuid}`;
+      }
+      
       console.log(`Tab ${tabIndex} making blocking call to: ${url}`);
       const response = await fetch(url);
       if (!response.ok) {
@@ -49,6 +60,14 @@ const MessageList = () => {
       // Clear any previous errors for this tab
       setFetchErrors(prev => ({ ...prev, [tabIndex]: null }));
       
+      // Extract and store the last message_uuid for this tab
+      if (data && data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
+        const lastMessage = data.messages[data.messages.length - 1];
+        if (lastMessage.message_uuid) {
+          lastMessageUuidRef.current[tabIndex] = lastMessage.message_uuid;
+        }
+      }
+      
       // Add the message(s) - handle both single message and multiple messages
       if (data && (data.message || data.content || data.messages)) {
         setMessages(prevMessages => {
@@ -56,11 +75,22 @@ const MessageList = () => {
           
           // If data contains multiple messages (messages array)
           if (data.messages && Array.isArray(data.messages)) {
-            return [...prevMessages, ...data.messages];
+            // Filter out messages that already exist to prevent duplicates
+            const existingUuids = new Set(prevMessages.map(msg => msg.message_uuid).filter(Boolean));
+            const newMessages = data.messages.filter(msg => 
+              !msg.message_uuid || !existingUuids.has(msg.message_uuid)
+            );
+            return [...prevMessages, ...newMessages];
           }
           // If data contains a single message
           else {
-            return [...prevMessages, data];
+            // Check if this message already exists
+            const messageExists = data.message_uuid && 
+              prevMessages.some(msg => msg.message_uuid === data.message_uuid);
+            if (!messageExists) {
+              return [...prevMessages, data];
+            }
+            return prevMessages; // Don't add duplicate
           }
         });
       }
@@ -146,11 +176,16 @@ const MessageList = () => {
           </div>
         )}
         {currentTab.messages.map((message, index) => (
-          <div key={index} className="message-item">
+          <div key={message.message_uuid || index} className="message-item">
             {(() => {
               // Handle different message formats
               if (typeof message === 'string') {
                 return message;
+              }
+              
+              // Handle new message format with message_uuid
+              if (message.message_uuid && message.message && message.timestamp) {
+                return `${message.timestamp}: ${message.message}`;
               }
               
               // If message has timestamp and message fields

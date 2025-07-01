@@ -132,6 +132,13 @@ class MessageService:
             JsonMessageKeys.STATUS.value: JsonMessageKeys.OK.value,
         }
 
+    def _create_channel(self,
+                        channel_id_guid: uuid.UUID) -> None:
+        with self._messages_lock:
+            if channel_id_guid not in self._messages:
+                self._messages[channel_id_guid] = []
+        self._add_message(channel_id_guid, "Channel created")
+
     def _add_message(self,
                      channel_id_guid: uuid.UUID,
                      message: Any) -> None:
@@ -276,8 +283,9 @@ class MessageService:
         Returns the message if found within the timeout, otherwise returns None.
         """
         if channel_id_as_guid not in self._messages:
-            raise self.MessageServiceFailure(
-                f"Channel ID {channel_id_as_guid} not registered.")
+            self._create_channel(channel_id_as_guid)
+            self._log.info(
+                f"Created new message channel with ID {channel_id_as_guid}")
 
         if all or message_uuid is None:
             cap: int = min(
@@ -287,18 +295,18 @@ class MessageService:
         # yes, but this is just a demo ..
         message_uuid_list: List[str] = [
             x[JsonMessageKeys.MESSAGE_UUID.value] for x in self._messages[channel_id_as_guid]]
-        if message_uuid in message_uuid_list:
+        if str(message_uuid).upper() not in [uuid_str.upper() for uuid_str in message_uuid_list]:
             raise self.MessageServiceFailure(
                 f"Message UUID {message_uuid} not found in channel ID {channel_id_as_guid}.")
 
-        if str(message_uuid).upper() == message_uuid_list[-1]:
+        if str(message_uuid).upper() == message_uuid_list[-1].upper():
             start_time = time.time()
             while time.time() - start_time < timeout:
                 with self._messages_lock:
                     channel_messages = self._messages[channel_id_as_guid]
                     messages = self._get_message_after_uuid(message_uuid=message_uuid,
-                                                           channel_messages=channel_messages,
-                                                           message_cap=message_cap)
+                                                            channel_messages=channel_messages,
+                                                            message_cap=message_cap)
                     # If we found new messages, return them
                     if messages:
                         return messages

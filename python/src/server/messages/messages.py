@@ -5,11 +5,11 @@ import random
 import threading
 import time
 import uuid
-from enum import Enum
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List, Type
 
 import requests
 
+from json_message_keys import JsonMessageKeys
 from mcp_client_web_server import MCPClientWebServer
 
 
@@ -18,18 +18,21 @@ from mcp_client_web_server import MCPClientWebServer
 
 class MessageService:
 
-    class JsonMessageKeys(Enum):
-        CHANNEL_ID_GUID = "channel_id"
-        MESSAGES = "messages"
-        MESSAGE = "message"
-        ERROR = "error"
-        OK = "ok"
-        STATUS = "status"
-        ALL = "all"
-        TIMESTAMP = "timestamp"
+    class MessageServiceFailure(Exception):
+        def __init__(self, message):
+            self.message = message
+            super().__init__(self.message)
 
         def __str__(self) -> str:
-            return self.value
+            return self.message
+
+    class MessageGetFailure(MessageServiceFailure):
+        def __init__(self, message):
+            super().__init__(f"Failed to get message: {message}")
+
+    class MessagePostFailure(MessageServiceFailure):
+        def __init__(self, message):
+            super().__init__(f"Failed to post message: {message}")
 
     def __init__(self,
                  host: str,
@@ -64,7 +67,7 @@ class MessageService:
                                    methods=['GET'],
                                    handler=self._get_messages)
 
-        self._messages: Dict[str, Any] = {}
+        self._messages: Dict[uuid.UUID, Any] = {}
         self._messages_lock = threading.Lock()
 
         self._log.info(f"Started Message Web interface in background thread")
@@ -91,28 +94,28 @@ class MessageService:
     def _post_message(self,
                       params: Dict) -> Dict:
         # Check if the required parameters are present
-        if 'args' in params:
+        if JsonMessageKeys.ARGS.value in params:
             params = params['args']
         else:
-            return {self.JsonMessageKeys.ERROR.value: "Missing 'args' in parameters."}
+            return {JsonMessageKeys.ERROR.value: "Missing 'args' in parameters."}
 
         if not isinstance(params, dict):
-            return {self.JsonMessageKeys.ERROR.value: "Invalid parameters format. Expected a dictionary."}
+            return {JsonMessageKeys.ERROR.value: "Invalid parameters format. Expected a dictionary."}
 
-        if self.JsonMessageKeys.CHANNEL_ID_GUID.value not in params:
-            return {self.JsonMessageKeys.ERROR.value: f"Missing required parameter: {self.JsonMessageKeys.CHANNEL_ID_GUID.value}"}
+        if JsonMessageKeys.CHANNEL_ID_GUID.value not in params:
+            return {JsonMessageKeys.ERROR.value: f"Missing required parameter: {JsonMessageKeys.CHANNEL_ID_GUID.value}"}
 
-        if self.JsonMessageKeys.MESSAGE.value not in params:
-            return {self.JsonMessageKeys.ERROR.value: f"Missing required parameter: {self.JsonMessageKeys.MESSAGE.value}"}
+        if JsonMessageKeys.MESSAGE.value not in params:
+            return {JsonMessageKeys.ERROR.value: f"Missing required parameter: {JsonMessageKeys.MESSAGE.value}"}
 
-        channel_id_guid = params[self.JsonMessageKeys.CHANNEL_ID_GUID.value]
-        message = params[self.JsonMessageKeys.MESSAGE.value]
+        channel_id_guid = params[JsonMessageKeys.CHANNEL_ID_GUID.value]
+        message = params[JsonMessageKeys.MESSAGE.value]
 
         # Validate that channel_id_guid is a valid UUID
         try:
-            _ = uuid.UUID(channel_id_guid)
+            channel_id_guid = uuid.UUID(channel_id_guid)
         except ValueError:
-            return {self.JsonMessageKeys.ERROR.value: f"Invalid UUID format for {self.JsonMessageKeys.CHANNEL_ID_GUID.value}"}
+            return {JsonMessageKeys.ERROR.value: f"Invalid UUID format for {JsonMessageKeys.CHANNEL_ID_GUID.value}"}
 
         # Add the message to our internal storage
         self._add_message(channel_id_guid, message)
@@ -126,98 +129,201 @@ class MessageService:
 
         # Return success response
         return {
-            self.JsonMessageKeys.STATUS.value: self.JsonMessageKeys.OK.value,
+            JsonMessageKeys.STATUS.value: JsonMessageKeys.OK.value,
         }
 
     def _add_message(self,
-                     channel_id_guid: str,
-                     message: Dict[str, Any]) -> None:
-        """Adds a message to the internal message list."""
+                     channel_id_guid: uuid.UUID,
+                     message: Any) -> None:
+
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+
+        # If message is already a dict with proper structure, use it
+        if isinstance(message, dict) and (JsonMessageKeys.MESSAGE.value in message):
+            structured_message = message
+            if JsonMessageKeys.TIMESTAMP.value not in structured_message:
+                structured_message[JsonMessageKeys.TIMESTAMP.value] = timestamp
+            structured_message[JsonMessageKeys.MESSAGE_UUID.value] = str(
+                uuid.uuid4()).upper()
+        else:
+            try:
+                if not isinstance(message, str):
+                    message = str(message).strip()
+            except Exception as e:
+                message = f"Error converting message: {str(e)}"
+
+            structured_message: Dict[str, str] = {
+                JsonMessageKeys.MESSAGE.value: str(message),
+                JsonMessageKeys.TIMESTAMP.value: timestamp,
+                JsonMessageKeys.MESSAGE_UUID.value: str(
+                    uuid.uuid4()).upper()
+            }
+
         with self._messages_lock:
             if channel_id_guid not in self._messages:
-                self._messages[channel_id_guid] = [message]
+                self._messages[channel_id_guid] = [structured_message]
             else:
-                self._messages[channel_id_guid].append(message)
+                self._messages[channel_id_guid].append(structured_message)
+
+    def _extract_param(self,
+                       params: Dict,
+                       key: str,
+                       type_cast: Callable,
+                       exception_class: Type[Exception],
+                       optional: bool = False,
+                       default: None | Any = None) -> Any:
+
+        res = params.get(key, None)
+        error_msg: str = ""
+        if res is None:
+            if not optional:
+                error_msg = f"Missing required parameter: {key}"
+            res = default
+        else:
+            try:
+                res = type_cast(res)
+            except Exception as e:
+                error_msg = f"Parameter '{key}' could not be extracted as required type: {str(e)}"
+                res = None
+        if not error_msg:
+            return res
+
+        raise exception_class(error_msg)
+
+    def _extract_params_from_payload(self,
+                                     params: Dict) -> Dict[str, Any]:
+        if JsonMessageKeys.ARGS.value in params:
+            params = params[JsonMessageKeys.ARGS.value]
+        else:
+            raise self.MessageGetFailure(
+                f"Unexpected payload, expected to level element key [{JsonMessageKeys.ARGS.value}]")
+
+        if not isinstance(params, dict):
+            raise self.MessageGetFailure(
+                f"Invalid parameters format. Expected a dictionary, got {type(params).__name__}")
+
+        if JsonMessageKeys.CHANNEL_ID_GUID.value not in params:
+            raise self.MessageGetFailure(
+                f"Missing required parameter: {JsonMessageKeys.CHANNEL_ID_GUID.value}")
+        return params
 
     def _get_messages(self,
                       params: Dict) -> Dict[str, Any]:
-        # Check if the required parameters are present
-        if 'args' in params:
-            params = params['args']
-        else:
-            return {self.JsonMessageKeys.ERROR.value: "Missing 'args' in parameters."}
 
-        if not isinstance(params, dict):
-            return {self.JsonMessageKeys.ERROR.value: "Invalid parameters format. Expected a dictionary."}
-
-        if self.JsonMessageKeys.CHANNEL_ID_GUID.value not in params:
-            return {self.JsonMessageKeys.ERROR.value: f"Missing required parameter: {self.JsonMessageKeys.CHANNEL_ID_GUID.value}"}
-
-        if self.JsonMessageKeys.ALL.value in params:
-            all = True
-        else:
-            all = False
-
-        channel_id_guid = params[self.JsonMessageKeys.CHANNEL_ID_GUID.value]
-        try:
-            _ = uuid.UUID(channel_id_guid)
-        except ValueError:
-            return {self.JsonMessageKeys.ERROR.value: f"Invalid UUID format for {self.JsonMessageKeys.CHANNEL_ID_GUID.value}",
-                    self.JsonMessageKeys.CHANNEL_ID_GUID.value: channel_id_guid}
-
-        messages: List[str] = self._wait_for_message_with_channel_id(
-            channel_id_as_guid=channel_id_guid)
-        # Add timestamps to messages if they don't already have them
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        if messages:
-            if all:
-                return {self.JsonMessageKeys.MESSAGES.value: messages,
-                        self.JsonMessageKeys.TIMESTAMP.value: timestamp,
-                        self.JsonMessageKeys.CHANNEL_ID_GUID.value: channel_id_guid}
+
+        try:
+            params = self._extract_params_from_payload(params)
+
+            message_uuid: uuid.UUID = self._extract_param(
+                params,
+                JsonMessageKeys.MESSAGE_UUID.value,
+                uuid.UUID,
+                self.MessageGetFailure,
+                True,)
+
+            all: bool = self._extract_param(
+                params,
+                JsonMessageKeys.ALL.value,
+                lambda x: str(x).lower() in ('true', 't', 'yes', 'y', '1'),
+                self.MessageGetFailure,
+                True,
+                False)
+
+            channel_id_guid: uuid.UUID = self._extract_param(
+                params,
+                JsonMessageKeys.CHANNEL_ID_GUID.value,
+                uuid.UUID,
+                self.MessageGetFailure)
+
+            messages: List = self._wait_for_message_with_channel_id(channel_id_as_guid=channel_id_guid,
+                                                                    message_uuid=message_uuid,
+                                                                    all=all)
+
+            return {JsonMessageKeys.MESSAGES.value: messages,
+                    JsonMessageKeys.TIMESTAMP.value: timestamp}
+        except Exception as e:
+            return {JsonMessageKeys.MESSAGES.value: [{JsonMessageKeys.ERROR.value: [f"Failed to retrieve messages, payload [{json.dumps(params)}] with error: {str(e)}"],
+                                                      JsonMessageKeys.CHANNEL_ID_GUID.value: "Unkown_or_Missing", }],
+                    JsonMessageKeys.TIMESTAMP.value: timestamp}
+
+    def _get_message_after_uuid(self,
+                                message_uuid: uuid.UUID,
+                                channel_messages: List[Dict[str, Any]],
+                                message_cap: int) -> List[Dict[str, Any]]:
+        messages: List[Dict[str, Any]] = []
+        included_message: bool = False
+        for message in channel_messages:
+            if included_message:
+                messages.append(message)
             else:
-                return {self.JsonMessageKeys.MESSAGE.value: messages[-1],
-                        self.JsonMessageKeys.TIMESTAMP.value: timestamp,
-                        self.JsonMessageKeys.CHANNEL_ID_GUID.value: channel_id_guid}
-        else:
-            return {self.JsonMessageKeys.ERROR.value: [f"Failed to retrieve messages for channel ID: {channel_id_guid}"],
-                    self.JsonMessageKeys.TIMESTAMP.value: timestamp,
-                    self.JsonMessageKeys.CHANNEL_ID_GUID.value: channel_id_guid}
+                if str(message.get(JsonMessageKeys.MESSAGE_UUID.value)).upper() == str(message_uuid).upper():
+                    included_message = True
+
+        if len(messages) >= message_cap:
+            messages = messages[-message_cap:]
+
+        return messages
 
     def _wait_for_message_with_channel_id(self,
-                                          channel_id_as_guid: str,
-                                          timeout: int = 60*60) -> List[str]:
+                                          channel_id_as_guid: uuid.UUID,
+                                          message_uuid: uuid.UUID | None = None,
+                                          all: bool = False,
+                                          timeout: int = 60*60,
+                                          message_cap: int = 100) -> List[Dict[str, Any]]:
         """
         Blocks until a NEW message with the specified channel ID is found in the internal message list.
         Returns the message if found within the timeout, otherwise returns None.
         """
-        start_time = time.time()
-        while time.time() - start_time < timeout:
-            with self._messages_lock:
-                if channel_id_as_guid in self._messages and self._messages[channel_id_as_guid]:
-                    messages = self._messages[channel_id_as_guid]
-                    # Clear the messages after retrieving them so we only get new messages on subsequent calls
-                    self._messages[channel_id_as_guid] = []
-                    return messages
-            time.sleep(0.1)
-        return [f"Timed out, no messages arrived on channel id {channel_id_as_guid}"]
+        if channel_id_as_guid not in self._messages:
+            raise self.MessageServiceFailure(
+                f"Channel ID {channel_id_as_guid} not registered.")
 
-    def _debug_messages(self, params: Dict) -> Dict[str, Any]:
-        """Debug endpoint to see current message state"""
-        with self._messages_lock:
-            return {
-                "message_count_by_channel": {k: len(v) for k, v in self._messages.items()},
-                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-            }
+        if all or message_uuid is None:
+            cap: int = min(
+                len(self._messages[channel_id_as_guid]), message_cap)
+            return self._messages[channel_id_as_guid][-cap:]
+
+        # yes, but this is just a demo ..
+        message_uuid_list: List[str] = [
+            x[JsonMessageKeys.MESSAGE_UUID.value] for x in self._messages[channel_id_as_guid]]
+        if message_uuid in message_uuid_list:
+            raise self.MessageServiceFailure(
+                f"Message UUID {message_uuid} not found in channel ID {channel_id_as_guid}.")
+
+        if str(message_uuid).upper() == message_uuid_list[-1]:
+            start_time = time.time()
+            while time.time() - start_time < timeout:
+                with self._messages_lock:
+                    channel_messages = self._messages[channel_id_as_guid]
+                    messages = self._get_message_after_uuid(message_uuid=message_uuid,
+                                                           channel_messages=channel_messages,
+                                                           message_cap=message_cap)
+                    # If we found new messages, return them
+                    if messages:
+                        return messages
+                time.sleep(0.2)
+        else:
+            return self._get_message_after_uuid(message_uuid=message_uuid,
+                                                channel_messages=self._messages[channel_id_as_guid],
+                                                message_cap=message_cap)
+        return [{
+            JsonMessageKeys.MESSAGE.value: f"Timed out, no messages arrived on channel id {channel_id_as_guid}",
+            JsonMessageKeys.TIMESTAMP.value: time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+            JsonMessageKeys.MESSAGE_UUID.value: str(uuid.uuid4()).upper()
+        }]
 
     def _post_message_to_document_storage(self,
                                           message: str,
-                                          channel_id: str) -> bool:
+                                          channel_id: uuid.UUID) -> bool:
         try:
             # Create document combining message, channel_id and timestamp
             timestamp = int(time.time())
+            channel_id_as_str = str(channel_id).upper()
+
             document = {
                 "message": message,
-                "channel_id": channel_id,
+                "channel_id": str(channel_id_as_str).upper(),
                 "timestamp": timestamp
             }
             document_json = json.dumps(document)

@@ -1,45 +1,25 @@
 {
-  "response": [
+  "messages": [
     {
-      "desk": "no-desk-restriction",
-      "document": "HelloToYou",
-      "document_guid": "a6236d64-2498-49b0-90fc-d173666d0b1b",
-      "document_type": "news",
-      "similarity": 271987.62,
-      "type": "news"
+      "message": "0001",
+      "message_uuid": "45A29A17-62A7-4F1A-BB9F-09544C68F971",
+      "timestamp": "2025-07-01 07:11:35"
     },
     {
-      "desk": "no-desk-restriction",
-      "document": "Pi3.142",
-      "document_guid": "737931f2-dc15-435f-a61b-6e7dd019c59c",
-      "document_type": "research",
-      "similarity": 154379.69,
-      "type": "research"
+      "message": "0002",
+      "message_uuid": "70F473C0-C0BB-4CD3-BD52-5B031304B4F8",
+      "timestamp": "2025-07-01 07:11:41"
     },
     {
-      "desk": "no-desk-restriction",
-      "document": "hi",
-      "document_guid": "2c7540cf-80a6-4a13-a976-fad0c0ace664",
-      "document_type": "general",
-      "similarity": 122937.62,
-      "type": "general"
+      "message": "0003",
+      "message_uuid": "7964A481-823E-4701-AEB8-C76FB3B1274C",
+      "timestamp": "2025-07-01 07:11:43"
     },
     {
-      "desk": "no-desk-restriction",
-      "document": "Hello",
-      "document_guid": "279604ad-36fa-41fc-8f28-cf58ee0741a4",
-      "document_type": "general",
-      "similarity": 109495.14,
-      "type": "general"
-    },
-    {
-      "desk": "no-desk-restriction",
-      "document": "Hello",
-      "document_guid": "32ab0b16-ae54-4dda-9732-66c68bcdec87",
-      "document_type": "news",
-      "similarity": 109495.14,
-      "type": "news"
+      "message": "0004",
+      "message_uuid": "BD2DC20E-5D0B-4600-B4D6-B08F51D8FBD7",
+      "timestamp": "2025-07-01 07:11:45"
     }
   ],
-  "status": "Found 5 related documents for fragment: 3.14..."
+  "timestamp": "2025-07-01 07:11:58"
 }

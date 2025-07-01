@@ -558,6 +558,22 @@
       }
     },
     {
+      "name": "Test - WEB Message Service (pytest)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": ["python/src/server/messages/test_message_web.py", "-v", "-s"],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python/src/server/messages/:${config:serverOnlyPythonPath}:$PYTHONPATH"
+      },
+      "presentation": {
+        "group": "5_Test",
+        "order": 16
+      }
+    },
+    {
       "name": "Inject Test Data - Trade Vectorizer",
       "type": "debugpy",
       "request": "launch",

@@ -1,6 +1,6 @@
+from abc import ABCMeta
 import logging
 import time
-from tkinter.tix import STATUS
 from urllib import response
 import uuid
 import json
@@ -150,9 +150,10 @@ class MessageService(IMCPServer):
     # Tool implementions
     #
 
-    def _invoke_message_url(self, url: str) -> bool:
+    def _invoke_message_url(self, url: str, channel_id: str, message: str) -> bool:
         try:
-            response = requests.get(url)
+            # Send simple POST request with URL parameters
+            response = requests.post(url)
             if response.status_code == 200:
                 self._log.info(f"Message sent successfully: {url}")
                 return True
@@ -172,7 +173,7 @@ class MessageService(IMCPServer):
         response = {}
 
         # First, try to post to the main message service
-        if self._invoke_message_url(self._form_message_url(channel_id, message)):
+        if self._invoke_message_url(self._form_message_url(channel_id, message), channel_id, message):
             self._log.info(
                 f"Message posted successfully to channel {channel_id}")
             response = {

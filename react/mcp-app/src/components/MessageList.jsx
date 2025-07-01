@@ -49,11 +49,19 @@ const MessageList = () => {
       // Clear any previous errors for this tab
       setFetchErrors(prev => ({ ...prev, [tabIndex]: null }));
       
-      // Add the message - no duplicate checking needed since backend only returns new messages
-      if (data && (data.message || data.content)) {
+      // Add the message(s) - handle both single message and multiple messages
+      if (data && (data.message || data.content || data.messages)) {
         setMessages(prevMessages => {
           setActiveTab(tabIndex); // Switch to this tab when a new message arrives
-          return [...prevMessages, data];
+          
+          // If data contains multiple messages (messages array)
+          if (data.messages && Array.isArray(data.messages)) {
+            return [...prevMessages, ...data.messages];
+          }
+          // If data contains a single message
+          else {
+            return [...prevMessages, data];
+          }
         });
       }
     } catch (error) {
@@ -139,12 +147,54 @@ const MessageList = () => {
         )}
         {currentTab.messages.map((message, index) => (
           <div key={index} className="message-item">
-            {message.timestamp && message.message
-              ? `${message.timestamp}: ${message.message}`
-              : message.content
-                ? `${message.timestamp || 'No timestamp'}: ${message.content}`
-                : JSON.stringify(message, null, 2)
-            }
+            {(() => {
+              // Handle different message formats
+              if (typeof message === 'string') {
+                return message;
+              }
+              
+              // If message has timestamp and message fields
+              if (message.timestamp && message.message) {
+                // Check if message.message is an object with nested message content
+                if (typeof message.message === 'object' && message.message.message) {
+                  // Extract the actual message content from the nested structure
+                  return `${message.timestamp}: ${message.message.message}`;
+                }
+                // If message.message is a simple string
+                else if (typeof message.message === 'string') {
+                  return `${message.timestamp}: ${message.message}`;
+                }
+                // If message.message is an object but doesn't have .message property
+                else if (typeof message.message === 'object') {
+                  return `${message.timestamp}: ${JSON.stringify(message.message)}`;
+                }
+              }
+              
+              // If message has timestamp and content fields
+              if (message.content) {
+                return `${message.timestamp || 'No timestamp'}: ${message.content}`;
+              }
+              
+              // If message is an object but doesn't have expected structure,
+              // try to extract the message content intelligently
+              if (typeof message === 'object' && message !== null) {
+                // Check if it's a nested message object
+                if (message.message && typeof message.message === 'object') {
+                  const innerMessage = message.message;
+                  if (innerMessage.message) {
+                    return `${message.timestamp || innerMessage.timestamp || 'No timestamp'}: ${innerMessage.message}`;
+                  }
+                  if (innerMessage.content) {
+                    return `${message.timestamp || innerMessage.timestamp || 'No timestamp'}: ${innerMessage.content}`;
+                  }
+                }
+                
+                // Fallback to JSON stringify for debugging
+                return JSON.stringify(message, null, 2);
+              }
+              
+              return 'Invalid message format';
+            })()}
           </div>
         ))}
       </div>

@@ -94,6 +94,7 @@ RUN conda run -n mcp pip install mcp-server
 RUN conda run -n mcp pip install "mcp[cli]"
 RUN conda run -n mcp pip install docker
 RUN conda run -n mcp pip install pytest
+RUN conda run -n mcp pip install pytest-order
 RUN conda run -n mcp conda install -c conda-forge langchain
 RUN conda run -n mcp conda install -c conda-forge ollama
 RUN conda run -n mcp conda install -c conda-forge ollama-python

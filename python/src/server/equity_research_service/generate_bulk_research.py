@@ -420,17 +420,17 @@ async def async_main():
 
         if summary['failed_reports'] > 0:
             print(
-                f"\n⚠️  Warning: {summary['failed_reports']} research reports failed to generate/send")
-            print(f"📊 Overall success rate: {summary['success_rate']:.1f}%")
+                f"\nWarning: {summary['failed_reports']} research reports failed to generate/send")
+            print(f"Overall success rate: {summary['success_rate']:.1f}%")
             sys.exit(1)
         else:
             print(
-                f"\n✅ Success: All {summary['successful_reports']} research reports generated and sent successfully!")
+                f"\nSuccess: All {summary['successful_reports']} research reports generated and sent successfully!")
             print(
-                f"📊 Desk assignment rate: {summary['desk_assignment_rate']:.1f}% (target: 25%)")
+                f"Desk assignment rate: {summary['desk_assignment_rate']:.1f}% (target: 25%)")
 
     except Exception as e:
-        print(f"\n❌ Error running bulk research generation: {e}")
+        print(f"\nError running bulk research generation: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

@@ -1,1 +1,24 @@
-"{'results': [{'source': \"Capability [get_instruments] called on server [instrument_service] with parameters: [field_name='name', regex='.*']\"}, {'error': \"execute_tool: An error occurred while executing tool 'get_instruments' on server 'instrument_service': _get_server_url: An error occurred while retrieving the server URL for 'instrument_service': _get_server_url: Server name 'instrument_service' not found in the cache.\", 'details': \"_get_server_url: An error occurred while retrieving the server URL for 'instrument_service': _get_server_url: Server name 'instrument_service' not found in the cache.\"}]}"
+{
+  "results": [
+    {
+      "source": "Capability [get_all_instrument_field_names] called on server [Instrument] with parameters: []"
+    },
+    {
+      "response": [
+        {
+          "instrument_fields": [
+            "GUID",
+            "Instrument_Long_Name",
+            "Reuters_Code",
+            "SEDOL",
+            "ISIN",
+            "Product_Type",
+            "Industry",
+            "Currency",
+            "Listing_Date"
+          ]
+        }
+      ]
+    }
+  ]
+}

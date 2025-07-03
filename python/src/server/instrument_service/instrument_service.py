@@ -188,15 +188,25 @@ class InstrumentService(IMCPServer):
             self._log.error(msg)
             return json.loads(json.dumps({"error": msg}))
 
+    def _is_valid_field_name(self, field_name: str) -> bool:
+        try:
+            return field_name in [field.value for field in self.InstrumentField.__members__.values()]
+        except Exception as e:
+            self._log.error(
+                f"Error validating field name '{field_name}': {str(e)}")
+            return False
+
     def get_instruments(self,
                         field_name: Annotated[str, Field(description="The instrument field name to search for")],
                         regular_expression: Annotated[str, Field(description="Pattern to match field name against")]) -> Dict[str, Any]:
         try:
             # If the regular expression is a single '*', treat it as '.*'
             if regular_expression == "*":
-                regex = re.compile(".*")
-            else:
-                regex = re.compile(regular_expression)
+                regex = ".*"
+            if not self._is_valid_field_name(field_name):
+                raise ValueError(
+                    f"Instrument field name: [{field_name}] is not a recognized field name.")
+            regex = re.compile(regular_expression)
             return {"instruments": [entry for entry in self._instument_db if field_name in entry and regex.search(entry[field_name])]}
         except Exception as e:
             msg = f"Error searching for instruments with key field [{field_name}] and matching expression [{regular_expression}]: {str(e)}"

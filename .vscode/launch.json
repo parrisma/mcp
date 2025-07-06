@@ -41,6 +41,25 @@
         "group": "1_MCP_Commands",
         "order": 3
       }
+    },
+    {
+      "name": "1. MCP - Launch All OpenWebUI Services",
+      "configurations": [
+        "5. OpenWebUi MCP Server - Hello World",
+        "5. OpenWebUi MCP Server - Instrument Data",
+        "5. OpenWebUi MCP Server - Client Data",
+        "5. OpenWebUi MCP Server - Trade Data",
+        "5. OpenWebUi MCP Server - Static Data",
+        "5. OpenWebUi MCP Server - News Service",
+        "5. OpenWebUi MCP Server - Equity Research Service",
+        "5. OpenWebUi MCP Server - Message Service",
+        "5. OpenWebUi MCP Server - VectorDB Service"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "group": "1_MCP_Commands",
+        "order": 4
+      }
     }
   ],
   "configurations": [
@@ -326,7 +345,7 @@
       "cwd": "${workspaceFolder}",
       "args": [
         "--host=0.0.0.0",
-        "--port=8000",
+        "--port=8277",
         "--server-type=sse",
         "--",
         "http://localhost:6277/sse"
@@ -334,6 +353,158 @@
       "presentation": {
         "group": "5_MCPO_Service",
         "order": 1
+      }
+    },
+    {
+      "name": "5. OpenWebUi MCP Server - Instrument Data",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "~/.conda/envs/mcp/bin/mcpo",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--host=0.0.0.0",
+        "--port=8278",
+        "--server-type=sse",
+        "--",
+        "http://localhost:6278/sse"
+      ],
+      "presentation": {
+        "group": "5_MCPO_Service",
+        "order": 2
+      }
+    },
+    {
+      "name": "5. OpenWebUi MCP Server - Client Data",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "~/.conda/envs/mcp/bin/mcpo",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--host=0.0.0.0",
+        "--port=8280",
+        "--server-type=sse",
+        "--",
+        "http://localhost:6280/sse"
+      ],
+      "presentation": {
+        "group": "5_MCPO_Service",
+        "order": 3
+      }
+    },
+    {
+      "name": "5. OpenWebUi MCP Server - Trade Data",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "~/.conda/envs/mcp/bin/mcpo",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--host=0.0.0.0",
+        "--port=8281",
+        "--server-type=sse",
+        "--",
+        "http://localhost:6281/sse"
+      ],
+      "presentation": {
+        "group": "5_MCPO_Service",
+        "order": 4
+      }
+    },
+    {
+      "name": "5. OpenWebUi MCP Server - Static Data",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "~/.conda/envs/mcp/bin/mcpo",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--host=0.0.0.0",
+        "--port=8279",
+        "--server-type=sse",
+        "--",
+        "http://localhost:6279/sse"
+      ],
+      "presentation": {
+        "group": "5_MCPO_Service",
+        "order": 5
+      }
+    },
+    {
+      "name": "5. OpenWebUi MCP Server - News Service",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "~/.conda/envs/mcp/bin/mcpo",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--host=0.0.0.0",
+        "--port=8282",
+        "--server-type=sse",
+        "--",
+        "http://localhost:6282/sse"
+      ],
+      "presentation": {
+        "group": "5_MCPO_Service",
+        "order": 6
+      }
+    },
+    {
+      "name": "5. OpenWebUi MCP Server - Equity Research Service",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "~/.conda/envs/mcp/bin/mcpo",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--host=0.0.0.0",
+        "--port=8283",
+        "--server-type=sse",
+        "--",
+        "http://localhost:6283/sse"
+      ],
+      "presentation": {
+        "group": "5_MCPO_Service",
+        "order": 7
+      }
+    },
+    {
+      "name": "5. OpenWebUi MCP Server - Message Service",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "~/.conda/envs/mcp/bin/mcpo",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--host=0.0.0.0",
+        "--port=8284",
+        "--server-type=sse",
+        "--",
+        "http://localhost:6284/sse"
+      ],
+      "presentation": {
+        "group": "5_MCPO_Service",
+        "order": 8
+      }
+    },
+    {
+      "name": "5. OpenWebUi MCP Server - VectorDB Service",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "~/.conda/envs/mcp/bin/mcpo",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--host=0.0.0.0",
+        "--port=8285",
+        "--server-type=sse",
+        "--",
+        "http://localhost:6285/sse"
+      ],
+      "presentation": {
+        "group": "5_MCPO_Service",
+        "order": 9
       }
     },
     {

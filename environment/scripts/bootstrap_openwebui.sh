@@ -11,24 +11,29 @@ fi
 openwebui_container_name="open-webui"
 openwebui_data_volume="/home/$username/openwebui_data"
 openwebui_volume_mount="/app/backend/data"
-openwebui_image="ghcr.io/open-webui/open-webui:cuda"
+openwebui_image="ghcr.io/open-webui/open-webui:git-5eca495-cuda" # https://github.com/open-webui/open-webui/pkgs/container/open-webui
+#openwebui_image="ghcr.io/open-webui/open-webui:cuda"
 openwebui_port="3000"
-ollama_base_url="http://localhost:11434"
+
+# Can test ollama is visible to openweb UI
+# docker exec -it open-webui curl http://ollama-gpu:11434
+# we use the ollama-gpu container name as both openwebiu and ollama-gpu are in the same Docker network
+ollama_base_url="http://ollama-gpu:11434"
 network_name="mcp-net"
 
 echo "##################################################################################"
 echo "# Script will do the following:                                                   "
 echo "#                                                                                 "
-echo "# 1. Check if Open WebUI container exists, if so, stop and remove it             "
+echo "# 1. Check if Open WebUI container exists, if so, stop and remove it              "
 echo "# 2. Create directory for Open WebUI persistent storage volume, if it does not exist"
-echo "# 3. Start Open WebUI container with GPU support                                 "
+echo "# 3. Start Open WebUI container                                                   "
 echo "#                                                                                 "
 echo "##################################################################################"
 
 echo
 echo "##################################    1    #######################################"
 echo
-echo "> Setting up Open WebUI Container, assumes you have GPU support"
+echo "> Setting up Open WebUI Container"
 echo "> Checking if Open WebUI container [$openwebui_container_name] exists..."
 docker_res=$(docker ps -a --filter name="$openwebui_container_name" --format "{{.Names}}")
 if [ "$docker_res" = "$openwebui_container_name" ]; then
@@ -63,8 +68,8 @@ echo
 echo "##################################    3    #######################################"
 echo
 echo "> Starting Open WebUI container..."
-echo "> docker run -d --network=host -p \"$openwebui_port:8080\" --gpus all -v \"$openwebui_data_volume:$openwebui_volume_mount\" -e OLLAMA_BASE_URL=\"$ollama_base_url\" --name \"$openwebui_container_name\" \"$openwebui_image\""
-docker run -d --network=host -p "$openwebui_port:8080" --gpus all -v "$openwebui_data_volume:$openwebui_volume_mount" -e OLLAMA_BASE_URL="$ollama_base_url" --name "$openwebui_container_name" "$openwebui_image" > /dev/null
+echo "> docker run -d -p \"$openwebui_port:8080\" --add-host=host.docker.internal:host-gateway --network="$network_name" --gpus all -v \"$openwebui_data_volume:$openwebui_volume_mount\" -e OLLAMA_BASE_URL=\"$ollama_base_url\" --name \"$openwebui_container_name\" \"$openwebui_image\""
+docker run -d -p "$openwebui_port:8080" --network="$network_name" --gpus all -v "$openwebui_data_volume:$openwebui_volume_mount" -e OLLAMA_BASE_URL="$ollama_base_url" --name "$openwebui_container_name" "$openwebui_image" > /dev/null
 
 echo "> Waiting for Open WebUI container to be running..."
 tries=0

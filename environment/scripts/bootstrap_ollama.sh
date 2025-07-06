@@ -15,6 +15,8 @@ ollama_port="11434"
 ollama_model="qwen2.5:72b"
 network_name="mcp-net"
 
+export OLLAMA_HOST="0.0.0.0"
+
 echo "##################################################################################"
 echo "# Script will do the following:                                                   "
 echo "#                                                                                 "
@@ -63,7 +65,7 @@ echo
 echo "##################################    3    #######################################"
 echo
 echo "> Starting Ollama container..."
-docker run -d --gpus "device=0" -v "$ollama_data_volume:/root/.ollama" --network="$network_name" -p "$ollama_port:$ollama_port" --name "$ollama_container_name" "$ollama_image" > /dev/null
+docker run -d --gpus "device=0" -v "$ollama_data_volume:/root/.ollama" --network="$network_name" -p "$ollama_port:$ollama_port" -e OLLAMA_HOST=0.0.0.0 --name "$ollama_container_name" "$ollama_image" > /dev/null
 
 echo "> Waiting for Ollama container to be running..."
 tries=0

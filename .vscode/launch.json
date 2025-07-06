@@ -318,6 +318,25 @@
       }
     },
     {
+      "name": "5. OpenWebUi MCP Server - Hello World",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "~/.conda/envs/mcp/bin/mcpo",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "--host=0.0.0.0",
+        "--port=8000",
+        "--server-type=sse",
+        "--",
+        "http://localhost:6277/sse"
+      ],
+      "presentation": {
+        "group": "5_MCPO_Service",
+        "order": 1
+      }
+    },
+    {
       "name": "Test - MCP Invoker",
       "type": "debugpy",
       "request": "launch",
@@ -328,7 +347,7 @@
         "PYTHONPATH": "${workspaceFolder}"
       },
       "presentation": {
-        "group": "5_Test",
+        "group": "6_Test",
         "order": 1
       }
     },
@@ -343,7 +362,7 @@
         "PYTHONPATH": "${workspaceFolder}"
       },
       "presentation": {
-        "group": "5_Test",
+        "group": "6_Test",
         "order": 2
       }
     },
@@ -358,7 +377,7 @@
         "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/server/static_data_service:$PYTHONPATH"
       },
       "presentation": {
-        "group": "5_Test",
+        "group": "6_Test",
         "order": 3
       }
     },
@@ -373,7 +392,7 @@
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
       },
       "presentation": {
-        "group": "5_Test",
+        "group": "6_Test",
         "order": 4
       }
     },
@@ -388,7 +407,7 @@
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
       },
       "presentation": {
-        "group": "5_Test",
+        "group": "6_Test",
         "order": 5
       }
     },
@@ -403,7 +422,7 @@
         "PYTHONPATH": "${workspaceFolder}/python/src/server:${workspaceFolder}/python/src/client:$PYTHONPATH"
       },
       "presentation": {
-        "group": "5_Test",
+        "group": "6_Test",
         "order": 6
       }
     },
@@ -418,7 +437,7 @@
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
       },
       "presentation": {
-        "group": "5_Test",
+        "group": "6_Test",
         "order": 7
       }
     },
@@ -438,7 +457,7 @@
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
       },
       "presentation": {
-        "group": "5_Test",
+        "group": "6_Test",
         "order": 8
       }
     },
@@ -458,7 +477,7 @@
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
       },
       "presentation": {
-        "group": "5_Test",
+        "group": "6_Test",
         "order": 9
       }
     },
@@ -475,7 +494,7 @@
         "OPENROUTER_API_KEY": "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"
       },
       "presentation": {
-        "group": "5_Test",
+        "group": "6_Test",
         "order": 10
       }
     },
@@ -490,7 +509,7 @@
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
       },
       "presentation": {
-        "group": "5_Test",
+        "group": "6_Test",
         "order": 11
       }
     },
@@ -506,7 +525,7 @@
         "MCP_LOCAL_SERVER_MODE": "False"
       },
       "presentation": {
-        "group": "5_Test",
+        "group": "6_Test",
         "order": 12
       }
     },
@@ -522,7 +541,7 @@
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
       },
       "presentation": {
-        "group": "5_Test",
+        "group": "6_Test",
         "order": 13
       }
     },
@@ -538,7 +557,7 @@
         "PYTHONPATH": "${workspaceFolder}/python/src/server:$PYTHONPATH"
       },
       "presentation": {
-        "group": "5_Test",
+        "group": "6_Test",
         "order": 14
       }
     },
@@ -553,7 +572,7 @@
         "PYTHONPATH": "${workspaceFolder}/python/src/lib:$PYTHONPATH"
       },
       "presentation": {
-        "group": "5_Test",
+        "group": "6_Test",
         "order": 15
       }
     },
@@ -569,7 +588,7 @@
         "PYTHONPATH": "${workspaceFolder}/python/src/server/messages/:${config:serverOnlyPythonPath}:$PYTHONPATH"
       },
       "presentation": {
-        "group": "5_Test",
+        "group": "6_Test",
         "order": 16
       }
     },
@@ -586,13 +605,13 @@
         "-s",
         "--server-name=Instrument",
         "--port=6278",
-        "--host=localhost",
+        "--host=localhost"
       ],
       "env": {
         "PYTHONPATH": "${workspaceFolder}/python/src/client:${config:serverOnlyPythonPath}:$PYTHONPATH"
       },
       "presentation": {
-        "group": "5_Test",
+        "group": "6_Test",
         "order": 17
       }
     },
@@ -615,7 +634,7 @@
         "PYTHONPATH": "${config:serverOnlyPythonPath}:$PYTHONPATH"
       },
       "presentation": {
-        "group": "6_InjectData",
+        "group": "7_InjectData",
         "order": 1
       }
     },
@@ -631,7 +650,7 @@
         "PYTHONPATH": "${config:serverOnlyPythonPath}:$PYTHONPATH"
       },
       "presentation": {
-        "group": "6_InjectData",
+        "group": "7_InjectData",
         "order": 2
       }
     },
@@ -647,7 +666,7 @@
         "PYTHONPATH": "${config:serverOnlyPythonPath}:$PYTHONPATH"
       },
       "presentation": {
-        "group": "6_InjectData",
+        "group": "7_InjectData",
         "order": 3
       }
     }
